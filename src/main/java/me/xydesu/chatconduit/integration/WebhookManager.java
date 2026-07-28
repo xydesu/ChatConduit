@@ -23,6 +23,9 @@ public class WebhookManager {
     // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <chat=UUID:[ping]:>)
     private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<chat=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
 
+    private static final java.util.Map<String, Long> LAST_SENT_MAP = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long COOLDOWN_MS = 1000; // 每頻道 1 秒速率限制
+
     /**
      * 非同步發送玩家群組對話訊息至隊長設定的 Discord Webhook URL
      */
@@ -31,6 +34,14 @@ public class WebhookManager {
 
         String webhookUrl = customChan.getWebhookUrl();
         if (webhookUrl == null || webhookUrl.trim().isEmpty() || !webhookUrl.startsWith("http")) return;
+
+        // 速率限制檢查
+        long now = System.currentTimeMillis();
+        Long lastSent = LAST_SENT_MAP.get(customChan.getId());
+        if (lastSent != null && (now - lastSent) < COOLDOWN_MS) {
+            return;
+        }
+        LAST_SENT_MAP.put(customChan.getId(), now);
 
         FileConfiguration config = Main.getInstance().getConfig();
 
