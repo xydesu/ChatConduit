@@ -54,18 +54,18 @@ public class PlayerChannelManageGUI {
 
         boolean isOwner = customChan.getOwner().equals(player.getUniqueId());
 
-        // Slot 4: 頻道模式與狀態按鈕
+        // Slot 4: 頻道詳細設定按鈕
         Material modeMat = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? Material.OAK_DOOR : Material.IRON_DOOR;
-        String modeName = "<gold><bold>頻道設定: " + customChan.getDisplayName() + "</bold>";
+        String modeName = "<gold><bold>⚙ 頻道詳細設定: " + customChan.getDisplayName() + "</bold>";
         List<String> modeLore = new ArrayList<>();
         modeLore.add("<gray>隊長: <yellow>" + (Bukkit.getOfflinePlayer(customChan.getOwner()).getName() != null ? Bukkit.getOfflinePlayer(customChan.getOwner()).getName() : customChan.getOwner().toString()));
         modeLore.add("<gray>存取模式: " + (customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>公共 (PUBLIC)" : "<red>私人 (PRIVATE)"));
         modeLore.add("<gray>成員總數: <yellow>" + customChan.getMembers().size() + " 人");
         modeLore.add("");
         if (isOwner) {
-            modeLore.add("<yellow>▶ 點擊切換模式 (PUBLIC / PRIVATE)</yellow>");
+            modeLore.add("<yellow>▶ 點擊開啟詳細設定選單 (更名/模式/色彩)</yellow>");
         } else {
-            modeLore.add("<gray>僅隊長可修改頻道設定");
+            modeLore.add("<gray>僅隊長可開啟與修改頻道詳細設定");
         }
         inv.setItem(4, createItem(modeMat, modeName, modeLore));
 
@@ -103,7 +103,6 @@ public class PlayerChannelManageGUI {
         // 底部功能按鈕
         inv.setItem(45, createItem(Material.ARROW, "<yellow><bold>← 返回頻道大廳</bold>", List.of("<gray>回到頻道選擇選單")));
 
-        // Slot 49: 邀請玩家線上選單 (隊長適用)
         if (isOwner) {
             inv.setItem(49, createItem(Material.WRITABLE_BOOK, "<green><bold>✉ 邀請線上玩家加入</bold>", List.of(
                     "<gray>開啟線上玩家頭像選單進行邀請",
@@ -112,7 +111,6 @@ public class PlayerChannelManageGUI {
             )));
         }
 
-        // Slot 51: 非隊長成員的退出頻道按鈕
         if (!isOwner) {
             inv.setItem(51, createItem(Material.OAK_DOOR, "<red><bold>🚪 退出群組頻道</bold>", List.of(
                     "<gray>退出此頻道並返回公共頻道",
@@ -121,7 +119,6 @@ public class PlayerChannelManageGUI {
             )));
         }
 
-        // Slot 53: 解散頻道 (僅 Owner 可用)
         if (isOwner) {
             inv.setItem(53, createItem(Material.TNT, "<red><bold>✖ 解散並刪除頻道</bold>", List.of(
                     "<gray>解散此頻道並踢出所有人",

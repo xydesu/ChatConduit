@@ -16,9 +16,19 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.util.List;
 import java.util.UUID;
 
 public class GUIListener implements Listener {
+
+    private static final List<String> COLOR_PRESETS = List.of(
+            "<gradient:#a8c0ff:#3f2b96>",
+            "<gradient:#ffb347:#ffcc33>",
+            "<gradient:#a8ff78:#78ffd6>",
+            "<gradient:#ee9ca7:#ffadc7>",
+            "<gradient:#f78ca0:#fe9a8b>",
+            "<gradient:#00d2ff:#3a7bd5>"
+    );
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
@@ -41,12 +51,12 @@ public class GUIListener implements Listener {
                 case PLAYER_CHANNEL_MANAGE -> handleManageClick(player, holder.getExtraData(), slot, clickedItem, event.getClick());
                 case PENDING_INVITES -> handlePendingInvitesClick(player, slot, clickedItem, event.getClick());
                 case ONLINE_PLAYERS_SELECT -> handleOnlinePlayersSelectClick(player, holder.getExtraData(), slot, clickedItem);
+                case CHANNEL_SETTINGS -> handleSettingsClick(player, holder.getExtraData(), slot, clickedItem);
             }
         }
     }
 
     private void handleChannelSelectClick(Player player, int slot, ItemStack clickedItem, ClickType clickType) {
-        // Slot 47: ＋ 建立新頻道
         if (slot == 47) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.CREATE_CHANNEL);
             return;
@@ -64,7 +74,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // 點擊系統公用頻道 (Row 2 ~ 3)
         if ((slot >= 10 && slot <= 16) || (slot >= 19 && slot <= 25)) {
             int sysIndex = 10;
             for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
@@ -84,7 +93,6 @@ public class GUIListener implements Listener {
             }
         }
 
-        // 點擊玩家自訂與公開群組頻道 (Row 5)
         if (slot >= 37 && slot <= 43) {
             int custIndex = 37;
             for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
@@ -93,7 +101,6 @@ public class GUIListener implements Listener {
                 if (!isMember && !isPublic) continue;
 
                 if (custIndex == slot) {
-                    // 右鍵點擊：直接開啟該群組頻道的管理面板！
                     if (clickType.isRightClick()) {
                         if (isMember) {
                             PlayerChannelManageGUI.openForChannel(player, custChan);
@@ -103,7 +110,6 @@ public class GUIListener implements Listener {
                         return;
                     }
 
-                    // 左鍵點擊：切換頻道/加入公開頻道
                     if (!isMember && isPublic) {
                         custChan.getMembers().add(player.getUniqueId());
                         PlayerChannelManager.save();
@@ -129,33 +135,26 @@ public class GUIListener implements Listener {
 
         boolean isOwner = customChan.getOwner().equals(player.getUniqueId());
 
-        // Slot 4: 頻道模式切換
+        // Slot 4: 打開頻道詳細設定面板
         if (slot == 4) {
             if (isOwner) {
-                PlayerChannelManager.Mode newMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? PlayerChannelManager.Mode.PRIVATE : PlayerChannelManager.Mode.PUBLIC;
-                customChan.setMode(newMode);
-                PlayerChannelManager.save();
-                ChatUtils.sendMessage(player, "<green>已成功切換頻道模式至：<yellow>" + (newMode == PlayerChannelManager.Mode.PUBLIC ? "公共 (PUBLIC)" : "私人 (PRIVATE)") + "</yellow>！");
-                PlayerChannelManageGUI.openForChannel(player, customChan);
+                ChannelSettingsGUI.open(player, customChan);
             } else {
                 ChatUtils.sendMessage(player, "<red>僅有頻道隊長可以修改頻道設定！");
             }
             return;
         }
 
-        // Slot 45: 返回主選單
         if (slot == 45) {
             ChannelSelectGUI.open(player);
             return;
         }
 
-        // Slot 49: 開啟線上玩家邀請面板
         if (slot == 49 && isOwner) {
             OnlinePlayersGUI.open(player, customChan);
             return;
         }
 
-        // Slot 51: 非隊長退出頻道
         if (slot == 51 && !isOwner) {
             customChan.getMembers().remove(player.getUniqueId());
             PlayerChannelManager.save();
@@ -165,7 +164,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Slot 53: 解散頻道
         if (slot == 53 && isOwner) {
             String delName = customChan.getDisplayName();
             PlayerChannelManager.deleteChannel(customChan.getId());
@@ -175,7 +173,6 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // 點擊成員頭顱進行踢人/轉讓隊長
         if (clickedItem.getType() == Material.PLAYER_HEAD && isOwner) {
             SkullMeta meta = (SkullMeta) clickedItem.getItemMeta();
             if (meta != null && meta.getOwningPlayer() != null) {
@@ -210,6 +207,55 @@ public class GUIListener implements Listener {
                     }
                 }
             }
+        }
+    }
+
+    private void handleSettingsClick(Player player, String channelId, int slot, ItemStack clickedItem) {
+        PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(channelId);
+        if (customChan == null) {
+            ChannelSelectGUI.open(player);
+            return;
+        }
+
+        if (!customChan.getOwner().equals(player.getUniqueId())) {
+            ChatUtils.sendMessage(player, "<red>僅有頻道隊長可以修改頻道設定！");
+            PlayerChannelManageGUI.openForChannel(player, customChan);
+            return;
+        }
+
+        // Slot 11: 存取權限模式切換
+        if (slot == 11) {
+            PlayerChannelManager.Mode newMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? PlayerChannelManager.Mode.PRIVATE : PlayerChannelManager.Mode.PUBLIC;
+            customChan.setMode(newMode);
+            PlayerChannelManager.save();
+            ChatUtils.sendMessage(player, "<green>頻道模式已切換為：<yellow>" + (newMode == PlayerChannelManager.Mode.PUBLIC ? "公共 (PUBLIC)" : "私人 (PRIVATE)") + "</yellow>");
+            ChannelSettingsGUI.open(player, customChan);
+            return;
+        }
+
+        // Slot 13: 修改頻道顯示名稱
+        if (slot == 13) {
+            PlayerInputManager.expectInput(player, PlayerInputManager.InputType.RENAME_CHANNEL, customChan.getId());
+            return;
+        }
+
+        // Slot 15: 頻道色彩主題樣式切換
+        if (slot == 15) {
+            String currentTheme = customChan.getColorTheme();
+            int curIdx = COLOR_PRESETS.indexOf(currentTheme);
+            int nextIdx = (curIdx + 1) % COLOR_PRESETS.size();
+            String nextTheme = COLOR_PRESETS.get(nextIdx);
+
+            customChan.setColorTheme(nextTheme);
+            PlayerChannelManager.save();
+            ChatUtils.sendMessage(player, "<green>已為頻道套用新的色彩主題樣式！");
+            ChannelSettingsGUI.open(player, customChan);
+            return;
+        }
+
+        // Slot 22: 返回頻道管理頁面
+        if (slot == 22) {
+            PlayerChannelManageGUI.openForChannel(player, customChan);
         }
     }
 

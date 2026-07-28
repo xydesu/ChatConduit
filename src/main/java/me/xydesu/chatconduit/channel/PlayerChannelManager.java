@@ -27,23 +27,28 @@ public class PlayerChannelManager {
         private String displayName;
         private UUID owner;
         private Mode mode;
+        private String colorTheme;
         private final Set<UUID> members = ConcurrentHashMap.newKeySet();
         private final Set<UUID> pendingInvites = ConcurrentHashMap.newKeySet();
 
-        public CustomChannel(String id, String displayName, UUID owner, Mode mode) {
+        public CustomChannel(String id, String displayName, UUID owner, Mode mode, String colorTheme) {
             this.id = id.toLowerCase();
             this.displayName = displayName;
             this.owner = owner;
             this.mode = mode;
+            this.colorTheme = colorTheme != null ? colorTheme : "<gradient:#a8c0ff:#3f2b96>";
             this.members.add(owner);
         }
 
         public String getId() { return id; }
         public String getDisplayName() { return displayName; }
+        public void setDisplayName(String displayName) { this.displayName = displayName; }
         public UUID getOwner() { return owner; }
         public void setOwner(UUID owner) { this.owner = owner; }
         public Mode getMode() { return mode; }
         public void setMode(Mode mode) { this.mode = mode; }
+        public String getColorTheme() { return colorTheme != null ? colorTheme : "<gradient:#a8c0ff:#3f2b96>"; }
+        public void setColorTheme(String colorTheme) { this.colorTheme = colorTheme; }
         public Set<UUID> getMembers() { return members; }
         public Set<UUID> getPendingInvites() { return pendingInvites; }
     }
@@ -70,8 +75,9 @@ public class PlayerChannelManager {
 
                     UUID owner = UUID.fromString(ownerStr);
                     Mode mode = Mode.valueOf(config.getString("channels." + id + ".mode", "PRIVATE"));
+                    String theme = config.getString("channels." + id + ".color-theme", "<gradient:#a8c0ff:#3f2b96>");
 
-                    CustomChannel channel = new CustomChannel(id, name, owner, mode);
+                    CustomChannel channel = new CustomChannel(id, name, owner, mode, theme);
 
                     List<String> memberList = config.getStringList("channels." + id + ".members");
                     for (String m : memberList) {
@@ -102,6 +108,7 @@ public class PlayerChannelManager {
                     config.set(path + "name", ch.getDisplayName());
                     config.set(path + "owner", ch.getOwner().toString());
                     config.set(path + "mode", ch.getMode().name());
+                    config.set(path + "color-theme", ch.getColorTheme());
 
                     List<String> memberStrings = ch.getMembers().stream().map(UUID::toString).toList();
                     config.set(path + "members", memberStrings);
@@ -138,7 +145,7 @@ public class PlayerChannelManager {
         if (customChannels.containsKey(id) || ChannelManager.getChannel(id) != null) {
             return false;
         }
-        CustomChannel channel = new CustomChannel(id, name, owner.getUniqueId(), Mode.PRIVATE);
+        CustomChannel channel = new CustomChannel(id, name, owner.getUniqueId(), Mode.PRIVATE, "<gradient:#a8c0ff:#3f2b96>");
         customChannels.put(id, channel);
         save();
         return true;

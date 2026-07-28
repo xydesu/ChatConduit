@@ -35,6 +35,7 @@ public class GUIHolder implements InventoryHolder {
         CHANNEL_SELECT,
         PLAYER_CHANNEL_MANAGE,
         PENDING_INVITES,
-        ONLINE_PLAYERS_SELECT
+        ONLINE_PLAYERS_SELECT,
+        CHANNEL_SETTINGS
     }
 }

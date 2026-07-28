@@ -81,7 +81,7 @@ public class ChatListener implements Listener {
                     return;
                 }
                 channelName = customChannel.getDisplayName();
-                channelColor = "<gradient:#a8c0ff:#3f2b96>";
+                channelColor = customChannel.getColorTheme();
             } else {
                 ChannelManager.Channel sysChannel = ChannelManager.getPlayerChannel(player);
                 channelName = sysChannel.name();
