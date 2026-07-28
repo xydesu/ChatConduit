@@ -15,6 +15,17 @@ discordsrv:
   # 是否將玩家自訂的私人/公開群組頻道訊息轉發至 Discord（預設 false 保障玩家群組隱私）
   forward-custom-group-channels: false
 
+  # 遊戲內頻道與 Discord 文字頻道對應映射表 (格式: 遊戲頻道Key: "Discord頻道ID或頻道名稱")
+  # 可以填寫 Discord 文字頻道的名稱 (例如 "global", "trade") 或 Discord 文字頻道的 ID (例如 "123456789012345678")
+  channel-mapping:
+    global: "global"
+    trade: "trade"
+    party: "party"
+    ask: "ask"
+    chitchat: "chitchat"
+    facility: "facility"
+    lottery: "lottery"
+
 # 頻道設定清單 (只設定 name, color, prefix-key, permission)
 channels:
   global:
