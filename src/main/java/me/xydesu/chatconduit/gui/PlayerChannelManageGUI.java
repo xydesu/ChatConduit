@@ -73,10 +73,10 @@ public class PlayerChannelManageGUI {
         }
         inv.setItem(4, createItem(modeMat, modeName, modeLore));
 
-        // Slot 10 ~ 34: 成員頭顱清單（帶有豐富個人資訊）
-        int slot = 10;
+        // Slot 9 ~ 44: 成員頭顱清單（帶有豐富個人資訊）
+        int slot = 9;
         for (UUID memberUuid : customChan.getMembers()) {
-            if (slot >= 44) break;
+            if (slot >= 45) break;
 
             OfflinePlayer offP = Bukkit.getOfflinePlayer(memberUuid);
             boolean memberIsOwner = memberUuid.equals(customChan.getOwner());
@@ -118,8 +118,6 @@ public class PlayerChannelManageGUI {
                 head.setItemMeta(meta);
             }
             inv.setItem(slot++, head);
-
-            if (slot % 9 == 8) slot += 2;
         }
 
         // 底部功能按鈕
