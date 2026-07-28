@@ -59,6 +59,7 @@ public class ChatListener implements Listener {
         // 1. 使用 ChannelManager 的 Prefix 快取清單進行匹配
         List<ChannelManager.Channel> prefixChannels = ChannelManager.getPrefixChannelsCache();
 
+        ChannelManager.Channel matchedSysChan = null;
         boolean matchedPrefix = false;
         for (ChannelManager.Channel ch : prefixChannels) {
             if (rawMessage.startsWith(ch.prefixKey())) {
@@ -67,6 +68,7 @@ public class ChatListener implements Listener {
                     channelColor = ch.color();
                     finalMessage = rawMessage.substring(ch.prefixKey().length()).trim();
                     matchedPrefix = true;
+                    matchedSysChan = ch;
                     customChannel = null;
                     break;
                 }
@@ -89,9 +91,9 @@ public class ChatListener implements Listener {
                 channelName = customChannel.getDisplayName();
                 channelColor = customChannel.getColorTheme();
             } else {
-                ChannelManager.Channel sysChannel = ChannelManager.getPlayerChannel(player);
-                channelName = sysChannel.name();
-                channelColor = sysChannel.color();
+                matchedSysChan = ChannelManager.getPlayerChannel(player);
+                channelName = matchedSysChan.name();
+                channelColor = matchedSysChan.color();
             }
         }
 
@@ -123,14 +125,13 @@ public class ChatListener implements Listener {
                     .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(hoverComponent))
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/playerchannel switch " + customChannel.getId()));
         } else {
-            ChannelManager.Channel sysChannel = ChannelManager.getChannel(selectedKey);
+            ChannelManager.Channel sysChannel = matchedSysChan;
+            if (sysChannel == null) sysChannel = ChannelManager.getChannel(selectedKey);
             if (sysChannel == null) sysChannel = ChannelManager.getPlayerChannel(player);
 
-            String prefixSymbol = sysChannel.prefixKey() != null ? sysChannel.prefixKey() : "";
-            String sysDisplayName = prefixSymbol + sysChannel.name();
-            String rawPrefixText = sysChannel.color() + "[" + sysDisplayName + "]</gradient>";
+            String rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]</gradient>";
             if (!sysChannel.color().startsWith("<gradient:")) {
-                rawPrefixText = sysChannel.color() + "[" + sysDisplayName + "]";
+                rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]";
             }
 
             String prefixKeyStr = sysChannel.prefixKey().isEmpty() ? "無 (選單切換)" : sysChannel.prefixKey();
