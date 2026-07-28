@@ -48,7 +48,7 @@ public class DiscordSRVHook {
         if (!enabled) return;
 
         try {
-            boolean allowCustom = Main.getInstance().getConfig().getBoolean("discordsrv.forward-custom-group-channels", true);
+            boolean allowCustom = Main.getInstance().getConfig().getBoolean("discordsrv.forward-custom-group-channels", false);
             if (!allowCustom && me.xydesu.chatconduit.channel.PlayerChannelManager.getChannel(channelKey) != null) {
                 return;
             }
