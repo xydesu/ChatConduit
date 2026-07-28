@@ -146,7 +146,7 @@ public class ChatListener implements Listener {
 
             channelPrefixComponent = ChatUtils.parseNoItalic(player, rawPrefixText)
                     .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(hoverComponent))
-                    .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/playerchannel switch " + sysChannel.key()));
+                    .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/channel " + sysChannel.key()));
         }
 
         Component playerMessage = ChatUtils.parseLegacy(finalMessage);
