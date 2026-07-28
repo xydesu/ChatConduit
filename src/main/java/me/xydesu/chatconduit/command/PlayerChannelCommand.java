@@ -1,9 +1,9 @@
-package me.xydesu.chatConduit.Commands;
+package me.xydesu.chatconduit.command;
 
-import me.xydesu.chatConduit.Channel.ChannelManager;
-import me.xydesu.chatConduit.Channel.PlayerChannelManager;
-import me.xydesu.chatConduit.Main;
-import me.xydesu.chatConduit.util.ChatUtils;
+import me.xydesu.chatconduit.channel.ChannelManager;
+import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.Main;
+import me.xydesu.chatconduit.util.ChatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -70,6 +70,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 myChan.getPendingInvites().add(targetInvite.getUniqueId());
+                PlayerChannelManager.save();
 
                 String sentMsg = getLang("channel.invite-sent", "<green>Invite sent to <yellow><player>.").replace("<player>", targetInvite.getName());
                 ChatUtils.sendMessage(player, sentMsg);
@@ -162,23 +163,37 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     ChatUtils.sendMessage(player, "<red>Usage: /playerchannel manage kick <Player>");
                     return;
                 }
-                OfflinePlayer targetKick = Bukkit.getOfflinePlayer(args[2]);
-                if (!myChan.getMembers().contains(targetKick.getUniqueId())) {
+                String targetName = args[2];
+                Player onlineKickTarget = Bukkit.getPlayer(targetName);
+                UUID targetUuid = onlineKickTarget != null ? onlineKickTarget.getUniqueId() : null;
+
+                if (targetUuid == null) {
+                    for (UUID memberUuid : myChan.getMembers()) {
+                        OfflinePlayer offP = Bukkit.getOfflinePlayer(memberUuid);
+                        if (offP.getName() != null && offP.getName().equalsIgnoreCase(targetName)) {
+                            targetUuid = memberUuid;
+                            break;
+                        }
+                    }
+                }
+
+                if (targetUuid == null || !myChan.getMembers().contains(targetUuid)) {
                     ChatUtils.sendMessage(player, "<red>This player is not in your channel!");
                     return;
                 }
-                if (targetKick.getUniqueId().equals(player.getUniqueId())) {
+                if (targetUuid.equals(player.getUniqueId())) {
                     ChatUtils.sendMessage(player, "<red>You cannot kick yourself!");
                     return;
                 }
-                myChan.getMembers().remove(targetKick.getUniqueId());
-                PlayerChannelManager.save();
-                ChatUtils.sendMessage(player, "<green>Kicked <yellow>" + targetKick.getName() + " <green>from channel.");
 
-                if (targetKick.isOnline() && targetKick.getPlayer() != null) {
-                    ChatUtils.sendMessage(targetKick.getPlayer(), "<red>You have been kicked from channel <yellow>" + myChan.getDisplayName() + "<red>.");
-                    if (ChannelManager.getPlayerSelectedKey(targetKick.getPlayer()).equals(myChan.getId())) {
-                        ChannelManager.setPlayerChannel(targetKick.getPlayer(), "global");
+                myChan.getMembers().remove(targetUuid);
+                PlayerChannelManager.save();
+                ChatUtils.sendMessage(player, "<green>Kicked <yellow>" + targetName + " <green>from channel.");
+
+                if (onlineKickTarget != null && onlineKickTarget.isOnline()) {
+                    ChatUtils.sendMessage(onlineKickTarget, "<red>You have been kicked from channel <yellow>" + myChan.getDisplayName() + "<red>.");
+                    if (ChannelManager.getPlayerSelectedKey(onlineKickTarget).equalsIgnoreCase(myChan.getId())) {
+                        ChannelManager.setPlayerChannel(onlineKickTarget, "global");
                     }
                 }
                 break;
@@ -194,6 +209,10 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     ChatUtils.sendMessage(player, "<red>Target player must be online and a member of this channel!");
                     return;
                 }
+                if (targetTransfer.getUniqueId().equals(player.getUniqueId())) {
+                    ChatUtils.sendMessage(player, "<red>You are already the owner of this channel!");
+                    return;
+                }
                 myChan.setOwner(targetTransfer.getUniqueId());
                 PlayerChannelManager.save();
                 ChatUtils.sendMessage(player, "<green>Transferred channel ownership to <yellow>" + targetTransfer.getName() + "<green>.");
@@ -204,7 +223,6 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
             case "delete":
                 String delName = myChan.getDisplayName();
                 PlayerChannelManager.deleteChannel(myChan.getId());
-                ChannelManager.setPlayerChannel(player, "global");
                 ChatUtils.sendMessage(player, "<red>Successfully deleted channel <yellow>" + delName + "<red>.");
                 break;
 

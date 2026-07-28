@@ -1,9 +1,9 @@
-package me.xydesu.chatConduit.Commands;
+package me.xydesu.chatconduit.command;
 
-import me.xydesu.chatConduit.Channel.ChannelManager;
-import me.xydesu.chatConduit.Channel.PlayerChannelManager;
-import me.xydesu.chatConduit.Main;
-import me.xydesu.chatConduit.util.ChatUtils;
+import me.xydesu.chatconduit.channel.ChannelManager;
+import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.Main;
+import me.xydesu.chatconduit.util.ChatUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

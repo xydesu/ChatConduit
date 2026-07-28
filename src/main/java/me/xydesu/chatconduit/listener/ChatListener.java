@@ -1,26 +1,41 @@
-package me.xydesu.chatConduit.Listener;
+package me.xydesu.chatconduit.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
-import me.xydesu.chatConduit.Channel.ChannelManager;
-import me.xydesu.chatConduit.Channel.PlayerChannelManager;
-import me.xydesu.chatConduit.Main;
-import me.xydesu.chatConduit.util.ChatUtils;
+import me.xydesu.chatconduit.channel.ChannelManager;
+import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.Main;
+import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
 public class ChatListener implements Listener {
 
-    @EventHandler
+    /**
+     * 攔截舊版 Spigot AsyncPlayerChatEvent (CMI、Essentials 等舊插件使用的事件)
+     * 避免 CMI 搶先印出一次訊息
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLegacyChat(AsyncPlayerChatEvent event) {
+        event.setCancelled(true);
+        event.getRecipients().clear();
+    }
+
+    /**
+     * 處理 Paper 新版 AsyncChatEvent
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onChat(AsyncChatEvent event) {
+        event.viewers().clear();
         event.setCancelled(true);
 
         Player player = event.getPlayer();
@@ -33,11 +48,8 @@ public class ChatListener implements Listener {
         String channelColor = "";
         String finalMessage = rawMessage;
 
-        // 1. 檢查 Prefix-Key 快速觸發系統頻道
-        List<ChannelManager.Channel> prefixChannels = ChannelManager.getChannels().values().stream()
-                .filter(c -> c.prefixKey() != null && !c.prefixKey().isEmpty())
-                .sorted(Comparator.comparingInt((ChannelManager.Channel c) -> c.prefixKey().length()).reversed())
-                .toList();
+        // 1. 使用 ChannelManager 的 Prefix 快取清單進行匹配
+        List<ChannelManager.Channel> prefixChannels = ChannelManager.getPrefixChannelsCache();
 
         boolean matchedPrefix = false;
         for (ChannelManager.Channel ch : prefixChannels) {
@@ -47,7 +59,6 @@ public class ChatListener implements Listener {
                     channelColor = ch.color();
                     finalMessage = rawMessage.substring(ch.prefixKey().length()).trim();
                     matchedPrefix = true;
-                    // 當使用 PrefixKey 時，會覆蓋當前選取的自訂頻道，視為系統頻道廣播
                     customChannel = null;
                     break;
                 }
@@ -57,14 +68,14 @@ public class ChatListener implements Listener {
         // 2. 若未匹配 Prefix-Key，依當前選擇頻道決定名稱與顏色
         if (!matchedPrefix) {
             if (customChannel != null) {
-                // 檢查發言者是否還在該群組頻道內
                 if (!customChannel.getMembers().contains(player.getUniqueId())) {
                     String notInGroupMsg = Main.getInstance().getLanguageConfig().getString(
                             "channel.not-in-group",
                             "<red>You are no longer in this group channel! Reverted to default channel."
                     );
                     ChatUtils.sendMessage(player, notInGroupMsg);
-                    ChannelManager.setPlayerChannel(player, "global");
+                    // 安全將重置狀態調度至主執行緒操作
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> ChannelManager.setPlayerChannel(player, "global"));
                     return;
                 }
                 channelName = customChannel.getDisplayName();
@@ -97,22 +108,20 @@ public class ChatListener implements Listener {
                 Placeholder.component("message", playerMessage)
         );
 
-        // 4. 發送對象判斷（關鍵修訂點）
+        // 4. 發送對象判斷
         if (customChannel != null) {
-            // 【玩家自訂/私人群組頻道】：只發送給已加入該頻道成員（Members）且在線的玩家
             for (UUID memberUuid : customChannel.getMembers()) {
                 Player member = Bukkit.getPlayer(memberUuid);
                 if (member != null && member.isOnline()) {
                     member.sendMessage(fullChatMessage);
                 }
             }
-            // 控制台紀錄一份訊息
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
         } else {
-            // 【系統公用頻道】：廣播給全伺服器所有人（event.viewers()）
-            for (var viewer : event.viewers()) {
-                viewer.sendMessage(fullChatMessage);
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                onlinePlayer.sendMessage(fullChatMessage);
             }
+            Bukkit.getConsoleSender().sendMessage(fullChatMessage);
         }
     }
 }

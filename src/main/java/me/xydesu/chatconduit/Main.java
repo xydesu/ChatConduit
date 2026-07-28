@@ -1,12 +1,12 @@
-package me.xydesu.chatConduit;
+package me.xydesu.chatconduit;
 
-import me.xydesu.chatConduit.Channel.ChannelManager;
-import me.xydesu.chatConduit.Channel.PlayerChannelManager;
-import me.xydesu.chatConduit.Commands.ChannelCommand;
-import me.xydesu.chatConduit.Commands.ChatConduitCommand;
-import me.xydesu.chatConduit.Commands.PlayerChannelCommand;
-import me.xydesu.chatConduit.Listener.ChatListener;
-import me.xydesu.chatConduit.Listener.PlayerListener;
+import me.xydesu.chatconduit.channel.ChannelManager;
+import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.command.ChannelCommand;
+import me.xydesu.chatconduit.command.ChatConduitCommand;
+import me.xydesu.chatconduit.command.PlayerChannelCommand;
+import me.xydesu.chatconduit.listener.ChatListener;
+import me.xydesu.chatconduit.listener.PlayerListener;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -59,7 +59,7 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // 關服時自動儲存所有資料
+        // 關服時自動儲存所有資料 (同步寫入)
         ChannelManager.saveAllPlayerData();
         PlayerChannelManager.save();
     }

@@ -1,7 +1,7 @@
-package me.xydesu.chatConduit.Listener;
+package me.xydesu.chatconduit.listener;
 
-import me.xydesu.chatConduit.Channel.ChannelManager;
-import me.xydesu.chatConduit.Channel.PlayerChannelManager;
+import me.xydesu.chatconduit.channel.ChannelManager;
+import me.xydesu.chatconduit.channel.PlayerChannelManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -34,7 +34,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        // 玩家離線時寫入保存
+        // 玩家離線時非同步寫入保存
         ChannelManager.savePlayerData(event.getPlayer().getUniqueId());
     }
 }

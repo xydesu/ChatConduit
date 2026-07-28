@@ -1,7 +1,7 @@
-package me.xydesu.chatConduit.util;
+package me.xydesu.chatconduit.util;
 
 import me.clip.placeholderapi.PlaceholderAPI;
-import me.xydesu.chatConduit.Main;
+import me.xydesu.chatconduit.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -48,28 +48,23 @@ public class ChatUtils {
             int index = 0;
 
             while (matcher.find()) {
-                String fullPlaceholder = matcher.group(0); // 例如 "%luckperms_prefix%"
+                String fullPlaceholder = matcher.group(0);
 
-                // 讓 PAPI 解析出帶有 Legacy 顏色碼的字串 (例如 "&c[管理員]")
-                String papiResult = PlaceholderAPI.setPlaceholders(player, fullPlaceholder);
+                try {
+                    String papiResult = PlaceholderAPI.setPlaceholders(player, fullPlaceholder);
+                    Component papiComponent = LEGACY_SERIALIZER.deserialize(papiResult != null ? papiResult : "");
 
-                // 將 PAPI 結果獨立轉為 Component
-                Component papiComponent = LEGACY_SERIALIZER.deserialize(papiResult);
-
-                // 產生符合 MiniMessage 規則的合法標籤名稱 (例如 "papi_0", "papi_1")
-                String papiTagName = "papi_" + index++;
-
-                // 將 Component 註冊至 Resolver
-                resolverBuilder.resolver(Placeholder.component(papiTagName, papiComponent));
-
-                // 將原字串中的 %papi% 替換為 <papi_x>
-                matcher.appendReplacement(sb, "<" + papiTagName + ">");
+                    String papiTagName = "papi_" + index++;
+                    resolverBuilder.resolver(Placeholder.component(papiTagName, papiComponent));
+                    matcher.appendReplacement(sb, Matcher.quoteReplacement("<" + papiTagName + ">"));
+                } catch (Exception e) {
+                    matcher.appendReplacement(sb, Matcher.quoteReplacement(fullPlaceholder));
+                }
             }
             matcher.appendTail(sb);
             formattedText = sb.toString();
         }
 
-        // 3. 由 MiniMessage 一次性解析最終 Component
         return MINI_MESSAGE.deserialize(formattedText, resolverBuilder.build());
     }
 

@@ -1,6 +1,6 @@
 name: ChatConduit
 version: '1.0'
-main: me.xydesu.chatConduit.Main
+main: me.xydesu.chatconduit.Main
 api-version: '1.20'
 softdepend: [PlaceholderAPI]
 
