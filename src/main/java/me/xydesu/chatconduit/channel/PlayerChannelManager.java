@@ -160,19 +160,37 @@ public class PlayerChannelManager {
         if (removed != null) {
             save();
 
-            // 線上玩家狀態同步即時修正
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (ChannelManager.getPlayerSelectedKey(player).equalsIgnoreCase(targetId)) {
-                    ChannelManager.setPlayerChannel(player, "global");
-                    String resetMsg = Main.getInstance().getLanguageConfig().getString(
-                            "channel.disbanded-reverted",
-                            "<red>Group channel <yellow>" + removed.getDisplayName() + "</yellow> was deleted. Switched back to default channel."
-                    );
-                    ChatUtils.sendMessage(player, resetMsg);
+            String resetMsg = Main.getInstance().getLanguageConfig().getString(
+                    "channel.disbanded-reverted",
+                    "<red>群組頻道 <yellow>" + removed.getDisplayName() + "</yellow> 已被解散/刪除！自動為你切換回預設頻道。"
+            );
+
+            // 廣播給所有線上的群組成員並將發言頻道重置為 global
+            for (UUID memberUuid : removed.getMembers()) {
+                Player member = Bukkit.getPlayer(memberUuid);
+                if (member != null && member.isOnline()) {
+                    if (ChannelManager.getPlayerSelectedKey(member).equalsIgnoreCase(targetId)) {
+                        ChannelManager.setPlayerChannel(member, "global");
+                    }
+                    ChatUtils.sendMessage(member, resetMsg);
                 }
             }
             return true;
         }
         return false;
+    }
+
+    /**
+     * 廣播訊息給群組頻道的線上記錄成員 (可排除指定玩家 UUID)
+     */
+    public static void broadcastToMembers(CustomChannel customChan, String message, UUID excludeUuid) {
+        if (customChan == null || message == null || message.isEmpty()) return;
+        for (UUID memberUuid : customChan.getMembers()) {
+            if (excludeUuid != null && memberUuid.equals(excludeUuid)) continue;
+            Player member = Bukkit.getPlayer(memberUuid);
+            if (member != null && member.isOnline()) {
+                ChatUtils.sendMessage(member, message);
+            }
+        }
     }
 }

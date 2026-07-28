@@ -114,6 +114,7 @@ public class GUIListener implements Listener {
                         custChan.getMembers().add(player.getUniqueId());
                         PlayerChannelManager.save();
                         ChatUtils.sendMessage(player, "<green>已成功加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
+                        PlayerChannelManager.broadcastToMembers(custChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！", player.getUniqueId());
                     }
                     ChannelManager.setPlayerChannel(player, custChan.getId());
                     String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", custChan.getDisplayName());
@@ -160,6 +161,7 @@ public class GUIListener implements Listener {
             PlayerChannelManager.save();
             ChannelManager.setPlayerChannel(player, "global");
             ChatUtils.sendMessage(player, "<green>你已成功退出頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。");
+            PlayerChannelManager.broadcastToMembers(customChan, "<red>🚪 玩家 <yellow>" + player.getName() + "</yellow> 已退出群組頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。</red>", player.getUniqueId());
             ChannelSelectGUI.open(player);
             return;
         }
@@ -186,6 +188,7 @@ public class GUIListener implements Listener {
                     PlayerChannelManager.save();
                     String pName = targetP.getName() != null ? targetP.getName() : targetUuid.toString();
                     ChatUtils.sendMessage(player, "<green>已將 <yellow>" + pName + "</yellow> 踢出群組頻道。");
+                    PlayerChannelManager.broadcastToMembers(customChan, "<red>🚪 玩家 <yellow>" + pName + "</yellow> 已被踢出群組頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。</red>", player.getUniqueId());
 
                     if (targetP.isOnline() && targetP.getPlayer() != null) {
                         ChatUtils.sendMessage(targetP.getPlayer(), "<red>你已被踢出頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。");
@@ -277,6 +280,7 @@ public class GUIListener implements Listener {
                         ChannelManager.setPlayerChannel(player, custChan.getId());
 
                         ChatUtils.sendMessage(player, "<green>成功加入群組頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
+                        PlayerChannelManager.broadcastToMembers(custChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已接受邀請加入群組頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！", player.getUniqueId());
                         ChannelSelectGUI.open(player);
                     } else if (clickType.isRightClick()) {
                         custChan.getPendingInvites().remove(player.getUniqueId());

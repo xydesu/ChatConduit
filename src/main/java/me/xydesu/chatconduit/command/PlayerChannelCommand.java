@@ -101,6 +101,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
 
                 String acceptMsg = getLang("channel.accept-success", "<green>Joined <yellow><name>!").replace("<name>", invChan.getDisplayName());
                 ChatUtils.sendMessage(player, acceptMsg);
+                PlayerChannelManager.broadcastToMembers(invChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入群組頻道 <yellow>" + invChan.getDisplayName() + "</yellow>！", player.getUniqueId());
                 ChannelManager.setPlayerChannel(player, invChan.getId());
                 break;
 
@@ -135,6 +136,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 PlayerChannelManager.save();
                 ChannelManager.setPlayerChannel(player, "global");
                 ChatUtils.sendMessage(player, "<green>You left channel <yellow>" + myChan.getDisplayName() + "<green>.");
+                PlayerChannelManager.broadcastToMembers(myChan, "<red>🚪 玩家 <yellow>" + player.getName() + "</yellow> 已退出群組頻道 <yellow>" + myChan.getDisplayName() + "</yellow>。</red>", player.getUniqueId());
                 break;
 
             // /pc members
