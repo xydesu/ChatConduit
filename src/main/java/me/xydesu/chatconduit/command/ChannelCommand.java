@@ -2,6 +2,7 @@ package me.xydesu.chatconduit.command;
 
 import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.gui.ChannelSelectGUI;
 import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import org.bukkit.command.Command;
@@ -24,14 +25,9 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // 無參數時直接為玩家開啟 GUI 箱子介面
         if (args.length == 0) {
-            String currentKey = ChannelManager.getPlayerSelectedKey(player);
-            PlayerChannelManager.CustomChannel cust = PlayerChannelManager.getChannel(currentKey);
-            String name = (cust != null) ? cust.getDisplayName() : ChannelManager.getPlayerChannel(player).name();
-
-            String msg = getLang("channel.current", "<gray>Your current channel: <yellow><channel_name>")
-                    .replace("<channel_name>", name);
-            ChatUtils.sendMessage(player, msg);
+            ChannelSelectGUI.open(player);
             return true;
         }
 

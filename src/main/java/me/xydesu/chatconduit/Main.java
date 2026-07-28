@@ -5,6 +5,7 @@ import me.xydesu.chatconduit.channel.PlayerChannelManager;
 import me.xydesu.chatconduit.command.ChannelCommand;
 import me.xydesu.chatconduit.command.ChatConduitCommand;
 import me.xydesu.chatconduit.command.PlayerChannelCommand;
+import me.xydesu.chatconduit.gui.GUIListener;
 import me.xydesu.chatconduit.listener.ChatListener;
 import me.xydesu.chatconduit.listener.PlayerListener;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -31,9 +32,10 @@ public final class Main extends JavaPlugin {
         ChannelManager.loadPlayerData(); // 載入玩家當前發言頻道紀錄
         PlayerChannelManager.load();     // 載入玩家自建群組頻道
 
-        // 註冊監聽器
+        // 註冊監聽器 (包含選單 GUIListener)
         getServer().getPluginManager().registerEvents(new ChatListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+        getServer().getPluginManager().registerEvents(new GUIListener(), this);
 
         // 註冊指令
         ChatConduitCommand chatConduitCmd = new ChatConduitCommand();
@@ -54,7 +56,7 @@ public final class Main extends JavaPlugin {
             getCommand("playerchannel").setTabCompleter(pcCmd);
         }
 
-        getLogger().info("ChatConduit 已成功啟動！");
+        getLogger().info("ChatConduit (含 Chest GUI 選單系統) 已成功啟動！");
     }
 
     @Override

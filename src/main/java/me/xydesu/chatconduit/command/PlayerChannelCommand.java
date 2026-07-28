@@ -2,6 +2,8 @@ package me.xydesu.chatconduit.command;
 
 import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.gui.ChannelSelectGUI;
+import me.xydesu.chatconduit.gui.PlayerChannelManageGUI;
 import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import org.bukkit.Bukkit;
@@ -28,7 +30,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            sendHelp(player);
+            PlayerChannelManageGUI.open(player);
             return true;
         }
 
@@ -37,6 +39,10 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
         PlayerChannelManager.CustomChannel myChan = PlayerChannelManager.getChannel(currentKey);
 
         switch (sub) {
+            case "gui":
+                PlayerChannelManageGUI.open(player);
+                break;
+
             // /pc create <名稱>
             case "create":
                 if (args.length < 2) {
@@ -135,7 +141,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
             // 二級管理指令：/pc manage <kick|transfer|delete>
             case "manage":
                 if (args.length < 2) {
-                    ChatUtils.sendMessage(player, "<red>Usage: /playerchannel manage <kick|transfer|delete>");
+                    PlayerChannelManageGUI.open(player);
                     return true;
                 }
                 if (myChan == null || !myChan.getOwner().equals(player.getUniqueId())) {
@@ -234,6 +240,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
 
     private void sendHelp(Player p) {
         ChatUtils.sendMessage(p, "<green>=== Player Channel Management (/pc) ===");
+        ChatUtils.sendMessage(p, "<yellow>/pc <gray>- Open channel management GUI");
         ChatUtils.sendMessage(p, "<yellow>/pc create <Name> <gray>- Create a channel");
         ChatUtils.sendMessage(p, "<yellow>/pc invite <Player> <gray>- Invite player");
         ChatUtils.sendMessage(p, "<yellow>/pc accept <Name> <gray>- Accept invite");
@@ -253,7 +260,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
         if (sender instanceof Player player) {
             if (args.length == 1) {
-                completions.addAll(List.of("create", "invite", "accept", "leave", "members", "manage"));
+                completions.addAll(List.of("gui", "create", "invite", "accept", "leave", "members", "manage"));
             } else if (args.length == 2 && args[0].equalsIgnoreCase("manage")) {
                 completions.addAll(List.of("kick", "transfer", "delete"));
             }
