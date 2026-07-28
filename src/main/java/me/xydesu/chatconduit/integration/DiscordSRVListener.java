@@ -85,7 +85,7 @@ public class DiscordSRVListener {
         if (mapSec != null) {
             for (String key : mapSec.getKeys(false)) {
                 String mappedValue = mapSec.getString(key);
-                if (mappedValue != null && (mappedValue.equalsIgnoreCase(discordChannelId) || mappedValue.equalsIgnoreCase(discordChannelName))) {
+                if (mappedValue != null && (mappedValue.trim().equalsIgnoreCase(discordChannelId) || mappedValue.trim().equalsIgnoreCase(discordChannelName.trim()))) {
                     targetChannelKey = key.toLowerCase();
                     break;
                 }

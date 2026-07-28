@@ -33,6 +33,11 @@ public class PlayerInputManager implements Listener {
 
     public record InputSession(InputType type, String extraData) {}
 
+    public static void clearPendingInput(UUID uuid) {
+        pendingInputs.remove(uuid);
+        currentlyProcessing.remove(uuid);
+    }
+
     public static boolean isInputPending(UUID uuid) {
         return pendingInputs.containsKey(uuid) || currentlyProcessing.contains(uuid);
     }
@@ -148,9 +153,10 @@ public class PlayerInputManager implements Listener {
                         return;
                     }
 
-                    Player targetPlayer = Bukkit.getPlayerExact(input);
+                    String targetName = input.trim();
+                    Player targetPlayer = Bukkit.getPlayerExact(targetName);
                     if (targetPlayer == null) {
-                        targetPlayer = Bukkit.getPlayer(input);
+                        targetPlayer = Bukkit.getPlayer(targetName);
                     }
 
                     if (targetPlayer == null || !targetPlayer.isOnline()) {
