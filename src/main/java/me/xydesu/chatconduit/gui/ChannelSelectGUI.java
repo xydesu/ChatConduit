@@ -19,6 +19,9 @@ import java.util.List;
 
 public class ChannelSelectGUI {
 
+    private static final int[] SYS_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
+    private static final int[] CUST_SLOTS = {37, 38, 39, 40, 41, 42, 43};
+
     public static void open(Player player) {
         String titleStr = Main.getInstance().getLanguageConfig().getString(
                 "gui.title-channel-select",
@@ -43,9 +46,9 @@ public class ChannelSelectGUI {
         }
 
         // 系統公用頻道圖示 (Row 2 ~ 3)
-        int sysIndex = 10;
+        int sysSlotIdx = 0;
         for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
-            if (sysIndex >= 26) break;
+            if (sysSlotIdx >= SYS_SLOTS.length) break;
 
             boolean isSelected = currentChannelKey.equalsIgnoreCase(sysChan.key());
             boolean hasPermission = sysChan.permission().isEmpty() || player.hasPermission(sysChan.permission());
@@ -67,9 +70,7 @@ public class ChannelSelectGUI {
             }
 
             ItemStack item = createItem(material, displayName, lore, isSelected);
-            inv.setItem(sysIndex++, item);
-
-            if (sysIndex % 9 == 8) sysIndex += 2;
+            inv.setItem(SYS_SLOTS[sysSlotIdx++], item);
         }
 
         // 分隔線
@@ -79,9 +80,9 @@ public class ChannelSelectGUI {
         }
 
         // 玩家自訂與公開群組頻道 (Row 5)
-        int custIndex = 37;
+        int custSlotIdx = 0;
         for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
-            if (custIndex >= 44) break;
+            if (custSlotIdx >= CUST_SLOTS.length) break;
 
             boolean isMember = custChan.getMembers().contains(player.getUniqueId());
             boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
@@ -108,7 +109,7 @@ public class ChannelSelectGUI {
             }
 
             ItemStack item = createItem(Material.BOOKSHELF, displayName, lore, isSelected);
-            inv.setItem(custIndex++, item);
+            inv.setItem(CUST_SLOTS[custSlotIdx++], item);
         }
 
         // 底部功能按鈕

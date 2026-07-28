@@ -34,6 +34,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        me.xydesu.chatconduit.gui.PlayerInputManager.clearPendingInput(event.getPlayer().getUniqueId());
         // 玩家離線時非同步寫入保存
         ChannelManager.savePlayerData(event.getPlayer().getUniqueId());
     }

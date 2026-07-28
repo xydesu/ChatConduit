@@ -56,6 +56,9 @@ public class GUIListener implements Listener {
         }
     }
 
+    private static final int[] SYS_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
+    private static final int[] CUST_SLOTS = {37, 38, 39, 40, 41, 42, 43};
+
     private void handleChannelSelectClick(Player player, int slot, ItemStack clickedItem, ClickType clickType) {
         if (slot == 47) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.CREATE_CHANNEL);
@@ -75,9 +78,11 @@ public class GUIListener implements Listener {
         }
 
         if ((slot >= 10 && slot <= 16) || (slot >= 19 && slot <= 25)) {
-            int sysIndex = 10;
+            int sysSlotIdx = 0;
             for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
-                if (sysIndex == slot) {
+                if (sysSlotIdx >= SYS_SLOTS.length) break;
+                int currentSlot = SYS_SLOTS[sysSlotIdx++];
+                if (currentSlot == slot) {
                     if (!sysChan.permission().isEmpty() && !player.hasPermission(sysChan.permission())) {
                         ChatUtils.sendMessage(player, Main.getInstance().getLanguageConfig().getString("channel.no-permission", "<red>你沒有權限進入此頻道！"));
                         return;
@@ -88,19 +93,19 @@ public class GUIListener implements Listener {
                     ChannelSelectGUI.open(player);
                     return;
                 }
-                sysIndex++;
-                if (sysIndex % 9 == 8) sysIndex += 2;
             }
         }
 
         if (slot >= 37 && slot <= 43) {
-            int custIndex = 37;
+            int custSlotIdx = 0;
             for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
                 boolean isMember = custChan.getMembers().contains(player.getUniqueId());
                 boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
                 if (!isMember && !isPublic) continue;
 
-                if (custIndex == slot) {
+                if (custSlotIdx >= CUST_SLOTS.length) break;
+                int currentSlot = CUST_SLOTS[custSlotIdx++];
+                if (currentSlot == slot) {
                     if (clickType.isRightClick()) {
                         if (isMember) {
                             PlayerChannelManageGUI.openForChannel(player, custChan);
@@ -122,7 +127,6 @@ public class GUIListener implements Listener {
                     ChannelSelectGUI.open(player);
                     return;
                 }
-                custIndex++;
             }
         }
     }
