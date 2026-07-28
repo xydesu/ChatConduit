@@ -58,11 +58,11 @@ public class PendingInvitesGUI {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(ChatUtils.parse(null, name));
+            meta.displayName(ChatUtils.parseNoItalic(name));
             if (lore != null && !lore.isEmpty()) {
                 List<Component> parsedLore = new ArrayList<>();
                 for (String line : lore) {
-                    parsedLore.add(ChatUtils.parse(null, line));
+                    parsedLore.add(ChatUtils.parseNoItalic(line));
                 }
                 meta.lore(parsedLore);
             }

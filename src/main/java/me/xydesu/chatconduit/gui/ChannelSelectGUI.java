@@ -43,9 +43,9 @@ public class ChannelSelectGUI {
         }
 
         // 系統公用頻道圖示映射表
-        int sysIndex = 10; // 從 2 行開始擺放
+        int sysIndex = 10;
         for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
-            if (sysIndex >= 26) break; // 避免超過區域
+            if (sysIndex >= 26) break;
 
             boolean isSelected = currentChannelKey.equalsIgnoreCase(sysChan.key());
             boolean hasPermission = sysChan.permission().isEmpty() || player.hasPermission(sysChan.permission());
@@ -69,7 +69,6 @@ public class ChannelSelectGUI {
             ItemStack item = createItem(material, displayName, lore, isSelected);
             inv.setItem(sysIndex++, item);
 
-            // 跳過邊界 slot
             if (sysIndex % 9 == 8) sysIndex += 2;
         }
 
@@ -79,7 +78,7 @@ public class ChannelSelectGUI {
             inv.setItem(i, lineFiller);
         }
 
-        // 玩家自訂群組頻道 (底層)
+        // 玩家自訂群組頻道
         int custIndex = 37;
         for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
             if (custIndex >= 44) break;
@@ -103,7 +102,6 @@ public class ChannelSelectGUI {
         }
 
         // 底部功能按鈕
-        // Slot 48: 群組頻道管理
         ItemStack manageItem = createItem(Material.NAME_TAG, "<gold><bold>⚙ 群組頻道管理</bold>", List.of(
                 "<gray>查看與管理我的群組頻道",
                 "<gray>包含成員列表、踢人與模式切換",
@@ -112,11 +110,9 @@ public class ChannelSelectGUI {
         ), false);
         inv.setItem(48, manageItem);
 
-        // Slot 49: 關閉選單
         ItemStack closeItem = createItem(Material.BARRIER, "<red><bold>✖ 關閉選單</bold>", List.of("<gray>點擊關閉此介面"), false);
         inv.setItem(49, closeItem);
 
-        // Slot 50: 待處理邀請
         int pendingCount = 0;
         for (PlayerChannelManager.CustomChannel c : PlayerChannelManager.getCustomChannels().values()) {
             if (c.getPendingInvites().contains(player.getUniqueId())) {
@@ -152,11 +148,11 @@ public class ChannelSelectGUI {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(ChatUtils.parse(null, name));
+            meta.displayName(ChatUtils.parseNoItalic(name));
             if (lore != null && !lore.isEmpty()) {
                 List<Component> parsedLore = new ArrayList<>();
                 for (String line : lore) {
-                    parsedLore.add(ChatUtils.parse(null, line));
+                    parsedLore.add(ChatUtils.parseNoItalic(line));
                 }
                 meta.lore(parsedLore);
             }

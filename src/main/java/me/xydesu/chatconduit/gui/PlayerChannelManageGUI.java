@@ -2,7 +2,6 @@ package me.xydesu.chatconduit.gui;
 
 import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
-import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -24,7 +23,6 @@ public class PlayerChannelManageGUI {
         String currentKey = ChannelManager.getPlayerSelectedKey(player);
         PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(currentKey);
 
-        // 若玩家當前沒有在任何自訂頻道中，搜尋玩家所擁有的或加入的第一個自訂頻道
         if (customChan == null) {
             for (PlayerChannelManager.CustomChannel c : PlayerChannelManager.getCustomChannels().values()) {
                 if (c.getMembers().contains(player.getUniqueId())) {
@@ -85,14 +83,14 @@ public class PlayerChannelManageGUI {
             if (meta != null) {
                 meta.setOwningPlayer(offP);
                 String pName = offP.getName() != null ? offP.getName() : memberUuid.toString();
-                meta.displayName(ChatUtils.parse(null, (memberIsOwner ? "<gold>[隊長] " : "<gray>[成員] ") + "<white>" + pName));
+                meta.displayName(ChatUtils.parseNoItalic((memberIsOwner ? "<gold>[隊長] " : "<gray>[成員] ") + "<white>" + pName));
 
                 List<Component> lore = new ArrayList<>();
-                lore.add(ChatUtils.parse(null, "<gray>狀態: " + (isOnline ? "<green>● 在線" : "<red>○ 離線")));
+                lore.add(ChatUtils.parseNoItalic("<gray>狀態: " + (isOnline ? "<green>● 在線" : "<red>○ 離線")));
                 if (isOwner && !memberIsOwner) {
-                    lore.add(ChatUtils.parse(null, ""));
-                    lore.add(ChatUtils.parse(null, "<yellow>▶ 左鍵點擊: 踢出該成員</yellow>"));
-                    lore.add(ChatUtils.parse(null, "<gold>▶ 右鍵點擊: 轉讓隊長給該成員</gold>"));
+                    lore.add(ChatUtils.parseNoItalic(""));
+                    lore.add(ChatUtils.parseNoItalic("<yellow>▶ 左鍵點擊: 踢出該成員</yellow>"));
+                    lore.add(ChatUtils.parseNoItalic("<gold>▶ 右鍵點擊: 轉讓隊長給該成員</gold>"));
                 }
                 meta.lore(lore);
                 head.setItemMeta(meta);
@@ -103,10 +101,8 @@ public class PlayerChannelManageGUI {
         }
 
         // 底部功能按鈕
-        // Slot 45: 返回頻道主頁
         inv.setItem(45, createItem(Material.ARROW, "<yellow><bold>← 返回頻道大廳</bold>", List.of("<gray>回到頻道選擇選單")));
 
-        // Slot 49: 邀請提示
         inv.setItem(49, createItem(Material.WRITABLE_BOOK, "<green><bold>✉ 邀請新玩家加入</bold>", List.of(
                 "<gray>若要邀請其他玩家加入，請使用指令：",
                 "<gold>/pc invite <玩家名稱>",
@@ -114,7 +110,6 @@ public class PlayerChannelManageGUI {
                 "<gray>受邀玩家將會在選單中收到通知！"
         )));
 
-        // Slot 53: 解散頻道 (僅 Owner 可用)
         if (isOwner) {
             inv.setItem(53, createItem(Material.TNT, "<red><bold>✖ 解散並刪除頻道</bold>", List.of(
                     "<gray>解散此頻道並踢出所有人",
@@ -130,11 +125,11 @@ public class PlayerChannelManageGUI {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(ChatUtils.parse(null, name));
+            meta.displayName(ChatUtils.parseNoItalic(name));
             if (lore != null && !lore.isEmpty()) {
                 List<Component> parsedLore = new ArrayList<>();
                 for (String line : lore) {
-                    parsedLore.add(ChatUtils.parse(null, line));
+                    parsedLore.add(ChatUtils.parseNoItalic(line));
                 }
                 meta.lore(parsedLore);
             }

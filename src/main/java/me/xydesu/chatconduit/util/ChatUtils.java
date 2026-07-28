@@ -3,6 +3,7 @@ package me.xydesu.chatconduit.util;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.xydesu.chatconduit.Main;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -66,6 +67,25 @@ public class ChatUtils {
         }
 
         return MINI_MESSAGE.deserialize(formattedText, resolverBuilder.build());
+    }
+
+    /**
+     * 解析 MiniMessage 格式字串，並強制移除 Minecraft 物品預設的斜體 (italic) 效果
+     */
+    public static Component parseNoItalic(String format, TagResolver... extraTags) {
+        if (format == null || format.isEmpty()) {
+            return Component.empty().decoration(TextDecoration.ITALIC, false);
+        }
+        String text = format.startsWith("<!italic>") ? format : "<!italic>" + format;
+        return parse(null, text, extraTags).decoration(TextDecoration.ITALIC, false);
+    }
+
+    public static Component parseNoItalic(Player player, String format, TagResolver... extraTags) {
+        if (format == null || format.isEmpty()) {
+            return Component.empty().decoration(TextDecoration.ITALIC, false);
+        }
+        String text = format.startsWith("<!italic>") ? format : "<!italic>" + format;
+        return parse(player, text, extraTags).decoration(TextDecoration.ITALIC, false);
     }
 
     /**
