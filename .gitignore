@@ -1,0 +1,52 @@
+# ==========================================
+# Java / Build Tools
+# ==========================================
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.next
+release.properties
+
+# Gradle
+.gradle/
+build/
+out/
+
+# ==========================================
+# IDE / Editor Files
+# ==========================================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.metadata/
+.classpath
+.project
+.settings/
+bin/
+
+# Visual Studio Code
+.vscode/
+
+# ==========================================
+# Operating System Files
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Test Server Files (如果在專案內放入測試伺服器資料夾)
+# ==========================================
+run/
+server/
+test-server/
+*.log
