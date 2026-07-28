@@ -31,10 +31,12 @@ public class ChatListener implements Listener {
     }
 
     /**
-     * 處理 Paper 新版 AsyncChatEvent
+     * 處理 Paper 新版 AsyncChatEvent (自動忽略已被對話框輸入等 Listener 取消的事件)
      */
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
+        if (event.isCancelled()) return;
+
         event.viewers().clear();
         event.setCancelled(true);
 
