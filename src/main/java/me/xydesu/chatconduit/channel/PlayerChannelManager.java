@@ -43,6 +43,7 @@ public class PlayerChannelManager {
         public UUID getOwner() { return owner; }
         public void setOwner(UUID owner) { this.owner = owner; }
         public Mode getMode() { return mode; }
+        public void setMode(Mode mode) { this.mode = mode; }
         public Set<UUID> getMembers() { return members; }
         public Set<UUID> getPendingInvites() { return pendingInvites; }
     }

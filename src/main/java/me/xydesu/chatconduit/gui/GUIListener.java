@@ -133,15 +133,10 @@ public class GUIListener implements Listener {
         if (slot == 4) {
             if (isOwner) {
                 PlayerChannelManager.Mode newMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? PlayerChannelManager.Mode.PRIVATE : PlayerChannelManager.Mode.PUBLIC;
-                PlayerChannelManager.deleteChannel(customChan.getId());
-                PlayerChannelManager.createChannel(customChan.getDisplayName(), player);
-                PlayerChannelManager.CustomChannel updated = PlayerChannelManager.getChannel(customChan.getId());
-                if (updated != null) {
-                    updated.getMembers().addAll(customChan.getMembers());
-                    updated.getPendingInvites().addAll(customChan.getPendingInvites());
-                    PlayerChannelManager.save();
-                    PlayerChannelManageGUI.openForChannel(player, updated);
-                }
+                customChan.setMode(newMode);
+                PlayerChannelManager.save();
+                ChatUtils.sendMessage(player, "<green>已成功切換頻道模式至：<yellow>" + (newMode == PlayerChannelManager.Mode.PUBLIC ? "公共 (PUBLIC)" : "私人 (PRIVATE)") + "</yellow>！");
+                PlayerChannelManageGUI.openForChannel(player, customChan);
             } else {
                 ChatUtils.sendMessage(player, "<red>僅有頻道隊長可以修改頻道設定！");
             }
@@ -174,7 +169,8 @@ public class GUIListener implements Listener {
         if (slot == 53 && isOwner) {
             String delName = customChan.getDisplayName();
             PlayerChannelManager.deleteChannel(customChan.getId());
-            ChatUtils.sendMessage(player, "<red>已成功解散群組頻道 <yellow>" + delName + "</yellow>。");
+            ChannelManager.setPlayerChannel(player, "global");
+            ChatUtils.sendMessage(player, "<red>已成功解散群組頻道 <yellow>" + delName + "</yellow>。已切換回預設頻道。");
             ChannelSelectGUI.open(player);
             return;
         }
