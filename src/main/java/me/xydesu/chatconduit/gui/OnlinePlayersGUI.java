@@ -64,6 +64,13 @@ public class OnlinePlayersGUI {
         // Slot 45: 返回
         inv.setItem(45, createItem(Material.ARROW, "<yellow><bold>← 返回頻道管理</bold>", List.of("<gray>回到頻道管理頁面")));
 
+        // Slot 53: 手動輸入玩家 ID 進行邀請
+        inv.setItem(53, createItem(Material.NAME_TAG, "<green><bold>⌨ 手動輸入玩家 ID 進行邀請</bold>", List.of(
+                "<gray>可在對話框手動輸入目標玩家名稱進行邀請",
+                "",
+                "<yellow>▶ 點擊開啟手動輸入對話框</yellow>"
+        )));
+
         inviter.openInventory(inv);
     }
 

@@ -304,6 +304,11 @@ public class GUIListener implements Listener {
             return;
         }
 
+        if (slot == 53) {
+            PlayerInputManager.expectInput(player, PlayerInputManager.InputType.INVITE_PLAYER, customChan.getId());
+            return;
+        }
+
         if (clickedItem.getType() == Material.PLAYER_HEAD) {
             SkullMeta meta = (SkullMeta) clickedItem.getItemMeta();
             if (meta != null && meta.getOwningPlayer() != null) {

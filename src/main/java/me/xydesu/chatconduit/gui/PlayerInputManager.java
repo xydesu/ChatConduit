@@ -24,7 +24,8 @@ public class PlayerInputManager implements Listener {
 
     public enum InputType {
         CREATE_CHANNEL,
-        RENAME_CHANNEL
+        RENAME_CHANNEL,
+        INVITE_PLAYER
     }
 
     public record InputSession(InputType type, String extraData) {}
@@ -48,6 +49,9 @@ public class PlayerInputManager implements Listener {
         } else if (type == InputType.RENAME_CHANNEL) {
             ChatUtils.sendMessage(player, "<gradient:#00d2ff:#3a7bd5><bold>=== 重命名頻道對話框提示 ===</bold></gradient>");
             ChatUtils.sendMessage(player, "<yellow>請在對話框輸入新的頻道顯示名稱 <gray>(輸入 cancel 可取消)：");
+        } else if (type == InputType.INVITE_PLAYER) {
+            ChatUtils.sendMessage(player, "<gradient:#00d2ff:#3a7bd5><bold>=== 頻道邀請對話框提示 ===</bold></gradient>");
+            ChatUtils.sendMessage(player, "<yellow>請在對話框輸入要邀請的線上玩家名稱 <gray>(輸入 cancel 可取消)：");
         }
         ChatUtils.sendMessage(player, "");
     }
@@ -70,6 +74,13 @@ public class PlayerInputManager implements Listener {
             try {
                 if (input.equalsIgnoreCase("cancel")) {
                     ChatUtils.sendMessage(player, "<gray>已取消對話框輸入。");
+                    if (session.extraData() != null) {
+                        PlayerChannelManager.CustomChannel c = PlayerChannelManager.getChannel(session.extraData());
+                        if (c != null) {
+                            OnlinePlayersGUI.open(player, c);
+                            return;
+                        }
+                    }
                     ChannelSelectGUI.open(player);
                     return;
                 }
@@ -114,6 +125,38 @@ public class PlayerInputManager implements Listener {
                     PlayerChannelManager.save();
                     ChatUtils.sendMessage(player, "<green>已成功將頻道顯示名稱修改為：<yellow>" + input + "</yellow>！");
                     ChannelSettingsGUI.open(player, customChan);
+                } else if (session.type() == InputType.INVITE_PLAYER) {
+                    PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
+                    if (customChan == null) {
+                        ChannelSelectGUI.open(player);
+                        return;
+                    }
+
+                    Player targetPlayer = Bukkit.getPlayerExact(input);
+                    if (targetPlayer == null) {
+                        targetPlayer = Bukkit.getPlayer(input);
+                    }
+
+                    if (targetPlayer == null || !targetPlayer.isOnline()) {
+                        ChatUtils.sendMessage(player, "<red>找不到玩家 <yellow>" + input + "</yellow> 或該玩家未在線！");
+                        OnlinePlayersGUI.open(player, customChan);
+                        return;
+                    }
+
+                    if (customChan.getMembers().contains(targetPlayer.getUniqueId())) {
+                        ChatUtils.sendMessage(player, "<red>玩家 <yellow>" + targetPlayer.getName() + "</yellow> 已經是此頻道的成員！");
+                        OnlinePlayersGUI.open(player, customChan);
+                        return;
+                    }
+
+                    customChan.getPendingInvites().add(targetPlayer.getUniqueId());
+                    PlayerChannelManager.save();
+
+                    ChatUtils.sendMessage(player, "<green>已成功邀請 <yellow>" + targetPlayer.getName() + "</yellow> 加入群組頻道。");
+                    String recvMsg = "<yellow>" + player.getName() + " 邀請你加入頻道 [<green>" + customChan.getDisplayName() + "<yellow>]！請開啟選單或輸入指令接受！";
+                    ChatUtils.sendMessage(targetPlayer, recvMsg);
+
+                    OnlinePlayersGUI.open(player, customChan);
                 }
             } finally {
                 currentlyProcessing.remove(uuid);
