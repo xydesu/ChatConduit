@@ -11,12 +11,17 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WebhookManager {
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
+
+    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <chat=UUID:[ping]:>)
+    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<chat=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
 
     /**
      * 非同步發送玩家群組對話訊息至隊長設定的 Discord Webhook URL
@@ -41,12 +46,15 @@ public class WebhookManager {
         String avatarUrl = avatarUrlFmt.replace("%player%", player.getName())
                 .replace("%uuid%", player.getUniqueId().toString());
 
+        // 清理 InteractiveChat 插件產生的內部未解析標籤 <chat=UUID:[item]:> 轉為乾淨的 [item]
+        String cleanMsg = cleanInteractiveChatPlaceholders(message);
+
         // 轉義 JSON 特殊字元
         String jsonPayload = String.format(
                 "{\"username\": \"%s\", \"avatar_url\": \"%s\", \"content\": \"%s\"}",
                 escapeJson(username),
                 escapeJson(avatarUrl),
-                escapeJson(message)
+                escapeJson(cleanMsg)
         );
 
         // 非同步在背景排程器發送 HTTP POST 請求 (避免主執行緒卡頓)
@@ -68,6 +76,24 @@ public class WebhookManager {
                 Main.getInstance().getLogger().warning("無法發送 Webhook 請求: " + e.getMessage());
             }
         });
+    }
+
+    /**
+     * 清理 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為乾淨的 [item])
+     */
+    public static String cleanInteractiveChatPlaceholders(String text) {
+        if (text == null || text.isEmpty()) return "";
+        Matcher matcher = INTERACTIVE_CHAT_PATTERN.matcher(text);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String tag = matcher.group(1);
+            if (!tag.startsWith("[")) {
+                tag = "[" + tag + "]";
+            }
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(tag));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private static String escapeJson(String text) {

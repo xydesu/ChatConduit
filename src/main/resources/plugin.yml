@@ -4,7 +4,7 @@ main: me.xydesu.chatconduit.Main
 api-version: '1.20'
 author: xydesu
 description: ChatConduit - Next Generation Paper Chat System with full Chest GUI Control
-softdepend: [PlaceholderAPI, DiscordSRV]
+softdepend: [PlaceholderAPI, DiscordSRV, InteractiveChat]
 
 commands:
   chatconduit:
