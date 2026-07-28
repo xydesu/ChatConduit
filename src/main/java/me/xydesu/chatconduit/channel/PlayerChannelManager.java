@@ -120,38 +120,54 @@ public class PlayerChannelManager {
         }
     }
 
+    private static volatile boolean isDirty = false;
+    private static org.bukkit.scheduler.BukkitTask pendingSaveTask = null;
+
     public static void save() {
-        Runnable saveTask = () -> {
-            synchronized (FILE_LOCK) {
-                config.set("channels", null);
-                for (CustomChannel ch : customChannels.values()) {
-                    String path = "channels." + ch.getId() + ".";
-                    config.set(path + "name", ch.getDisplayName());
-                    config.set(path + "owner", ch.getOwner().toString());
-                    config.set(path + "mode", ch.getMode().name());
-                    config.set(path + "color-theme", ch.getColorTheme());
-                    config.set(path + "webhook-url", ch.getWebhookUrl());
-                    config.set(path + "description", ch.getDescription());
-                    config.set(path + "rules", ch.getRules());
+        isDirty = true;
+        scheduleDebouncedSave();
+    }
 
-                    List<String> memberStrings = ch.getMembers().stream().map(UUID::toString).toList();
-                    config.set(path + "members", memberStrings);
+    public static void saveImmediately() {
+        if (config == null || !isDirty) return;
+        synchronized (FILE_LOCK) {
+            if (!isDirty) return;
+            config.set("channels", null);
+            for (CustomChannel ch : customChannels.values()) {
+                String path = "channels." + ch.getId() + ".";
+                config.set(path + "name", ch.getDisplayName());
+                config.set(path + "owner", ch.getOwner().toString());
+                config.set(path + "mode", ch.getMode().name());
+                config.set(path + "color-theme", ch.getColorTheme());
+                config.set(path + "webhook-url", ch.getWebhookUrl());
+                config.set(path + "description", ch.getDescription());
+                config.set(path + "rules", ch.getRules());
 
-                    List<String> inviteStrings = ch.getPendingInvites().stream().map(UUID::toString).toList();
-                    config.set(path + "pending-invites", inviteStrings);
-                }
-                try {
-                    config.save(file);
-                } catch (IOException e) {
-                    Main.getInstance().getLogger().severe("無法儲存自訂頻道數據: " + e.getMessage());
-                }
+                List<String> memberStrings = ch.getMembers().stream().map(UUID::toString).toList();
+                config.set(path + "members", memberStrings);
+
+                List<String> inviteStrings = ch.getPendingInvites().stream().map(UUID::toString).toList();
+                config.set(path + "pending-invites", inviteStrings);
             }
-        };
+            try {
+                config.save(file);
+                isDirty = false;
+            } catch (IOException e) {
+                Main.getInstance().getLogger().severe("無法儲存自訂頻道數據: " + e.getMessage());
+            }
+        }
+    }
 
-        if (Main.getInstance().isEnabled()) {
-            Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), saveTask);
-        } else {
-            saveTask.run();
+    private static synchronized void scheduleDebouncedSave() {
+        if (!Main.getInstance().isEnabled()) {
+            saveImmediately();
+            return;
+        }
+        if (pendingSaveTask == null || pendingSaveTask.isCancelled()) {
+            pendingSaveTask = Bukkit.getScheduler().runTaskLaterAsynchronously(Main.getInstance(), () -> {
+                saveImmediately();
+                pendingSaveTask = null;
+            }, 60L); // 3 秒 (60 ticks) 防抖延遲
         }
     }
 

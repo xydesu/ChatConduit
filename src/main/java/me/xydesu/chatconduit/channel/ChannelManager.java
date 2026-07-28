@@ -86,28 +86,34 @@ public class ChannelManager {
         }
     }
 
+    private static volatile boolean isDirty = false;
+    private static org.bukkit.scheduler.BukkitTask pendingSaveTask = null;
+
     /**
-     * 儲存單一玩家資料（非同步進行寫入）
+     * 儲存單一玩家資料（防抖延遲非同步寫入硬碟）
      */
     public static void savePlayerData(UUID uuid) {
         if (dataConfig == null) return;
         String key = playerSelectedChannel.getOrDefault(uuid, defaultChannelKey);
 
-        Runnable saveTask = () -> {
-            synchronized (FILE_LOCK) {
-                dataConfig.set("players." + uuid.toString(), key);
-                try {
-                    dataConfig.save(dataFile);
-                } catch (IOException e) {
-                    Main.getInstance().getLogger().severe("無法儲存玩家數據 " + uuid + ": " + e.getMessage());
-                }
-            }
-        };
+        synchronized (FILE_LOCK) {
+            dataConfig.set("players." + uuid.toString(), key);
+            isDirty = true;
+        }
 
-        if (Main.getInstance().isEnabled()) {
-            Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), saveTask);
-        } else {
-            saveTask.run();
+        scheduleDebouncedSave();
+    }
+
+    private static synchronized void scheduleDebouncedSave() {
+        if (!Main.getInstance().isEnabled()) {
+            saveAllPlayerData();
+            return;
+        }
+        if (pendingSaveTask == null || pendingSaveTask.isCancelled()) {
+            pendingSaveTask = Bukkit.getScheduler().runTaskLaterAsynchronously(Main.getInstance(), () -> {
+                saveAllPlayerData();
+                pendingSaveTask = null;
+            }, 60L); // 3 秒 (60 ticks) 防抖延遲
         }
     }
 
@@ -117,11 +123,13 @@ public class ChannelManager {
     public static void saveAllPlayerData() {
         if (dataConfig == null) return;
         synchronized (FILE_LOCK) {
+            if (!isDirty) return;
             for (Map.Entry<UUID, String> entry : playerSelectedChannel.entrySet()) {
                 dataConfig.set("players." + entry.getKey().toString(), entry.getValue());
             }
             try {
                 dataConfig.save(dataFile);
+                isDirty = false;
             } catch (IOException e) {
                 Main.getInstance().getLogger().severe("無法儲存所有玩家數據: " + e.getMessage());
             }

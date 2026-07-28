@@ -69,7 +69,7 @@ public final class Main extends JavaPlugin {
         me.xydesu.chatconduit.integration.DiscordSRVHook.shutdown();
         // 關服時自動儲存所有資料 (同步寫入)
         ChannelManager.saveAllPlayerData();
-        PlayerChannelManager.save();
+        PlayerChannelManager.saveImmediately();
     }
 
     public static Main getInstance() {
