@@ -70,49 +70,51 @@ public class PlayerChannelManager {
     }
 
     public static void load() {
-        customChannels.clear();
-        file = new File(Main.getInstance().getDataFolder(), "player-channels.yml");
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                Main.getInstance().getLogger().warning("無法建立 player-channels.yml: " + e.getMessage());
+        synchronized (FILE_LOCK) {
+            customChannels.clear();
+            file = new File(Main.getInstance().getDataFolder(), "player-channels.yml");
+            if (!file.exists()) {
+                try {
+                    file.createNewFile();
+                } catch (IOException e) {
+                    Main.getInstance().getLogger().warning("無法建立 player-channels.yml: " + e.getMessage());
+                }
             }
-        }
-        config = YamlConfiguration.loadConfiguration(file);
+            config = YamlConfiguration.loadConfiguration(file);
 
-        if (config.contains("channels")) {
-            ConfigurationSection channelsSec = config.getConfigurationSection("channels");
-            if (channelsSec != null) {
-                for (String id : channelsSec.getKeys(false)) {
-                    String name = config.getString("channels." + id + ".name", id);
-                    String ownerStr = config.getString("channels." + id + ".owner");
-                    if (ownerStr == null) continue;
+            if (config.contains("channels")) {
+                ConfigurationSection channelsSec = config.getConfigurationSection("channels");
+                if (channelsSec != null) {
+                    for (String id : channelsSec.getKeys(false)) {
+                        String name = config.getString("channels." + id + ".name", id);
+                        String ownerStr = config.getString("channels." + id + ".owner");
+                        if (ownerStr == null) continue;
 
-                    UUID owner = UUID.fromString(ownerStr);
-                    Mode mode = Mode.valueOf(config.getString("channels." + id + ".mode", "PRIVATE"));
-                    String theme = config.getString("channels." + id + ".color-theme", "<gradient:#a8c0ff:#3f2b96>");
-                    String webhook = config.getString("channels." + id + ".webhook-url", null);
-                    String desc = config.getString("channels." + id + ".description", "尚無頻道簡介說明");
-                    String rules = config.getString("channels." + id + ".rules", "遵守社群規範，友善交流。");
+                        UUID owner = UUID.fromString(ownerStr);
+                        Mode mode = Mode.valueOf(config.getString("channels." + id + ".mode", "PRIVATE"));
+                        String theme = config.getString("channels." + id + ".color-theme", "<gradient:#a8c0ff:#3f2b96>");
+                        String webhook = config.getString("channels." + id + ".webhook-url", null);
+                        String desc = config.getString("channels." + id + ".description", "尚無頻道簡介說明");
+                        String rules = config.getString("channels." + id + ".rules", "遵守社群規範，友善交流。");
 
-                    CustomChannel channel = new CustomChannel(id, name, owner, mode, theme, webhook, desc, rules);
+                        CustomChannel channel = new CustomChannel(id, name, owner, mode, theme, webhook, desc, rules);
 
-                    List<String> memberList = config.getStringList("channels." + id + ".members");
-                    for (String m : memberList) {
-                        try {
-                            channel.getMembers().add(UUID.fromString(m));
-                        } catch (IllegalArgumentException ignored) {}
+                        List<String> memberList = config.getStringList("channels." + id + ".members");
+                        for (String m : memberList) {
+                            try {
+                                channel.getMembers().add(UUID.fromString(m));
+                            } catch (IllegalArgumentException ignored) {}
+                        }
+
+                        List<String> inviteList = config.getStringList("channels." + id + ".pending-invites");
+                        for (String inv : inviteList) {
+                            try {
+                                channel.getPendingInvites().add(UUID.fromString(inv));
+                            } catch (IllegalArgumentException ignored) {}
+                        }
+
+                        customChannels.put(id.toLowerCase(), channel);
                     }
-
-                    List<String> inviteList = config.getStringList("channels." + id + ".pending-invites");
-                    for (String inv : inviteList) {
-                        try {
-                            channel.getPendingInvites().add(UUID.fromString(inv));
-                        } catch (IllegalArgumentException ignored) {}
-                    }
-
-                    customChannels.put(id.toLowerCase(), channel);
                 }
             }
         }

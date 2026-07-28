@@ -57,28 +57,30 @@ public class ChannelManager {
      * 載入玩家頻道選擇資料 (player-data.yml)
      */
     public static void loadPlayerData() {
-        playerSelectedChannel.clear();
-        dataFile = new File(Main.getInstance().getDataFolder(), "player-data.yml");
-        if (!dataFile.exists()) {
-            try {
-                dataFile.createNewFile();
-            } catch (IOException e) {
-                Main.getInstance().getLogger().warning("無法建立 player-data.yml: " + e.getMessage());
+        synchronized (FILE_LOCK) {
+            playerSelectedChannel.clear();
+            dataFile = new File(Main.getInstance().getDataFolder(), "player-data.yml");
+            if (!dataFile.exists()) {
+                try {
+                    dataFile.createNewFile();
+                } catch (IOException e) {
+                    Main.getInstance().getLogger().warning("無法建立 player-data.yml: " + e.getMessage());
+                }
             }
-        }
-        dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+            dataConfig = YamlConfiguration.loadConfiguration(dataFile);
 
-        if (dataConfig.contains("players")) {
-            ConfigurationSection playersSection = dataConfig.getConfigurationSection("players");
-            if (playersSection != null) {
-                for (String uuidStr : playersSection.getKeys(false)) {
-                    try {
-                        UUID uuid = UUID.fromString(uuidStr);
-                        String channelKey = dataConfig.getString("players." + uuidStr);
-                        if (channelKey != null) {
-                            playerSelectedChannel.put(uuid, channelKey.toLowerCase());
-                        }
-                    } catch (IllegalArgumentException ignored) {}
+            if (dataConfig.contains("players")) {
+                ConfigurationSection playersSection = dataConfig.getConfigurationSection("players");
+                if (playersSection != null) {
+                    for (String uuidStr : playersSection.getKeys(false)) {
+                        try {
+                            UUID uuid = UUID.fromString(uuidStr);
+                            String channelKey = dataConfig.getString("players." + uuidStr);
+                            if (channelKey != null) {
+                                playerSelectedChannel.put(uuid, channelKey.toLowerCase());
+                            }
+                        } catch (IllegalArgumentException ignored) {}
+                    }
                 }
             }
         }
