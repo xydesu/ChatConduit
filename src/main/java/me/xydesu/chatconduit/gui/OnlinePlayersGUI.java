@@ -1,5 +1,6 @@
 package me.xydesu.chatconduit.gui;
 
+import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
 import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
@@ -32,10 +33,11 @@ public class OnlinePlayersGUI {
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (slot >= 45) break;
 
-            // 過慮已是成員的玩家
+            // 過濾已是成員的玩家
             if (customChan.getMembers().contains(onlinePlayer.getUniqueId())) continue;
 
             boolean isInvited = customChan.getPendingInvites().contains(onlinePlayer.getUniqueId());
+            String curChanKey = ChannelManager.getPlayerSelectedKey(onlinePlayer);
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -44,6 +46,10 @@ public class OnlinePlayersGUI {
                 meta.displayName(ChatUtils.parseNoItalic("<white><bold>" + onlinePlayer.getName() + "</bold>"));
 
                 List<Component> lore = new ArrayList<>();
+                lore.add(ChatUtils.parseNoItalic("<gray>連線狀態: <green>● 線上中 (" + onlinePlayer.getWorld().getName() + ")</green>"));
+                lore.add(ChatUtils.parseNoItalic("<gray>當前頻道: <yellow>" + curChanKey + "</yellow>"));
+                lore.add(ChatUtils.parseNoItalic("<gray>連線延遲: <yellow>" + onlinePlayer.getPing() + " ms</yellow>"));
+                lore.add(ChatUtils.parseNoItalic(""));
                 if (isInvited) {
                     lore.add(ChatUtils.parseNoItalic("<gold>✉ 已發送邀請 (等待對方接受)</gold>"));
                 } else {

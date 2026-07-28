@@ -13,11 +13,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 public class PlayerChannelManageGUI {
+
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
     public static void open(Player player) {
         String currentKey = ChannelManager.getPlayerSelectedKey(player);
@@ -69,7 +73,7 @@ public class PlayerChannelManageGUI {
         }
         inv.setItem(4, createItem(modeMat, modeName, modeLore));
 
-        // Slot 10 ~ 34: 成員頭顱清單
+        // Slot 10 ~ 34: 成員頭顱清單（帶有豐富個人資訊）
         int slot = 10;
         for (UUID memberUuid : customChan.getMembers()) {
             if (slot >= 44) break;
@@ -83,10 +87,28 @@ public class PlayerChannelManageGUI {
             if (meta != null) {
                 meta.setOwningPlayer(offP);
                 String pName = offP.getName() != null ? offP.getName() : memberUuid.toString();
-                meta.displayName(ChatUtils.parseNoItalic((memberIsOwner ? "<gold>[隊長] " : "<gray>[成員] ") + "<white>" + pName));
+                meta.displayName(ChatUtils.parseNoItalic((memberIsOwner ? "<gold><bold>[隊長] " : "<gray>[成員] ") + "<white><bold>" + pName + "</bold>"));
 
                 List<Component> lore = new ArrayList<>();
-                lore.add(ChatUtils.parseNoItalic("<gray>狀態: " + (isOnline ? "<green>● 在線" : "<red>○ 離線")));
+                lore.add(ChatUtils.parseNoItalic("<gray>職位身份: " + (memberIsOwner ? "<gold><bold>頻道創始隊長</bold></gold>" : "<white>普通成員</white>")));
+                lore.add(ChatUtils.parseNoItalic("<gray>連線狀態: " + (isOnline ? "<green>● 線上中</green>" : "<red>○ 離線</red>")));
+
+                if (isOnline && offP.getPlayer() != null) {
+                    Player memberOnline = offP.getPlayer();
+                    lore.add(ChatUtils.parseNoItalic("<gray>所在世界: <yellow>" + memberOnline.getWorld().getName() + "</yellow>"));
+                    String curChan = ChannelManager.getPlayerSelectedKey(memberOnline);
+                    boolean isSpeakingHere = curChan.equalsIgnoreCase(customChan.getId());
+                    lore.add(ChatUtils.parseNoItalic("<gray>當前頻道: " + (isSpeakingHere ? "<green>✓ 正在本頻道發言</green>" : "<gray>其他頻道 (" + curChan + ")</gray>")));
+                    lore.add(ChatUtils.parseNoItalic("<gray>連線延遲: <yellow>" + memberOnline.getPing() + " ms</yellow>"));
+                } else {
+                    long lastPlayed = offP.getLastPlayed();
+                    if (lastPlayed > 0) {
+                        lore.add(ChatUtils.parseNoItalic("<gray>最後上線: <yellow>" + DATE_FORMAT.format(new Date(lastPlayed)) + "</yellow>"));
+                    }
+                }
+
+                lore.add(ChatUtils.parseNoItalic("<gray>UUID: <dark_gray>" + memberUuid.toString().substring(0, 18) + "...</dark_gray>"));
+
                 if (isOwner && !memberIsOwner) {
                     lore.add(ChatUtils.parseNoItalic(""));
                     lore.add(ChatUtils.parseNoItalic("<yellow>▶ 左鍵點擊: 踢出該成員</yellow>"));
