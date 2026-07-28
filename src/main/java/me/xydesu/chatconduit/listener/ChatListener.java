@@ -107,9 +107,14 @@ public class ChatListener implements Listener {
                 rawPrefixText = channelColor + "[<channel_name>]";
             }
 
-            org.bukkit.OfflinePlayer ownerP = Bukkit.getOfflinePlayer(customChannel.getOwner());
-            String ownerName = ownerP.getName() != null ? ownerP.getName() : customChannel.getOwner().toString();
+            Player onlineOwner = Bukkit.getPlayer(customChannel.getOwner());
+            String ownerName = onlineOwner != null ? onlineOwner.getName() : null;
+            if (ownerName == null) {
+                org.bukkit.OfflinePlayer offP = Bukkit.getOfflinePlayer(customChannel.getOwner());
+                ownerName = offP.getName() != null ? offP.getName() : customChannel.getOwner().toString().substring(0, 8);
+            }
             String modeStr = customChannel.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>PUBLIC (公共)</green>" : "<red>PRIVATE (私人)</red>";
+
 
             String hoverStr = customChannel.getColorTheme() + "<bold>=== 群組頻道: <channel_name> ===</bold></gradient>\n" +
                     "<gray>頻道隊長: <yellow><owner_name></yellow>\n" +

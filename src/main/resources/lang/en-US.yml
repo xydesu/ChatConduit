@@ -21,6 +21,12 @@ channel:
   create-usage: "<red>Usage: /playerchannel create <ChannelName>"
   create-success: "<green>Successfully created channel <yellow><name>!"
   create-exists: "<red>A channel with this name already exists!"
+  create-limit-reached: "<red>You have reached the maximum channel creation limit (max <limit>)!"
+  name-blacklisted: "<red>This channel name contains a reserved keyword and cannot be used!"
+  name-invalid: "<red>Invalid channel name (must be 1-20 characters long without special characters)!"
+  input-timeout: "<red>Chat input session expired and was cancelled automatically."
+  only-members-manage: "<red>You must be a member of this channel to manage it!"
+
 
   invite-usage: "<red>Usage: /playerchannel invite <Player>"
   invite-not-owner: "<red>You must be the owner of this channel to perform this action!"

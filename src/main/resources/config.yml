@@ -9,6 +9,14 @@ default-channel: "global"
 # 聊天格式統一模板 (可用 <channel_prefix>, <player>, <message>, %papi%)
 chat-format: "<white><channel_prefix> <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
 
+# 玩家自訂群組頻道相關安全與數量限制設定
+player-channels:
+  # 單一玩家最多允許創建的群組頻道數量
+  max-per-player: 3
+  # 對話框輸入 (GUI Input) 超時時間 (秒)
+  session-timeout-seconds: 45
+
+
 # DiscordSRV 雙向轉發與 Webhook 設定
 discordsrv:
   enabled: true

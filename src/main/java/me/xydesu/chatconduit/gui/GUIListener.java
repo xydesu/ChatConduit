@@ -56,9 +56,6 @@ public class GUIListener implements Listener {
         }
     }
 
-    private static final int[] SYS_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
-    private static final int[] CUST_SLOTS = {37, 38, 39, 40, 41, 42, 43};
-
     private void handleChannelSelectClick(Player player, int page, int slot, ItemStack clickedItem, ClickType clickType) {
         if (slot == 46) {
             ChannelSelectGUI.open(player, Math.max(1, page - 1));
@@ -88,8 +85,8 @@ public class GUIListener implements Listener {
         if ((slot >= 10 && slot <= 16) || (slot >= 19 && slot <= 25)) {
             int sysSlotIdx = 0;
             for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
-                if (sysSlotIdx >= SYS_SLOTS.length) break;
-                int currentSlot = SYS_SLOTS[sysSlotIdx++];
+                if (sysSlotIdx >= GUIHolder.SYS_SLOTS.length) break;
+                int currentSlot = GUIHolder.SYS_SLOTS[sysSlotIdx++];
                 if (currentSlot == slot) {
                     if (!sysChan.permission().isEmpty() && !player.hasPermission(sysChan.permission())) {
                         ChatUtils.sendMessage(player, Main.getInstance().getLanguageConfig().getString("channel.no-permission", "<red>你沒有權限進入此頻道！"));
@@ -115,8 +112,8 @@ public class GUIListener implements Listener {
             }
 
             int custSlotIdx = -1;
-            for (int i = 0; i < CUST_SLOTS.length; i++) {
-                if (CUST_SLOTS[i] == slot) {
+            for (int i = 0; i < GUIHolder.CUST_SLOTS.length; i++) {
+                if (GUIHolder.CUST_SLOTS[i] == slot) {
                     custSlotIdx = i;
                     break;
                 }
@@ -133,10 +130,12 @@ public class GUIListener implements Listener {
                         if (isMember) {
                             PlayerChannelManageGUI.openForChannel(player, custChan);
                         } else {
-                            ChatUtils.sendMessage(player, "<red>你必須是該頻道的成員才能進行管理！");
+                            String msg = Main.getInstance().getLanguageConfig().getString("channel.only-members-manage", "<red>你必須是該頻道的成員才能進行管理！");
+                            ChatUtils.sendMessage(player, msg);
                         }
                         return;
                     }
+
 
                     if (!isMember && isPublic) {
                         custChan.getMembers().add(player.getUniqueId());

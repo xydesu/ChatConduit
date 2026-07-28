@@ -21,6 +21,7 @@ public class PlayerInputManager implements Listener {
 
     private static final Map<UUID, InputSession> pendingInputs = new ConcurrentHashMap<>();
     private static final Set<UUID> currentlyProcessing = ConcurrentHashMap.newKeySet();
+    private static final Map<UUID, org.bukkit.scheduler.BukkitTask> timeoutTasks = new ConcurrentHashMap<>();
 
     public enum InputType {
         CREATE_CHANNEL,
@@ -36,6 +37,10 @@ public class PlayerInputManager implements Listener {
     public static void clearPendingInput(UUID uuid) {
         pendingInputs.remove(uuid);
         currentlyProcessing.remove(uuid);
+        org.bukkit.scheduler.BukkitTask task = timeoutTasks.remove(uuid);
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     public static boolean isInputPending(UUID uuid) {
@@ -47,8 +52,25 @@ public class PlayerInputManager implements Listener {
     }
 
     public static void expectInput(Player player, InputType type, String extraData) {
+        clearPendingInput(player.getUniqueId());
+
         pendingInputs.put(player.getUniqueId(), new InputSession(type, extraData));
         player.closeInventory();
+
+        int timeoutSeconds = Main.getInstance().getConfig().getInt("player-channels.session-timeout-seconds", 45);
+        if (timeoutSeconds > 0) {
+            org.bukkit.scheduler.BukkitTask task = Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                if (pendingInputs.remove(player.getUniqueId()) != null) {
+                    currentlyProcessing.remove(player.getUniqueId());
+                    timeoutTasks.remove(player.getUniqueId());
+                    if (player.isOnline()) {
+                        String timeoutMsg = Main.getInstance().getLanguageConfig().getString("channel.input-timeout", "<red>對話框輸入已逾時，自動取消操作。");
+                        ChatUtils.sendMessage(player, timeoutMsg);
+                    }
+                }
+            }, timeoutSeconds * 20L);
+            timeoutTasks.put(player.getUniqueId(), task);
+        }
 
         ChatUtils.sendMessage(player, "");
         if (type == InputType.CREATE_CHANNEL) {
@@ -83,6 +105,10 @@ public class PlayerInputManager implements Listener {
 
         currentlyProcessing.add(uuid);
         pendingInputs.remove(uuid);
+        org.bukkit.scheduler.BukkitTask task = timeoutTasks.remove(uuid);
+        if (task != null) {
+            task.cancel();
+        }
 
         event.setCancelled(true);
         String input = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
@@ -110,27 +136,49 @@ public class PlayerInputManager implements Listener {
 
                 if (session.type() == InputType.CREATE_CHANNEL) {
                     if (cleanInput.isEmpty() || cleanInput.length() > 20) {
-                        ChatUtils.sendMessage(player, "<red>頻道名稱長度必須介於 1 至 20 個字元！");
+                        String msg = Main.getInstance().getLanguageConfig().getString("channel.name-invalid", "<red>頻道名稱格式無效！");
+                        ChatUtils.sendMessage(player, msg);
                         ChannelSelectGUI.open(player);
                         return;
                     }
 
-                    if (PlayerChannelManager.createChannel(cleanInput, player)) {
-                        String msg = Main.getInstance().getLanguageConfig().getString("channel.create-success", "<green>成功建立群組頻道 <yellow><name>！").replace("<name>", cleanInput);
-                        ChatUtils.sendMessage(player, msg);
-                        ChannelManager.setPlayerChannel(player, cleanInput.toLowerCase());
+                    PlayerChannelManager.CreateResult res = PlayerChannelManager.tryCreateChannel(cleanInput, player);
+                    switch (res) {
+                        case SUCCESS -> {
+                            String msg = Main.getInstance().getLanguageConfig().getString("channel.create-success", "<green>成功建立群組頻道 <yellow><name>！").replace("<name>", cleanInput);
+                            ChatUtils.sendMessage(player, msg);
+                            ChannelManager.setPlayerChannel(player, cleanInput.toLowerCase());
 
-                        PlayerChannelManager.CustomChannel newChan = PlayerChannelManager.getChannel(cleanInput.toLowerCase());
-                        if (newChan != null) {
-                            PlayerChannelManageGUI.openForChannel(player, newChan);
-                        } else {
+                            PlayerChannelManager.CustomChannel newChan = PlayerChannelManager.getChannel(cleanInput.toLowerCase());
+                            if (newChan != null) {
+                                PlayerChannelManageGUI.openForChannel(player, newChan);
+                            } else {
+                                ChannelSelectGUI.open(player);
+                            }
+                        }
+                        case RESERVED_KEYWORD -> {
+                            String msg = Main.getInstance().getLanguageConfig().getString("channel.name-blacklisted", "<red>該名稱包含系統保留字，無法作為頻道名稱！");
+                            ChatUtils.sendMessage(player, msg);
                             ChannelSelectGUI.open(player);
                         }
-                    } else {
-                        String msg = Main.getInstance().getLanguageConfig().getString("channel.create-exists", "<red>該頻道名稱已存在！");
-                        ChatUtils.sendMessage(player, msg);
-                        ChannelSelectGUI.open(player);
+                        case LIMIT_REACHED -> {
+                            int max = Main.getInstance().getConfig().getInt("player-channels.max-per-player", 3);
+                            String msg = Main.getInstance().getLanguageConfig().getString("channel.create-limit-reached", "<red>您創建的群組頻道數量已達上限（最多 <limit> 個）！").replace("<limit>", String.valueOf(max));
+                            ChatUtils.sendMessage(player, msg);
+                            ChannelSelectGUI.open(player);
+                        }
+                        case ALREADY_EXISTS -> {
+                            String msg = Main.getInstance().getLanguageConfig().getString("channel.create-exists", "<red>該頻道名稱已存在！");
+                            ChatUtils.sendMessage(player, msg);
+                            ChannelSelectGUI.open(player);
+                        }
+                        default -> {
+                            String msg = Main.getInstance().getLanguageConfig().getString("channel.name-invalid", "<red>頻道名稱格式無效！");
+                            ChatUtils.sendMessage(player, msg);
+                            ChannelSelectGUI.open(player);
+                        }
                     }
+
                 } else if (session.type() == InputType.RENAME_CHANNEL) {
                     PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
                     if (customChan == null) {

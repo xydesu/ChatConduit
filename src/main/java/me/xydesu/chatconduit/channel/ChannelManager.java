@@ -155,7 +155,18 @@ public class ChannelManager {
     }
 
     public static String getPlayerSelectedKey(Player player) {
-        return playerSelectedChannel.getOrDefault(player.getUniqueId(), defaultChannelKey);
+        if (player == null) return defaultChannelKey;
+        return playerSelectedChannel.computeIfAbsent(player.getUniqueId(), uuid -> {
+            synchronized (FILE_LOCK) {
+                if (dataConfig != null && dataConfig.contains("players." + uuid.toString())) {
+                    String val = dataConfig.getString("players." + uuid.toString());
+                    if (val != null && !val.isEmpty()) {
+                        return val.toLowerCase();
+                    }
+                }
+            }
+            return defaultChannelKey;
+        });
     }
 
     public static Channel getPlayerChannel(Player player) {
@@ -168,4 +179,14 @@ public class ChannelManager {
         playerSelectedChannel.put(player.getUniqueId(), channelKey.toLowerCase());
         savePlayerData(player.getUniqueId());
     }
+
+    /**
+     * 玩家離線時清理記憶體 Map 資源，防止常駐記憶體洩漏
+     */
+    public static void unloadPlayerData(UUID uuid) {
+        if (uuid != null) {
+            playerSelectedChannel.remove(uuid);
+        }
+    }
 }
+

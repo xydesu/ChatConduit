@@ -92,16 +92,34 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     ChatUtils.sendMessage(player, getLang("channel.create-usage", "<red>Usage: /playerchannel create <Name>"));
                     return true;
                 }
+                if (!player.hasPermission("chatconduit.create")) {
+                    ChatUtils.sendMessage(player, getLang("messages.no-permission", "<red>You do not have permission to execute this command!"));
+                    return true;
+                }
                 String name = args[1];
-                if (PlayerChannelManager.createChannel(name, player)) {
-                    String msg = getLang("channel.create-success", "<green>Successfully created channel <yellow><name>!")
-                            .replace("<name>", name);
-                    ChatUtils.sendMessage(player, msg);
-                    ChannelManager.setPlayerChannel(player, name.toLowerCase());
-                } else {
-                    ChatUtils.sendMessage(player, getLang("channel.create-exists", "<red>A channel with this name already exists!"));
+                PlayerChannelManager.CreateResult res = PlayerChannelManager.tryCreateChannel(name, player);
+                switch (res) {
+                    case SUCCESS -> {
+                        String msg = getLang("channel.create-success", "<green>Successfully created channel <yellow><name>!").replace("<name>", name);
+                        ChatUtils.sendMessage(player, msg);
+                        ChannelManager.setPlayerChannel(player, name.toLowerCase());
+                    }
+                    case RESERVED_KEYWORD -> {
+                        ChatUtils.sendMessage(player, getLang("channel.name-blacklisted", "<red>This channel name contains a reserved keyword!"));
+                    }
+                    case LIMIT_REACHED -> {
+                        int max = Main.getInstance().getConfig().getInt("player-channels.max-per-player", 3);
+                        ChatUtils.sendMessage(player, getLang("channel.create-limit-reached", "<red>You have reached the channel limit!").replace("<limit>", String.valueOf(max)));
+                    }
+                    case ALREADY_EXISTS -> {
+                        ChatUtils.sendMessage(player, getLang("channel.create-exists", "<red>A channel with this name already exists!"));
+                    }
+                    default -> {
+                        ChatUtils.sendMessage(player, getLang("channel.name-invalid", "<red>Invalid channel name!"));
+                    }
                 }
                 break;
+
 
             // /pc invite <玩家>
             case "invite":

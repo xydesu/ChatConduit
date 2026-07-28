@@ -185,16 +185,60 @@ public class PlayerChannelManager {
         return Collections.unmodifiableMap(customChannels);
     }
 
-    public static boolean createChannel(String name, Player owner) {
-        String id = name.toLowerCase();
-        if (customChannels.containsKey(id) || ChannelManager.getChannel(id) != null) {
-            return false;
+    private static final Set<String> RESERVED_KEYWORDS = Set.of(
+            "cancel", "create", "invite", "accept", "deny", "reject", "leave",
+            "members", "manage", "kick", "transfer", "delete", "gui", "help",
+            "reload", "global", "clear", "main", "admin"
+    );
+
+    public static boolean isReservedKeyword(String name) {
+        if (name == null) return true;
+        return RESERVED_KEYWORDS.contains(name.toLowerCase().trim());
+    }
+
+    public static int getOwnedChannelCount(UUID owner) {
+        if (owner == null) return 0;
+        int count = 0;
+        for (CustomChannel ch : customChannels.values()) {
+            if (owner.equals(ch.getOwner())) {
+                count++;
+            }
         }
-        CustomChannel channel = new CustomChannel(id, name, owner.getUniqueId(), Mode.PRIVATE, "<gradient:#a8c0ff:#3f2b96>");
+        return count;
+    }
+
+    public enum CreateResult {
+        SUCCESS,
+        ALREADY_EXISTS,
+        RESERVED_KEYWORD,
+        LIMIT_REACHED,
+        INVALID_NAME
+    }
+
+    public static CreateResult tryCreateChannel(String name, Player owner) {
+        if (name == null) return CreateResult.INVALID_NAME;
+        String cleanName = name.trim();
+        if (cleanName.isEmpty() || cleanName.length() > 20) return CreateResult.INVALID_NAME;
+        String id = cleanName.toLowerCase();
+
+        if (isReservedKeyword(id)) return CreateResult.RESERVED_KEYWORD;
+        if (customChannels.containsKey(id) || ChannelManager.getChannel(id) != null) return CreateResult.ALREADY_EXISTS;
+
+        int maxAllowed = Main.getInstance().getConfig().getInt("player-channels.max-per-player", 3);
+        if (!owner.hasPermission("chatconduit.admin.bypasslimit") && getOwnedChannelCount(owner.getUniqueId()) >= maxAllowed) {
+            return CreateResult.LIMIT_REACHED;
+        }
+
+        CustomChannel channel = new CustomChannel(id, cleanName, owner.getUniqueId(), Mode.PRIVATE, "<gradient:#a8c0ff:#3f2b96>");
         customChannels.put(id, channel);
         save();
-        return true;
+        return CreateResult.SUCCESS;
     }
+
+    public static boolean createChannel(String name, Player owner) {
+        return tryCreateChannel(name, owner) == CreateResult.SUCCESS;
+    }
+
 
     /**
      * 解散/刪除頻道，並將線上停留在該頻道的玩家狀態同步重置為 global

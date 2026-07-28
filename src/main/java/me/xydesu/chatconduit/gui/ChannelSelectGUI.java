@@ -19,10 +19,8 @@ import java.util.List;
 
 public class ChannelSelectGUI {
 
-    private static final int[] SYS_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
-    private static final int[] CUST_SLOTS = {37, 38, 39, 40, 41, 42, 43};
-
     public static void open(Player player) {
+
         open(player, 1);
     }
 
@@ -53,7 +51,7 @@ public class ChannelSelectGUI {
         // 系統公用頻道圖示 (Row 2 ~ 3)
         int sysSlotIdx = 0;
         for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
-            if (sysSlotIdx >= SYS_SLOTS.length) break;
+            if (sysSlotIdx >= GUIHolder.SYS_SLOTS.length) break;
 
             boolean isSelected = currentChannelKey.equalsIgnoreCase(sysChan.key());
             boolean hasPermission = sysChan.permission().isEmpty() || player.hasPermission(sysChan.permission());
@@ -75,7 +73,7 @@ public class ChannelSelectGUI {
             }
 
             ItemStack item = createItem(material, displayName, lore, isSelected);
-            inv.setItem(SYS_SLOTS[sysSlotIdx++], item);
+            inv.setItem(GUIHolder.SYS_SLOTS[sysSlotIdx++], item);
         }
 
         // 分隔線
@@ -125,8 +123,9 @@ public class ChannelSelectGUI {
             }
 
             ItemStack item = createItem(Material.BOOKSHELF, displayName, lore, isSelected);
-            inv.setItem(CUST_SLOTS[custSlotIdx++], item);
+            inv.setItem(GUIHolder.CUST_SLOTS[custSlotIdx++], item);
         }
+
 
         // 分頁控制按鈕
         if (currentPage > 1) {

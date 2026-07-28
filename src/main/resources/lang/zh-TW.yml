@@ -21,6 +21,12 @@ channel:
   create-usage: "<red>用法: /playerchannel create <頻道名稱>"
   create-success: "<green>成功建立群組頻道 <yellow><name>！"
   create-exists: "<red>該頻道名稱已存在！"
+  create-limit-reached: "<red>您創建的群組頻道數量已達上限（最多 <limit> 個）！"
+  name-blacklisted: "<red>該名稱包含系統保留字，無法作為頻道名稱！"
+  name-invalid: "<red>頻道名稱格式無效（長度需在 1-20 個字元，且不可包含特殊符號）！"
+  input-timeout: "<red>對話框輸入已逾時，自動取消操作。"
+  only-members-manage: "<red>你必須是該頻道的成員才能進行管理！"
+
 
   invite-usage: "<red>用法: /playerchannel invite <玩家名稱>"
   invite-not-owner: "<red>你必須是你當前所在自訂頻道的隊長才能執行此操作！"
