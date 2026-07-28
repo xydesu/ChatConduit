@@ -23,7 +23,7 @@ public class ChannelManager {
     private static FileConfiguration dataConfig;
     private static final Object FILE_LOCK = new Object();
 
-    public record Channel(String key, String name, String color, String prefixKey, String permission) {}
+    public record Channel(String key, String name, String color, String prefixKey, String permission, String description, String rules) {}
 
     /**
      * 從 config.yml 載入系統頻道設定並更新快取
@@ -39,8 +39,10 @@ public class ChannelManager {
                 String color = section.getString(key + ".color", "<white>");
                 String prefixKey = section.getString(key + ".prefix-key", "");
                 String permission = section.getString(key + ".permission", "");
+                String description = section.getString(key + ".description", "官方系統頻道");
+                String rules = section.getString(key + ".rules", "遵守伺服器通用社群規範");
 
-                systemChannels.put(key.toLowerCase(), new Channel(key, name, color, prefixKey, permission));
+                systemChannels.put(key.toLowerCase(), new Channel(key, name, color, prefixKey, permission, description, rules));
             }
         }
 

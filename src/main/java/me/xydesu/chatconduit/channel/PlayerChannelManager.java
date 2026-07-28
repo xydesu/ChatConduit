@@ -29,21 +29,25 @@ public class PlayerChannelManager {
         private Mode mode;
         private String colorTheme;
         private String webhookUrl;
+        private String description;
+        private String rules;
         private final Set<UUID> members = ConcurrentHashMap.newKeySet();
         private final Set<UUID> pendingInvites = ConcurrentHashMap.newKeySet();
 
-        public CustomChannel(String id, String displayName, UUID owner, Mode mode, String colorTheme, String webhookUrl) {
+        public CustomChannel(String id, String displayName, UUID owner, Mode mode, String colorTheme, String webhookUrl, String description, String rules) {
             this.id = id.toLowerCase();
             this.displayName = displayName;
             this.owner = owner;
             this.mode = mode;
             this.colorTheme = colorTheme != null ? colorTheme : "<gradient:#a8c0ff:#3f2b96>";
             this.webhookUrl = webhookUrl;
+            this.description = description != null ? description : "尚無頻道簡介說明";
+            this.rules = rules != null ? rules : "遵守社群規範，友善交流。";
             this.members.add(owner);
         }
 
         public CustomChannel(String id, String displayName, UUID owner, Mode mode, String colorTheme) {
-            this(id, displayName, owner, mode, colorTheme, null);
+            this(id, displayName, owner, mode, colorTheme, null, null, null);
         }
 
         public String getId() { return id; }
@@ -57,6 +61,10 @@ public class PlayerChannelManager {
         public void setColorTheme(String colorTheme) { this.colorTheme = colorTheme; }
         public String getWebhookUrl() { return webhookUrl; }
         public void setWebhookUrl(String webhookUrl) { this.webhookUrl = webhookUrl; }
+        public String getDescription() { return description != null ? description : "尚無頻道簡介說明"; }
+        public void setDescription(String description) { this.description = description; }
+        public String getRules() { return rules != null ? rules : "遵守社群規範，友善交流。"; }
+        public void setRules(String rules) { this.rules = rules; }
         public Set<UUID> getMembers() { return members; }
         public Set<UUID> getPendingInvites() { return pendingInvites; }
     }
@@ -85,8 +93,10 @@ public class PlayerChannelManager {
                     Mode mode = Mode.valueOf(config.getString("channels." + id + ".mode", "PRIVATE"));
                     String theme = config.getString("channels." + id + ".color-theme", "<gradient:#a8c0ff:#3f2b96>");
                     String webhook = config.getString("channels." + id + ".webhook-url", null);
+                    String desc = config.getString("channels." + id + ".description", "尚無頻道簡介說明");
+                    String rules = config.getString("channels." + id + ".rules", "遵守社群規範，友善交流。");
 
-                    CustomChannel channel = new CustomChannel(id, name, owner, mode, theme, webhook);
+                    CustomChannel channel = new CustomChannel(id, name, owner, mode, theme, webhook, desc, rules);
 
                     List<String> memberList = config.getStringList("channels." + id + ".members");
                     for (String m : memberList) {
@@ -119,6 +129,8 @@ public class PlayerChannelManager {
                     config.set(path + "mode", ch.getMode().name());
                     config.set(path + "color-theme", ch.getColorTheme());
                     config.set(path + "webhook-url", ch.getWebhookUrl());
+                    config.set(path + "description", ch.getDescription());
+                    config.set(path + "rules", ch.getRules());
 
                     List<String> memberStrings = ch.getMembers().stream().map(UUID::toString).toList();
                     config.set(path + "members", memberStrings);

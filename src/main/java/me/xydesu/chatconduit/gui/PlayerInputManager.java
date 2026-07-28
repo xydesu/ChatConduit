@@ -26,7 +26,9 @@ public class PlayerInputManager implements Listener {
         CREATE_CHANNEL,
         RENAME_CHANNEL,
         INVITE_PLAYER,
-        SET_WEBHOOK
+        SET_WEBHOOK,
+        SET_DESCRIPTION,
+        SET_RULES
     }
 
     public record InputSession(InputType type, String extraData) {}
@@ -56,6 +58,12 @@ public class PlayerInputManager implements Listener {
         } else if (type == InputType.SET_WEBHOOK) {
             ChatUtils.sendMessage(player, "<gradient:#00d2ff:#3a7bd5><bold>=== Webhook 設定對話框提示 ===</bold></gradient>");
             ChatUtils.sendMessage(player, "<yellow>請在對話框輸入 Discord Webhook 網址 <gray>(輸入 clear 可解除綁定，輸入 cancel 可取消)：");
+        } else if (type == InputType.SET_DESCRIPTION) {
+            ChatUtils.sendMessage(player, "<gradient:#00d2ff:#3a7bd5><bold>=== 頻道簡介對話框提示 ===</bold></gradient>");
+            ChatUtils.sendMessage(player, "<yellow>請在對話框輸入頻道的介紹說明 <gray>(輸入 cancel 可取消)：");
+        } else if (type == InputType.SET_RULES) {
+            ChatUtils.sendMessage(player, "<gradient:#00d2ff:#3a7bd5><bold>=== 頻道規則對話框提示 ===</bold></gradient>");
+            ChatUtils.sendMessage(player, "<yellow>請在對話框輸入頻道的規章守則 <gray>(輸入 cancel 可取消)：");
         }
         ChatUtils.sendMessage(player, "");
     }
@@ -81,7 +89,7 @@ public class PlayerInputManager implements Listener {
                     if (session.extraData() != null) {
                         PlayerChannelManager.CustomChannel c = PlayerChannelManager.getChannel(session.extraData());
                         if (c != null) {
-                            if (session.type() == InputType.SET_WEBHOOK || session.type() == InputType.RENAME_CHANNEL) {
+                            if (session.type() == InputType.SET_WEBHOOK || session.type() == InputType.RENAME_CHANNEL || session.type() == InputType.SET_DESCRIPTION || session.type() == InputType.SET_RULES) {
                                 ChannelSettingsGUI.open(player, c);
                                 return;
                             }
@@ -188,6 +196,40 @@ public class PlayerInputManager implements Listener {
                     customChan.setWebhookUrl(input.trim());
                     PlayerChannelManager.save();
                     ChatUtils.sendMessage(player, "<green>已成功為頻道綁定外接 Discord Webhook 網址！");
+                    ChannelSettingsGUI.open(player, customChan);
+                } else if (session.type() == InputType.SET_DESCRIPTION) {
+                    PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
+                    if (customChan == null) {
+                        ChannelSelectGUI.open(player);
+                        return;
+                    }
+
+                    if (input.isEmpty() || input.length() > 60) {
+                        ChatUtils.sendMessage(player, "<red>頻道簡介長度必須介於 1 至 60 個字元！");
+                        ChannelSettingsGUI.open(player, customChan);
+                        return;
+                    }
+
+                    customChan.setDescription(input);
+                    PlayerChannelManager.save();
+                    ChatUtils.sendMessage(player, "<green>已成功修改頻道簡介說明！");
+                    ChannelSettingsGUI.open(player, customChan);
+                } else if (session.type() == InputType.SET_RULES) {
+                    PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
+                    if (customChan == null) {
+                        ChannelSelectGUI.open(player);
+                        return;
+                    }
+
+                    if (input.isEmpty() || input.length() > 60) {
+                        ChatUtils.sendMessage(player, "<red>頻道規則長度必須介於 1 至 60 個字元！");
+                        ChannelSettingsGUI.open(player, customChan);
+                        return;
+                    }
+
+                    customChan.setRules(input);
+                    PlayerChannelManager.save();
+                    ChatUtils.sendMessage(player, "<green>已成功修改頻道守則！");
                     ChannelSettingsGUI.open(player, customChan);
                 }
             } finally {

@@ -97,21 +97,68 @@ public class ChatListener implements Listener {
 
         if (finalMessage.isEmpty()) return;
 
-        // 3. 組合聊天 Component
+        // 3. 構造具備 HoverEvent (懸停視窗: 簡介與規則) 與 ClickEvent (點擊切換頻道) 的頻道 Prefix Component
+        Component channelPrefixComponent;
+        if (customChannel != null) {
+            String rawPrefixText = channelColor + "[" + channelName + "]</gradient>";
+            if (!channelColor.startsWith("<gradient:")) {
+                rawPrefixText = channelColor + "[" + channelName + "]";
+            }
+
+            org.bukkit.OfflinePlayer ownerP = Bukkit.getOfflinePlayer(customChannel.getOwner());
+            String ownerName = ownerP.getName() != null ? ownerP.getName() : customChannel.getOwner().toString();
+            String modeStr = customChannel.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>PUBLIC (公共)</green>" : "<red>PRIVATE (私人)</red>";
+
+            String hoverStr = customChannel.getColorTheme() + "<bold>=== 群組頻道: " + customChannel.getDisplayName() + " ===</bold></gradient>\n" +
+                    "<gray>頻道隊長: <yellow>" + ownerName + "</yellow>\n" +
+                    "<gray>頻道權限: " + modeStr + "\n" +
+                    "<gray>成員數量: <yellow>" + customChannel.getMembers().size() + " 人</yellow>\n" +
+                    "<gray>頻道簡介: <white>" + customChannel.getDescription() + "</white>\n" +
+                    "<gray>頻道規則: <red>" + customChannel.getRules() + "</red>\n\n" +
+                    "<yellow>▶ 點擊快速切換發言至此頻道 / 開啟選單</yellow>";
+
+            Component hoverComponent = ChatUtils.parseNoItalic(player, hoverStr);
+
+            channelPrefixComponent = ChatUtils.parseNoItalic(player, rawPrefixText)
+                    .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(hoverComponent))
+                    .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/playerchannel switch " + customChannel.getId()));
+        } else {
+            ChannelManager.Channel sysChannel = ChannelManager.getChannel(selectedKey);
+            if (sysChannel == null) sysChannel = ChannelManager.getPlayerChannel(player);
+
+            String prefixSymbol = sysChannel.prefixKey() != null ? sysChannel.prefixKey() : "";
+            String sysDisplayName = prefixSymbol + sysChannel.name();
+            String rawPrefixText = sysChannel.color() + "[" + sysDisplayName + "]</gradient>";
+            if (!sysChannel.color().startsWith("<gradient:")) {
+                rawPrefixText = sysChannel.color() + "[" + sysDisplayName + "]";
+            }
+
+            String prefixKeyStr = sysChannel.prefixKey().isEmpty() ? "無 (選單切換)" : sysChannel.prefixKey();
+            String hoverStr = sysChannel.color() + "<bold>=== 官方頻道: " + sysChannel.name() + " ===</bold></gradient>\n" +
+                    "<gray>頻道類型: <green>● 官方系統頻道</green>\n" +
+                    "<gray>快捷鍵前綴: <yellow>" + prefixKeyStr + "</yellow>\n" +
+                    "<gray>頻道簡介: <white>" + sysChannel.description() + "</white>\n" +
+                    "<gray>頻道規則: <red>" + sysChannel.rules() + "</red>\n\n" +
+                    "<yellow>▶ 點擊快速切換發言至此頻道</yellow>";
+
+            Component hoverComponent = ChatUtils.parseNoItalic(player, hoverStr);
+
+            channelPrefixComponent = ChatUtils.parseNoItalic(player, rawPrefixText)
+                    .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(hoverComponent))
+                    .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/playerchannel switch " + sysChannel.key()));
+        }
+
         Component playerMessage = ChatUtils.parseLegacy(finalMessage);
 
         String rawChatFormat = Main.getInstance().getConfig().getString(
                 "chat-format",
-                "<white>[<channel_color><channel_name><white>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
+                "<white><channel_prefix> <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
         );
-
-        String formattedWithChannel = rawChatFormat
-                .replace("<channel_color>", channelColor)
-                .replace("<channel_name>", channelName);
 
         Component fullChatMessage = ChatUtils.parse(
                 player,
-                formattedWithChannel,
+                rawChatFormat,
+                Placeholder.component("channel_prefix", channelPrefixComponent),
                 Placeholder.component("player", player.displayName()),
                 Placeholder.component("message", playerMessage)
         );

@@ -43,6 +43,49 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 PlayerChannelManageGUI.open(player);
                 break;
 
+            // /pc switch <頻道ID/名稱> 或 /pc join <頻道ID/名稱>
+            case "switch":
+            case "join":
+                if (args.length < 2) {
+                    ChannelSelectGUI.open(player);
+                    return true;
+                }
+                String targetKey = args[1].toLowerCase();
+
+                // 檢查是否為系統頻道
+                ChannelManager.Channel sysChan = ChannelManager.getChannel(targetKey);
+                if (sysChan != null) {
+                    ChannelManager.setPlayerChannel(player, sysChan.key());
+                    ChatUtils.sendMessage(player, "<green>已切換預設發言頻道至：<yellow>" + sysChan.name() + "</yellow>");
+                    return true;
+                }
+
+                // 檢查是否為玩家群組頻道
+                PlayerChannelManager.CustomChannel custTarget = PlayerChannelManager.getChannel(targetKey);
+                if (custTarget != null) {
+                    boolean isMember = custTarget.getMembers().contains(player.getUniqueId());
+                    boolean isPublic = custTarget.getMode() == PlayerChannelManager.Mode.PUBLIC;
+
+                    if (!isMember) {
+                        if (isPublic) {
+                            custTarget.getMembers().add(player.getUniqueId());
+                            PlayerChannelManager.save();
+                            ChatUtils.sendMessage(player, "<green>已成功加入公開頻道 <yellow>" + custTarget.getDisplayName() + "</yellow>！");
+                            PlayerChannelManager.broadcastToMembers(custTarget, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入公開頻道 <yellow>" + custTarget.getDisplayName() + "</yellow>！", player.getUniqueId());
+                        } else {
+                            ChatUtils.sendMessage(player, "<red>你不是該私人群組頻道的成員，且尚未收到邀請！");
+                            return true;
+                        }
+                    }
+
+                    ChannelManager.setPlayerChannel(player, custTarget.getId());
+                    ChatUtils.sendMessage(player, "<green>已切換預設發言頻道至：<yellow>" + custTarget.getDisplayName() + "</yellow>");
+                    return true;
+                }
+
+                ChatUtils.sendMessage(player, "<red>找不到頻道 <yellow>" + args[1] + "</yellow>！");
+                break;
+
             // /pc create <名稱>
             case "create":
                 if (args.length < 2) {

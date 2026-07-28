@@ -16,13 +16,13 @@ import java.util.List;
 public class ChannelSettingsGUI {
 
     public static void open(Player player, PlayerChannelManager.CustomChannel customChan) {
-        String titleStr = "<gradient:#00d2ff:#3a7bd5><bold>頻道設定 - " + customChan.getDisplayName() + "</bold></gradient>";
+        String titleStr = "<gradient:#00d2ff:#3a7bd5><bold>頻道詳細設定 - " + customChan.getDisplayName() + "</bold></gradient>";
         Component titleComponent = ChatUtils.parse(player, titleStr);
 
         GUIHolder holder = new GUIHolder(GUIHolder.GUIType.CHANNEL_SETTINGS, customChan.getId());
         Inventory inv = Bukkit.createInventory(holder, 27, titleComponent);
 
-        // 裝飾
+        // 裝飾邊框
         ItemStack glassFiller = createItem(Material.GRAY_STAINED_GLASS_PANE, "<gray> ");
         for (int i = 0; i < 9; i++) inv.setItem(i, glassFiller);
         for (int i = 18; i < 27; i++) inv.setItem(i, glassFiller);
@@ -39,7 +39,7 @@ public class ChannelSettingsGUI {
         );
         inv.setItem(10, createItem(modeMat, modeTitle, modeLore));
 
-        // Slot 12: 頻道顯示名稱重命名
+        // Slot 11: 頻道顯示名稱重命名
         String nameTitle = "<gold><bold>2. 修改頻道顯示名稱</bold>";
         List<String> nameLore = List.of(
                 "<gray>當前顯示名稱: " + customChan.getColorTheme() + customChan.getDisplayName() + "</gradient>",
@@ -47,10 +47,30 @@ public class ChannelSettingsGUI {
                 "",
                 "<yellow>▶ 點擊開啟對話框輸入新名稱</yellow>"
         );
-        inv.setItem(12, createItem(Material.NAME_TAG, nameTitle, nameLore));
+        inv.setItem(11, createItem(Material.NAME_TAG, nameTitle, nameLore));
+
+        // Slot 12: 頻道簡介說明設定
+        String descTitle = "<gold><bold>3. 頻道簡介說明</bold>";
+        List<String> descLore = List.of(
+                "<gray>當前簡介: <white>" + customChan.getDescription() + "</white>",
+                "<gray>說明: 展示於全服聊天欄頻道 Prefix 滑鼠懸停提示中",
+                "",
+                "<yellow>▶ 點擊開啟對話框修改頻道簡介</yellow>"
+        );
+        inv.setItem(12, createItem(Material.BOOK, descTitle, descLore));
+
+        // Slot 13: 頻道規則守則設定
+        String rulesTitle = "<gold><bold>4. 頻道規則與規範</bold>";
+        List<String> rulesLore = List.of(
+                "<gray>當前規則: <white>" + customChan.getRules() + "</white>",
+                "<gray>說明: 成員與外部玩家懸停頻道標籤時呈現的規章",
+                "",
+                "<yellow>▶ 點擊開啟對話框修改頻道守則</yellow>"
+        );
+        inv.setItem(13, createItem(Material.PAPER, rulesTitle, rulesLore));
 
         // Slot 14: 頻道色彩主題切換
-        String colorTitle = "<gold><bold>3. 頻道色彩主題樣式</bold>";
+        String colorTitle = "<gold><bold>5. 頻道色彩主題樣式</bold>";
         List<String> colorLore = List.of(
                 "<gray>當前色彩預設: " + customChan.getColorTheme() + "樣式預覽 [頻道名稱]</gradient>",
                 "<gray>說明: 改變該群組在聊天欄顯示的色彩主題",
@@ -62,7 +82,7 @@ public class ChannelSettingsGUI {
         // Slot 16: 專屬 Webhook 網址綁定
         String webhookUrl = customChan.getWebhookUrl();
         boolean hasWebhook = webhookUrl != null && !webhookUrl.trim().isEmpty();
-        String hookTitle = "<gold><bold>4. 設定專屬 Discord Webhook</bold>";
+        String hookTitle = "<gold><bold>6. 設定專屬 Discord Webhook</bold>";
         List<String> hookLore = List.of(
                 "<gray>綁定狀態: " + (hasWebhook ? "<green>✓ 已綁定 Webhook</green>" : "<red>✗ 未綁定 (單向純遊戲內頻道)</red>"),
                 "<gray>網址預覽: <yellow>" + (hasWebhook ? (webhookUrl.length() > 30 ? webhookUrl.substring(0, 27) + "..." : webhookUrl) : "無") + "</yellow>",
