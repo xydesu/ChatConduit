@@ -78,23 +78,30 @@ public class ChannelSelectGUI {
             inv.setItem(i, lineFiller);
         }
 
-        // 玩家自訂群組頻道
+        // 玩家自訂與公開群組頻道 (底層)
         int custIndex = 37;
         for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
             if (custIndex >= 44) break;
-            if (!custChan.getMembers().contains(player.getUniqueId())) continue;
+
+            boolean isMember = custChan.getMembers().contains(player.getUniqueId());
+            boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
+
+            // 僅展示玩家已加入的頻道或是公開 (PUBLIC) 的頻道
+            if (!isMember && !isPublic) continue;
 
             boolean isSelected = currentChannelKey.equalsIgnoreCase(custChan.getId());
             String displayName = "<gradient:#a8c0ff:#3f2b96><bold>" + custChan.getDisplayName() + "</bold></gradient>";
 
             List<String> lore = new ArrayList<>();
-            lore.add("<gray>類型: <gold>玩家群組頻道");
+            lore.add("<gray>類型: <gold>玩家群組頻道 (" + (isPublic ? "<green>PUBLIC" : "<red>PRIVATE") + "<gray>)");
             lore.add("<gray>成員人數: <yellow>" + custChan.getMembers().size() + " 人");
             lore.add("");
             if (isSelected) {
                 lore.add("<green><bold>✓ 目前選取的發言頻道</bold>");
-            } else {
+            } else if (isMember) {
                 lore.add("<yellow>▶ 點擊切換至此群組頻道</yellow>");
+            } else {
+                lore.add("<gold>▶ 點擊加入此公開頻道</gold>");
             }
 
             ItemStack item = createItem(Material.BOOKSHELF, displayName, lore, isSelected);
@@ -102,6 +109,15 @@ public class ChannelSelectGUI {
         }
 
         // 底部功能按鈕
+        // Slot 47: ＋ 建立新頻道
+        ItemStack createChannelItem = createItem(Material.EMERALD, "<green><bold>＋ 建立新群組頻道</bold>", List.of(
+                "<gray>點擊即可輸入名稱建立自己的專屬頻道",
+                "",
+                "<yellow>▶ 點擊進行建立</yellow>"
+        ), false);
+        inv.setItem(47, createChannelItem);
+
+        // Slot 48: 群組頻道管理
         ItemStack manageItem = createItem(Material.NAME_TAG, "<gold><bold>⚙ 群組頻道管理</bold>", List.of(
                 "<gray>查看與管理我的群組頻道",
                 "<gray>包含成員列表、踢人與模式切換",
@@ -110,9 +126,11 @@ public class ChannelSelectGUI {
         ), false);
         inv.setItem(48, manageItem);
 
+        // Slot 49: 關閉選單
         ItemStack closeItem = createItem(Material.BARRIER, "<red><bold>✖ 關閉選單</bold>", List.of("<gray>點擊關閉此介面"), false);
         inv.setItem(49, closeItem);
 
+        // Slot 50: 待處理邀請
         int pendingCount = 0;
         for (PlayerChannelManager.CustomChannel c : PlayerChannelManager.getCustomChannels().values()) {
             if (c.getPendingInvites().contains(player.getUniqueId())) {

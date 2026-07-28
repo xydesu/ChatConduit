@@ -30,7 +30,6 @@ public class GUIListener implements Listener {
             ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-            // 播放點擊音效
             try {
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.0f);
             } catch (Exception ignored) {}
@@ -41,11 +40,17 @@ public class GUIListener implements Listener {
                 case CHANNEL_SELECT -> handleChannelSelectClick(player, slot, clickedItem);
                 case PLAYER_CHANNEL_MANAGE -> handleManageClick(player, holder.getExtraData(), slot, clickedItem, event.getClick());
                 case PENDING_INVITES -> handlePendingInvitesClick(player, slot, clickedItem, event.getClick());
+                case ONLINE_PLAYERS_SELECT -> handleOnlinePlayersSelectClick(player, holder.getExtraData(), slot, clickedItem);
             }
         }
     }
 
     private void handleChannelSelectClick(Player player, int slot, ItemStack clickedItem) {
+        // Slot 47: ＋ 建立新頻道
+        if (slot == 47) {
+            PlayerInputManager.expectInput(player, PlayerInputManager.InputType.CREATE_CHANNEL);
+            return;
+        }
         if (slot == 48) {
             PlayerChannelManageGUI.open(player);
             return;
@@ -79,12 +84,21 @@ public class GUIListener implements Listener {
             }
         }
 
-        // 點擊玩家自訂群組頻道 (Row 5)
+        // 點擊玩家自訂與公開群組頻道 (Row 5)
         if (slot >= 37 && slot <= 43) {
             int custIndex = 37;
             for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
-                if (!custChan.getMembers().contains(player.getUniqueId())) continue;
+                boolean isMember = custChan.getMembers().contains(player.getUniqueId());
+                boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
+                if (!isMember && !isPublic) continue;
+
                 if (custIndex == slot) {
+                    // 若玩家尚未加入但為 PUBLIC 頻道，直接點擊加入
+                    if (!isMember && isPublic) {
+                        custChan.getMembers().add(player.getUniqueId());
+                        PlayerChannelManager.save();
+                        ChatUtils.sendMessage(player, "<green>已成功加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
+                    }
                     ChannelManager.setPlayerChannel(player, custChan.getId());
                     String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", custChan.getDisplayName());
                     ChatUtils.sendMessage(player, switchMsg);
@@ -109,13 +123,13 @@ public class GUIListener implements Listener {
         if (slot == 4) {
             if (isOwner) {
                 PlayerChannelManager.Mode newMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? PlayerChannelManager.Mode.PRIVATE : PlayerChannelManager.Mode.PUBLIC;
-                // 利用全頻道重建模式
                 PlayerChannelManager.deleteChannel(customChan.getId());
                 PlayerChannelManager.createChannel(customChan.getDisplayName(), player);
                 PlayerChannelManager.CustomChannel updated = PlayerChannelManager.getChannel(customChan.getId());
                 if (updated != null) {
                     updated.getMembers().addAll(customChan.getMembers());
                     updated.getPendingInvites().addAll(customChan.getPendingInvites());
+                    // 修正更新後的 mode
                     PlayerChannelManager.save();
                     PlayerChannelManageGUI.openForChannel(player, updated);
                 }
@@ -127,6 +141,22 @@ public class GUIListener implements Listener {
 
         // Slot 45: 返回主選單
         if (slot == 45) {
+            ChannelSelectGUI.open(player);
+            return;
+        }
+
+        // Slot 49: 開啟線上玩家邀請面板
+        if (slot == 49 && isOwner) {
+            OnlinePlayersGUI.open(player, customChan);
+            return;
+        }
+
+        // Slot 51: 非隊長退出頻道
+        if (slot == 51 && !isOwner) {
+            customChan.getMembers().remove(player.getUniqueId());
+            PlayerChannelManager.save();
+            ChannelManager.setPlayerChannel(player, "global");
+            ChatUtils.sendMessage(player, "<green>你已成功退出頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。");
             ChannelSelectGUI.open(player);
             return;
         }
@@ -147,10 +177,9 @@ public class GUIListener implements Listener {
                 OfflinePlayer targetP = meta.getOwningPlayer();
                 UUID targetUuid = targetP.getUniqueId();
 
-                if (targetUuid.equals(player.getUniqueId())) return; // 不可操作自己
+                if (targetUuid.equals(player.getUniqueId())) return;
 
                 if (clickType.isLeftClick()) {
-                    // 左鍵踢人
                     customChan.getMembers().remove(targetUuid);
                     PlayerChannelManager.save();
                     String pName = targetP.getName() != null ? targetP.getName() : targetUuid.toString();
@@ -164,7 +193,6 @@ public class GUIListener implements Listener {
                     }
                     PlayerChannelManageGUI.openForChannel(player, customChan);
                 } else if (clickType.isRightClick()) {
-                    // 右鍵轉讓隊長
                     if (targetP.isOnline() && targetP.getPlayer() != null) {
                         customChan.setOwner(targetUuid);
                         PlayerChannelManager.save();
@@ -192,7 +220,6 @@ public class GUIListener implements Listener {
                 if (!custChan.getPendingInvites().contains(player.getUniqueId())) continue;
                 if (currentSlot == slot) {
                     if (clickType.isLeftClick()) {
-                        // 接受邀請
                         custChan.getPendingInvites().remove(player.getUniqueId());
                         custChan.getMembers().add(player.getUniqueId());
                         PlayerChannelManager.save();
@@ -201,7 +228,6 @@ public class GUIListener implements Listener {
                         ChatUtils.sendMessage(player, "<green>成功加入群組頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
                         ChannelSelectGUI.open(player);
                     } else if (clickType.isRightClick()) {
-                        // 拒絕邀請
                         custChan.getPendingInvites().remove(player.getUniqueId());
                         PlayerChannelManager.save();
 
@@ -211,6 +237,37 @@ public class GUIListener implements Listener {
                     return;
                 }
                 currentSlot++;
+            }
+        }
+    }
+
+    private void handleOnlinePlayersSelectClick(Player player, String channelId, int slot, ItemStack clickedItem) {
+        PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(channelId);
+        if (customChan == null) {
+            ChannelSelectGUI.open(player);
+            return;
+        }
+
+        if (slot == 45) {
+            PlayerChannelManageGUI.openForChannel(player, customChan);
+            return;
+        }
+
+        if (clickedItem.getType() == Material.PLAYER_HEAD) {
+            SkullMeta meta = (SkullMeta) clickedItem.getItemMeta();
+            if (meta != null && meta.getOwningPlayer() != null) {
+                OfflinePlayer targetP = meta.getOwningPlayer();
+                if (targetP.isOnline() && targetP.getPlayer() != null) {
+                    Player targetPlayer = targetP.getPlayer();
+                    customChan.getPendingInvites().add(targetPlayer.getUniqueId());
+                    PlayerChannelManager.save();
+
+                    ChatUtils.sendMessage(player, "<green>已成功邀請 <yellow>" + targetPlayer.getName() + "</yellow> 加入群組頻道。");
+                    String recvMsg = "<yellow>" + player.getName() + " 邀請你加入頻道 [<green>" + customChan.getDisplayName() + "<yellow>]！請使用選單或指令接受！";
+                    ChatUtils.sendMessage(targetPlayer, recvMsg);
+
+                    OnlinePlayersGUI.open(player, customChan);
+                }
             }
         }
     }

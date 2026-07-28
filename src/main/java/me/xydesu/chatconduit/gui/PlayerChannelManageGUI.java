@@ -103,13 +103,25 @@ public class PlayerChannelManageGUI {
         // 底部功能按鈕
         inv.setItem(45, createItem(Material.ARROW, "<yellow><bold>← 返回頻道大廳</bold>", List.of("<gray>回到頻道選擇選單")));
 
-        inv.setItem(49, createItem(Material.WRITABLE_BOOK, "<green><bold>✉ 邀請新玩家加入</bold>", List.of(
-                "<gray>若要邀請其他玩家加入，請使用指令：",
-                "<gold>/pc invite <玩家名稱>",
-                "",
-                "<gray>受邀玩家將會在選單中收到通知！"
-        )));
+        // Slot 49: 邀請玩家線上選單 (隊長適用)
+        if (isOwner) {
+            inv.setItem(49, createItem(Material.WRITABLE_BOOK, "<green><bold>✉ 邀請線上玩家加入</bold>", List.of(
+                    "<gray>開啟線上玩家頭像選單進行邀請",
+                    "",
+                    "<yellow>▶ 點擊開啟線上邀請面板</yellow>"
+            )));
+        }
 
+        // Slot 51: 非隊長成員的退出頻道按鈕
+        if (!isOwner) {
+            inv.setItem(51, createItem(Material.OAK_DOOR, "<red><bold>🚪 退出群組頻道</bold>", List.of(
+                    "<gray>退出此頻道並返回公共頻道",
+                    "",
+                    "<red>▶ 點擊確認退出</red>"
+            )));
+        }
+
+        // Slot 53: 解散頻道 (僅 Owner 可用)
         if (isOwner) {
             inv.setItem(53, createItem(Material.TNT, "<red><bold>✖ 解散並刪除頻道</bold>", List.of(
                     "<gray>解散此頻道並踢出所有人",

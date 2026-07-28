@@ -34,6 +34,7 @@ public class GUIHolder implements InventoryHolder {
     public enum GUIType {
         CHANNEL_SELECT,
         PLAYER_CHANNEL_MANAGE,
-        PENDING_INVITES
+        PENDING_INVITES,
+        ONLINE_PLAYERS_SELECT
     }
 }
