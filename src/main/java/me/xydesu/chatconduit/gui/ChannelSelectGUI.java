@@ -42,7 +42,7 @@ public class ChannelSelectGUI {
             inv.setItem(row * 9 + 8, glassFiller);
         }
 
-        // 系統公用頻道圖示映射表
+        // 系統公用頻道圖示 (Row 2 ~ 3)
         int sysIndex = 10;
         for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
             if (sysIndex >= 26) break;
@@ -78,7 +78,7 @@ public class ChannelSelectGUI {
             inv.setItem(i, lineFiller);
         }
 
-        // 玩家自訂與公開群組頻道 (底層)
+        // 玩家自訂與公開群組頻道 (Row 5)
         int custIndex = 37;
         for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
             if (custIndex >= 44) break;
@@ -86,7 +86,6 @@ public class ChannelSelectGUI {
             boolean isMember = custChan.getMembers().contains(player.getUniqueId());
             boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
 
-            // 僅展示玩家已加入的頻道或是公開 (PUBLIC) 的頻道
             if (!isMember && !isPublic) continue;
 
             boolean isSelected = currentChannelKey.equalsIgnoreCase(custChan.getId());
@@ -99,9 +98,13 @@ public class ChannelSelectGUI {
             if (isSelected) {
                 lore.add("<green><bold>✓ 目前選取的發言頻道</bold>");
             } else if (isMember) {
-                lore.add("<yellow>▶ 點擊切換至此群組頻道</yellow>");
+                lore.add("<yellow>▶ 左鍵點擊: 切換發言至此頻道</yellow>");
             } else {
-                lore.add("<gold>▶ 點擊加入此公開頻道</gold>");
+                lore.add("<gold>▶ 左鍵點擊: 加入此公開頻道</gold>");
+            }
+
+            if (isMember) {
+                lore.add("<gold>▶ 右鍵點擊: 開啟此頻道管理面板</gold>");
             }
 
             ItemStack item = createItem(Material.BOOKSHELF, displayName, lore, isSelected);
@@ -117,12 +120,12 @@ public class ChannelSelectGUI {
         ), false);
         inv.setItem(47, createChannelItem);
 
-        // Slot 48: 群組頻道管理
+        // Slot 48: 群組頻道管理說明/按鈕
         ItemStack manageItem = createItem(Material.NAME_TAG, "<gold><bold>⚙ 群組頻道管理</bold>", List.of(
-                "<gray>查看與管理我的群組頻道",
-                "<gray>包含成員列表、踢人與模式切換",
+                "<gray>提示：在上方自訂群組頻道圖示上",
+                "<gold>右鍵點擊</gold> <gray>即可直接開啟該頻道管理面板！",
                 "",
-                "<yellow>▶ 點擊開啟管理面板</yellow>"
+                "<yellow>▶ 點擊開啟目前所屬群組面板</yellow>"
         ), false);
         inv.setItem(48, manageItem);
 

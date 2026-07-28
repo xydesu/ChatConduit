@@ -37,7 +37,7 @@ public class GUIListener implements Listener {
             int slot = event.getSlot();
 
             switch (holder.getGuiType()) {
-                case CHANNEL_SELECT -> handleChannelSelectClick(player, slot, clickedItem);
+                case CHANNEL_SELECT -> handleChannelSelectClick(player, slot, clickedItem, event.getClick());
                 case PLAYER_CHANNEL_MANAGE -> handleManageClick(player, holder.getExtraData(), slot, clickedItem, event.getClick());
                 case PENDING_INVITES -> handlePendingInvitesClick(player, slot, clickedItem, event.getClick());
                 case ONLINE_PLAYERS_SELECT -> handleOnlinePlayersSelectClick(player, holder.getExtraData(), slot, clickedItem);
@@ -45,7 +45,7 @@ public class GUIListener implements Listener {
         }
     }
 
-    private void handleChannelSelectClick(Player player, int slot, ItemStack clickedItem) {
+    private void handleChannelSelectClick(Player player, int slot, ItemStack clickedItem, ClickType clickType) {
         // Slot 47: ＋ 建立新頻道
         if (slot == 47) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.CREATE_CHANNEL);
@@ -93,7 +93,17 @@ public class GUIListener implements Listener {
                 if (!isMember && !isPublic) continue;
 
                 if (custIndex == slot) {
-                    // 若玩家尚未加入但為 PUBLIC 頻道，直接點擊加入
+                    // 右鍵點擊：直接開啟該群組頻道的管理面板！
+                    if (clickType.isRightClick()) {
+                        if (isMember) {
+                            PlayerChannelManageGUI.openForChannel(player, custChan);
+                        } else {
+                            ChatUtils.sendMessage(player, "<red>你必須是該頻道的成員才能進行管理！");
+                        }
+                        return;
+                    }
+
+                    // 左鍵點擊：切換頻道/加入公開頻道
                     if (!isMember && isPublic) {
                         custChan.getMembers().add(player.getUniqueId());
                         PlayerChannelManager.save();
@@ -129,7 +139,6 @@ public class GUIListener implements Listener {
                 if (updated != null) {
                     updated.getMembers().addAll(customChan.getMembers());
                     updated.getPendingInvites().addAll(customChan.getPendingInvites());
-                    // 修正更新後的 mode
                     PlayerChannelManager.save();
                     PlayerChannelManageGUI.openForChannel(player, updated);
                 }
