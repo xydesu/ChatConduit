@@ -12,33 +12,55 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
+import java.util.List;
 import java.util.UUID;
 
 public class DiscordSRVListener {
 
     /**
-     * 監聽並攔截/修改 Minecraft 傳送至 Discord 的發言事件 (依據 channel-mapping 精準映射頻道)
+     * 監聽並攔截/修改 Minecraft 傳送至 Discord 的發言事件 (支援前綴符號 prefix-key 快捷匹配與精準頻道映射)
      */
     @Subscribe
     public void onGameChatMessagePreProcess(GameChatMessagePreProcessEvent event) {
         Player player = event.getPlayer();
         if (player == null) return;
 
-        String selectedKey = ChannelManager.getPlayerSelectedKey(player);
-        boolean isCustom = PlayerChannelManager.getChannel(selectedKey) != null;
+        String rawMessage = event.getMessage() != null ? event.getMessage().trim() : "";
+        if (rawMessage.isEmpty()) return;
 
+        String targetChannelKey = ChannelManager.getPlayerSelectedKey(player);
+        String cleanMessage = rawMessage;
+
+        // 1. 優先檢查訊息是否以系統頻道的 prefix-key (例如 $, !, +, ?, ~, @, *) 開頭
+        List<ChannelManager.Channel> prefixChannels = ChannelManager.getPrefixChannelsCache();
+        for (ChannelManager.Channel ch : prefixChannels) {
+            if (rawMessage.startsWith(ch.prefixKey())) {
+                if (ch.permission().isEmpty() || player.hasPermission(ch.permission())) {
+                    targetChannelKey = ch.key();
+                    cleanMessage = rawMessage.substring(ch.prefixKey().length()).trim();
+                    break;
+                }
+            }
+        }
+
+        boolean isCustom = PlayerChannelManager.getChannel(targetChannelKey) != null;
         boolean allowCustom = Main.getInstance().getConfig().getBoolean("discordsrv.forward-custom-group-channels", false);
         if (isCustom && !allowCustom) {
             event.setCancelled(true);
             return;
         }
 
+        // 更新傳送至 Discord 的訊息內容 (去除前綴開頭符號)
+        if (!cleanMessage.isEmpty()) {
+            event.setMessage(cleanMessage);
+        }
+
         // 讀取 config.yml 的 channel-mapping 映射設定
-        String mappedChannel = Main.getInstance().getConfig().getString("discordsrv.channel-mapping." + selectedKey.toLowerCase());
+        String mappedChannel = Main.getInstance().getConfig().getString("discordsrv.channel-mapping." + targetChannelKey.toLowerCase());
         if (mappedChannel != null && !mappedChannel.isEmpty()) {
             event.setChannel(mappedChannel);
         } else {
-            event.setChannel(selectedKey);
+            event.setChannel(targetChannelKey);
         }
     }
 
