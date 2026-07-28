@@ -165,8 +165,13 @@ public class PlayerChannelManager {
         }
         if (pendingSaveTask == null || pendingSaveTask.isCancelled()) {
             pendingSaveTask = Bukkit.getScheduler().runTaskLaterAsynchronously(Main.getInstance(), () -> {
-                saveImmediately();
-                pendingSaveTask = null;
+                try {
+                    saveImmediately();
+                } finally {
+                    synchronized (PlayerChannelManager.class) {
+                        pendingSaveTask = null;
+                    }
+                }
             }, 60L); // 3 秒 (60 ticks) 防抖延遲
         }
     }
@@ -198,6 +203,7 @@ public class PlayerChannelManager {
         String targetId = id.toLowerCase();
         CustomChannel removed = customChannels.remove(targetId);
         if (removed != null) {
+            me.xydesu.chatconduit.integration.WebhookManager.removeCooldown(targetId);
             save();
 
             String resetMsg = Main.getInstance().getLanguageConfig().getString(
@@ -205,7 +211,7 @@ public class PlayerChannelManager {
                     "<red>群組頻道 <yellow>" + removed.getDisplayName() + "</yellow> 已被解散/刪除！自動為你切換回預設頻道。"
             );
 
-            // 廣播給所有線上的群組成員並將發言頻道重置為 global
+            // 廣播給所有線上的群組成員並將發言頻道重置為 global，同時關閉開啟的 GUI 選單
             for (UUID memberUuid : removed.getMembers()) {
                 Player member = Bukkit.getPlayer(memberUuid);
                 if (member != null && member.isOnline()) {
@@ -213,6 +219,7 @@ public class PlayerChannelManager {
                         ChannelManager.setPlayerChannel(member, "global");
                     }
                     ChatUtils.sendMessage(member, resetMsg);
+                    member.closeInventory();
                 }
             }
             return true;

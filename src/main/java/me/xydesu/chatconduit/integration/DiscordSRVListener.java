@@ -70,6 +70,7 @@ public class DiscordSRVListener {
     @Subscribe
     public void onDiscordMessage(DiscordGuildMessagePostProcessEvent event) {
         if (event.getAuthor() == null || event.getAuthor().isBot()) return;
+        if (event.getChannel() == null) return;
 
         String discordChannelId = event.getChannel().getId();
         String discordChannelName = event.getChannel().getName();

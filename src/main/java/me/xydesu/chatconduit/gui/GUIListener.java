@@ -47,7 +47,7 @@ public class GUIListener implements Listener {
             int slot = event.getSlot();
 
             switch (holder.getGuiType()) {
-                case CHANNEL_SELECT -> handleChannelSelectClick(player, slot, clickedItem, event.getClick());
+                case CHANNEL_SELECT -> handleChannelSelectClick(player, holder.getPage(), slot, clickedItem, event.getClick());
                 case PLAYER_CHANNEL_MANAGE -> handleManageClick(player, holder.getExtraData(), slot, clickedItem, event.getClick());
                 case PENDING_INVITES -> handlePendingInvitesClick(player, slot, clickedItem, event.getClick());
                 case ONLINE_PLAYERS_SELECT -> handleOnlinePlayersSelectClick(player, holder.getExtraData(), slot, clickedItem);
@@ -59,7 +59,15 @@ public class GUIListener implements Listener {
     private static final int[] SYS_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
     private static final int[] CUST_SLOTS = {37, 38, 39, 40, 41, 42, 43};
 
-    private void handleChannelSelectClick(Player player, int slot, ItemStack clickedItem, ClickType clickType) {
+    private void handleChannelSelectClick(Player player, int page, int slot, ItemStack clickedItem, ClickType clickType) {
+        if (slot == 46) {
+            ChannelSelectGUI.open(player, Math.max(1, page - 1));
+            return;
+        }
+        if (slot == 52) {
+            ChannelSelectGUI.open(player, page + 1);
+            return;
+        }
         if (slot == 47) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.CREATE_CHANNEL);
             return;
@@ -90,22 +98,37 @@ public class GUIListener implements Listener {
                     ChannelManager.setPlayerChannel(player, sysChan.key());
                     String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", sysChan.name());
                     ChatUtils.sendMessage(player, switchMsg);
-                    ChannelSelectGUI.open(player);
+                    ChannelSelectGUI.open(player, page);
                     return;
                 }
             }
         }
 
         if (slot >= 37 && slot <= 43) {
-            int custSlotIdx = 0;
+            List<PlayerChannelManager.CustomChannel> availableChannels = new java.util.ArrayList<>();
             for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
                 boolean isMember = custChan.getMembers().contains(player.getUniqueId());
                 boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
-                if (!isMember && !isPublic) continue;
+                if (isMember || isPublic) {
+                    availableChannels.add(custChan);
+                }
+            }
 
-                if (custSlotIdx >= CUST_SLOTS.length) break;
-                int currentSlot = CUST_SLOTS[custSlotIdx++];
-                if (currentSlot == slot) {
+            int custSlotIdx = -1;
+            for (int i = 0; i < CUST_SLOTS.length; i++) {
+                if (CUST_SLOTS[i] == slot) {
+                    custSlotIdx = i;
+                    break;
+                }
+            }
+
+            if (custSlotIdx != -1) {
+                int targetIndex = (page - 1) * 7 + custSlotIdx;
+                if (targetIndex >= 0 && targetIndex < availableChannels.size()) {
+                    PlayerChannelManager.CustomChannel custChan = availableChannels.get(targetIndex);
+                    boolean isMember = custChan.getMembers().contains(player.getUniqueId());
+                    boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
+
                     if (clickType.isRightClick()) {
                         if (isMember) {
                             PlayerChannelManageGUI.openForChannel(player, custChan);
@@ -124,7 +147,7 @@ public class GUIListener implements Listener {
                     ChannelManager.setPlayerChannel(player, custChan.getId());
                     String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", custChan.getDisplayName());
                     ChatUtils.sendMessage(player, switchMsg);
-                    ChannelSelectGUI.open(player);
+                    ChannelSelectGUI.open(player, page);
                     return;
                 }
             }

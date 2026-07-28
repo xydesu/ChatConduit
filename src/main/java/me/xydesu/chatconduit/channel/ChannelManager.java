@@ -111,8 +111,13 @@ public class ChannelManager {
         }
         if (pendingSaveTask == null || pendingSaveTask.isCancelled()) {
             pendingSaveTask = Bukkit.getScheduler().runTaskLaterAsynchronously(Main.getInstance(), () -> {
-                saveAllPlayerData();
-                pendingSaveTask = null;
+                try {
+                    saveAllPlayerData();
+                } finally {
+                    synchronized (ChannelManager.class) {
+                        pendingSaveTask = null;
+                    }
+                }
             }, 60L); // 3 秒 (60 ticks) 防抖延遲
         }
     }

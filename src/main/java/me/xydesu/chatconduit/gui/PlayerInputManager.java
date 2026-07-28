@@ -106,19 +106,21 @@ public class PlayerInputManager implements Listener {
                     return;
                 }
 
+                String cleanInput = sanitizeInput(input);
+
                 if (session.type() == InputType.CREATE_CHANNEL) {
-                    if (input.isEmpty() || input.length() > 20) {
+                    if (cleanInput.isEmpty() || cleanInput.length() > 20) {
                         ChatUtils.sendMessage(player, "<red>頻道名稱長度必須介於 1 至 20 個字元！");
                         ChannelSelectGUI.open(player);
                         return;
                     }
 
-                    if (PlayerChannelManager.createChannel(input, player)) {
-                        String msg = Main.getInstance().getLanguageConfig().getString("channel.create-success", "<green>成功建立群組頻道 <yellow><name>！").replace("<name>", input);
+                    if (PlayerChannelManager.createChannel(cleanInput, player)) {
+                        String msg = Main.getInstance().getLanguageConfig().getString("channel.create-success", "<green>成功建立群組頻道 <yellow><name>！").replace("<name>", cleanInput);
                         ChatUtils.sendMessage(player, msg);
-                        ChannelManager.setPlayerChannel(player, input.toLowerCase());
+                        ChannelManager.setPlayerChannel(player, cleanInput.toLowerCase());
 
-                        PlayerChannelManager.CustomChannel newChan = PlayerChannelManager.getChannel(input.toLowerCase());
+                        PlayerChannelManager.CustomChannel newChan = PlayerChannelManager.getChannel(cleanInput.toLowerCase());
                         if (newChan != null) {
                             PlayerChannelManageGUI.openForChannel(player, newChan);
                         } else {
@@ -136,15 +138,15 @@ public class PlayerInputManager implements Listener {
                         return;
                     }
 
-                    if (input.isEmpty() || input.length() > 20) {
+                    if (cleanInput.isEmpty() || cleanInput.length() > 20) {
                         ChatUtils.sendMessage(player, "<red>頻道顯示名稱長度必須介於 1 至 20 個字元！");
                         ChannelSettingsGUI.open(player, customChan);
                         return;
                     }
 
-                    customChan.setDisplayName(input);
+                    customChan.setDisplayName(cleanInput);
                     PlayerChannelManager.save();
-                    ChatUtils.sendMessage(player, "<green>已成功將頻道顯示名稱修改為：<yellow>" + input + "</yellow>！");
+                    ChatUtils.sendMessage(player, "<green>已成功將頻道顯示名稱修改為：<yellow>" + cleanInput + "</yellow>！");
                     ChannelSettingsGUI.open(player, customChan);
                 } else if (session.type() == InputType.INVITE_PLAYER) {
                     PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
@@ -210,13 +212,13 @@ public class PlayerInputManager implements Listener {
                         return;
                     }
 
-                    if (input.isEmpty() || input.length() > 60) {
+                    if (cleanInput.isEmpty() || cleanInput.length() > 60) {
                         ChatUtils.sendMessage(player, "<red>頻道簡介長度必須介於 1 至 60 個字元！");
                         ChannelSettingsGUI.open(player, customChan);
                         return;
                     }
 
-                    customChan.setDescription(input);
+                    customChan.setDescription(cleanInput);
                     PlayerChannelManager.save();
                     ChatUtils.sendMessage(player, "<green>已成功修改頻道簡介說明！");
                     ChannelSettingsGUI.open(player, customChan);
@@ -227,13 +229,13 @@ public class PlayerInputManager implements Listener {
                         return;
                     }
 
-                    if (input.isEmpty() || input.length() > 60) {
+                    if (cleanInput.isEmpty() || cleanInput.length() > 60) {
                         ChatUtils.sendMessage(player, "<red>頻道規則長度必須介於 1 至 60 個字元！");
                         ChannelSettingsGUI.open(player, customChan);
                         return;
                     }
 
-                    customChan.setRules(input);
+                    customChan.setRules(cleanInput);
                     PlayerChannelManager.save();
                     ChatUtils.sendMessage(player, "<green>已成功修改頻道守則！");
                     ChannelSettingsGUI.open(player, customChan);
@@ -242,5 +244,13 @@ public class PlayerInputManager implements Listener {
                 currentlyProcessing.remove(uuid);
             }
         });
+    }
+
+    /**
+     * 淨化玩家對話框輸入，剝離角括號標籤以防止 MiniMessage 格式標籤注入
+     */
+    private static String sanitizeInput(String text) {
+        if (text == null) return "";
+        return text.replace("<", "").replace(">", "").trim();
     }
 }

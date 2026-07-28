@@ -23,14 +23,19 @@ public class ChannelSelectGUI {
     private static final int[] CUST_SLOTS = {37, 38, 39, 40, 41, 42, 43};
 
     public static void open(Player player) {
+        open(player, 1);
+    }
+
+    public static void open(Player player, int page) {
         String titleStr = Main.getInstance().getLanguageConfig().getString(
                 "gui.title-channel-select",
                 "<gradient:#00d2ff:#3a7bd5><bold>聊天頻道控制台</bold></gradient>"
         );
         Component titleComponent = ChatUtils.parse(player, titleStr);
 
-        GUIHolder holder = new GUIHolder(GUIHolder.GUIType.CHANNEL_SELECT);
+        GUIHolder holder = new GUIHolder(GUIHolder.GUIType.CHANNEL_SELECT, null, page);
         Inventory inv = Bukkit.createInventory(holder, 54, titleComponent);
+        holder.setInventory(inv);
 
         String currentChannelKey = ChannelManager.getPlayerSelectedKey(player);
 
@@ -79,16 +84,27 @@ public class ChannelSelectGUI {
             inv.setItem(i, lineFiller);
         }
 
-        // 玩家自訂與公開群組頻道 (Row 5)
-        int custSlotIdx = 0;
+        // 玩家自訂與公開群組頻道 (Row 5 - 支援分頁)
+        List<PlayerChannelManager.CustomChannel> availableChannels = new ArrayList<>();
         for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
-            if (custSlotIdx >= CUST_SLOTS.length) break;
-
             boolean isMember = custChan.getMembers().contains(player.getUniqueId());
             boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
+            if (isMember || isPublic) {
+                availableChannels.add(custChan);
+            }
+        }
 
-            if (!isMember && !isPublic) continue;
+        int totalPages = Math.max(1, (int) Math.ceil(availableChannels.size() / 7.0));
+        int currentPage = Math.min(Math.max(1, page), totalPages);
 
+        int startIndex = (currentPage - 1) * 7;
+        int endIndex = Math.min(availableChannels.size(), currentPage * 7);
+
+        int custSlotIdx = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            PlayerChannelManager.CustomChannel custChan = availableChannels.get(i);
+            boolean isMember = custChan.getMembers().contains(player.getUniqueId());
+            boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
             boolean isSelected = currentChannelKey.equalsIgnoreCase(custChan.getId());
             String displayName = "<gradient:#a8c0ff:#3f2b96><bold>" + custChan.getDisplayName() + "</bold></gradient>";
 
@@ -110,6 +126,16 @@ public class ChannelSelectGUI {
 
             ItemStack item = createItem(Material.BOOKSHELF, displayName, lore, isSelected);
             inv.setItem(CUST_SLOTS[custSlotIdx++], item);
+        }
+
+        // 分頁控制按鈕
+        if (currentPage > 1) {
+            ItemStack prevPage = createItem(Material.ARROW, "<yellow>◀ 上一頁 (第 " + (currentPage - 1) + " 頁)</yellow>");
+            inv.setItem(46, prevPage);
+        }
+        if (currentPage < totalPages) {
+            ItemStack nextPage = createItem(Material.ARROW, "<yellow>下一頁 ▶ (第 " + (currentPage + 1) + " 頁)</yellow>");
+            inv.setItem(52, nextPage);
         }
 
         // 底部功能按鈕

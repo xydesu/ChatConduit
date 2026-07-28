@@ -8,14 +8,21 @@ public class GUIHolder implements InventoryHolder {
 
     private final GUIType guiType;
     private final String extraData;
+    private final int page;
+    private Inventory inventory;
 
     public GUIHolder(GUIType guiType) {
-        this(guiType, null);
+        this(guiType, null, 1);
     }
 
     public GUIHolder(GUIType guiType, String extraData) {
+        this(guiType, extraData, 1);
+    }
+
+    public GUIHolder(GUIType guiType, String extraData, int page) {
         this.guiType = guiType;
         this.extraData = extraData;
+        this.page = page;
     }
 
     public GUIType getGuiType() {
@@ -26,9 +33,17 @@ public class GUIHolder implements InventoryHolder {
         return extraData;
     }
 
+    public int getPage() {
+        return page;
+    }
+
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
+    }
+
     @Override
     public @NotNull Inventory getInventory() {
-        return null;
+        return inventory != null ? inventory : org.bukkit.Bukkit.createInventory(this, 54);
     }
 
     public enum GUIType {

@@ -68,25 +68,31 @@ public class WebhookManager {
                 escapeJson(cleanMsg)
         );
 
-        // 非同步在背景排程器發送 HTTP POST 請求 (避免主執行緒卡頓)
-        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
-            try {
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(webhookUrl.trim()))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                        .timeout(Duration.ofSeconds(5))
-                        .build();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(webhookUrl.trim()))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .timeout(Duration.ofSeconds(5))
+                    .build();
 
-                HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.discarding())
-                        .exceptionally(throwable -> {
-                            Main.getInstance().getLogger().warning("發送 Webhook 訊息失敗 [" + customChan.getId() + "]: " + throwable.getMessage());
-                            return null;
-                        });
-            } catch (Exception e) {
-                Main.getInstance().getLogger().warning("無法發送 Webhook 請求: " + e.getMessage());
-            }
-        });
+            HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.discarding())
+                    .exceptionally(throwable -> {
+                        Main.getInstance().getLogger().warning("發送 Webhook 訊息失敗 [" + customChan.getId() + "]: " + throwable.getMessage());
+                        return null;
+                    });
+        } catch (Exception e) {
+            Main.getInstance().getLogger().warning("無法發送 Webhook 請求: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 當頻道解散/刪除時，清理冷卻時間快取，防止記憶體殘留
+     */
+    public static void removeCooldown(String channelId) {
+        if (channelId != null) {
+            LAST_SENT_MAP.remove(channelId.toLowerCase());
+        }
     }
 
     /**
