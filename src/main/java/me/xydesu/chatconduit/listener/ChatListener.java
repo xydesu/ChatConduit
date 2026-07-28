@@ -125,11 +125,13 @@ public class ChatListener implements Listener {
                 }
             }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
+            me.xydesu.chatconduit.integration.DiscordSRVHook.sendToDiscord(player, customChannel.getId(), finalMessage);
         } else {
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                 onlinePlayer.sendMessage(fullChatMessage);
             }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
+            me.xydesu.chatconduit.integration.DiscordSRVHook.sendToDiscord(player, selectedKey, finalMessage);
         }
     }
 }

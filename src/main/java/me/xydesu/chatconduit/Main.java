@@ -58,11 +58,15 @@ public final class Main extends JavaPlugin {
             getCommand("playerchannel").setTabCompleter(pcCmd);
         }
 
+        // 初始化 DiscordSRV 溝通模組
+        me.xydesu.chatconduit.integration.DiscordSRVHook.init();
+
         getLogger().info("ChatConduit (含全 Chest GUI 零指令系統) 已成功啟動！");
     }
 
     @Override
     public void onDisable() {
+        me.xydesu.chatconduit.integration.DiscordSRVHook.shutdown();
         // 關服時自動儲存所有資料 (同步寫入)
         ChannelManager.saveAllPlayerData();
         PlayerChannelManager.save();

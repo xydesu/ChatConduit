@@ -1,17 +1,18 @@
 name: ChatConduit
-version: '1.0'
+version: '${project.version}'
 main: me.xydesu.chatconduit.Main
 api-version: '1.20'
-softdepend: [PlaceholderAPI]
+author: xydesu
+description: ChatConduit - Next Generation Paper Chat System with full Chest GUI Control
+softdepend: [PlaceholderAPI, DiscordSRV]
 
 commands:
   chatconduit:
     description: ChatConduit 主指令
-    aliases: [cc, chat]
-    permission: chatconduit.use
+    aliases: [cc]
   channel:
-    description: 切換發言頻道
-    aliases: [ ch ]
+    description: 開啟頻道選擇選單或切換頻道
+    aliases: [ch]
   playerchannel:
-    description: 玩家自訂頻道管理指令
-    aliases: [ pc, pchannel ]
+    description: 玩家自訂群組頻道管理指令
+    aliases: [pc]

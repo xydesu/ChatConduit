@@ -7,7 +7,13 @@ language: "zh-TW"
 default-channel: "global"
 
 # 聊天格式統一模板 (可用 <channel_color>, <channel_name>, <player>, <message>, %papi%)
-chat-format: "<white>[<channel_color><channel_name><white>] <<gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
+chat-format: "<white>[<channel_color><channel_name><white>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
+
+# DiscordSRV 雙向轉發設定
+discordsrv:
+  enabled: true
+  # 是否同步將玩家自訂群組頻道的聊天訊息轉發至 DiscordSRV
+  forward-custom-group-channels: true
 
 # 頻道設定清單 (只設定 name, color, prefix-key, permission)
 channels:
@@ -41,14 +47,12 @@ channels:
     prefix-key: "~"
     permission: ""
 
-    # 6. 設施/情報頻道 (例如公用設施、景點、地標或公用農場公告)
   facility:
     name: "設施"
     color: "<gradient:#43e97b:#38f9d7>"
     prefix-key: "@"
     permission: ""
 
-    # 7. 抽獎/活動頻道 (例如抽獎交流、抽獎通知、福利發放)
   lottery:
     name: "抽獎"
     color: "<gradient:#f83600:#fe8c00>"
