@@ -22,10 +22,20 @@ public class PlayerListener implements Listener {
         if (customChan != null) {
             if (!customChan.getMembers().contains(player.getUniqueId())) {
                 ChannelManager.setPlayerChannel(player, "global");
+                String resetMsg = me.xydesu.chatconduit.Main.getInstance().getLanguageConfig().getString(
+                        "channel.reverted-on-join",
+                        "<gray>提示：您先前所在的群組頻道已離開或解散，已自動為您切換回預設頻道。"
+                );
+                me.xydesu.chatconduit.util.ChatUtils.sendMessage(player, resetMsg);
             }
         } else if (sysChan != null) {
             if (!sysChan.permission().isEmpty() && !player.hasPermission(sysChan.permission())) {
                 ChannelManager.setPlayerChannel(player, "global");
+                String resetMsg = me.xydesu.chatconduit.Main.getInstance().getLanguageConfig().getString(
+                        "channel.reverted-on-join-no-perm",
+                        "<gray>提示：您先前選擇的系統頻道已無存取權限，已自動為您切換回預設頻道。"
+                );
+                me.xydesu.chatconduit.util.ChatUtils.sendMessage(player, resetMsg);
             }
         } else {
             ChannelManager.setPlayerChannel(player, "global");

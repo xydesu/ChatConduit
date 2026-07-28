@@ -102,26 +102,32 @@ public class ChatListener implements Listener {
         // 3. 構造具備 HoverEvent (懸停視窗: 簡介與規則) 與 ClickEvent (點擊切換頻道) 的頻道 Prefix Component
         Component channelPrefixComponent;
         if (customChannel != null) {
-            String rawPrefixText = channelColor + "[" + channelName + "]</gradient>";
+            String rawPrefixText = channelColor + "[<channel_name>]</gradient>";
             if (!channelColor.startsWith("<gradient:")) {
-                rawPrefixText = channelColor + "[" + channelName + "]";
+                rawPrefixText = channelColor + "[<channel_name>]";
             }
 
             org.bukkit.OfflinePlayer ownerP = Bukkit.getOfflinePlayer(customChannel.getOwner());
             String ownerName = ownerP.getName() != null ? ownerP.getName() : customChannel.getOwner().toString();
             String modeStr = customChannel.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>PUBLIC (公共)</green>" : "<red>PRIVATE (私人)</red>";
 
-            String hoverStr = customChannel.getColorTheme() + "<bold>=== 群組頻道: " + customChannel.getDisplayName() + " ===</bold></gradient>\n" +
-                    "<gray>頻道隊長: <yellow>" + ownerName + "</yellow>\n" +
+            String hoverStr = customChannel.getColorTheme() + "<bold>=== 群組頻道: <channel_name> ===</bold></gradient>\n" +
+                    "<gray>頻道隊長: <yellow><owner_name></yellow>\n" +
                     "<gray>頻道權限: " + modeStr + "\n" +
-                    "<gray>成員數量: <yellow>" + customChannel.getMembers().size() + " 人</yellow>\n" +
-                    "<gray>頻道簡介: <white>" + customChannel.getDescription() + "</white>\n" +
-                    "<gray>頻道規則: <red>" + customChannel.getRules() + "</red>\n\n" +
+                    "<gray>成員數量: <yellow><member_count> 人</yellow>\n" +
+                    "<gray>頻道簡介: <white><description></white>\n" +
+                    "<gray>頻道規則: <red><rules></red>\n\n" +
                     "<yellow>▶ 點擊快速切換發言至此頻道 / 開啟選單</yellow>";
 
-            Component hoverComponent = ChatUtils.parseNoItalic(player, hoverStr);
+            Component hoverComponent = ChatUtils.parseNoItalic(player, hoverStr,
+                    Placeholder.unparsed("channel_name", customChannel.getDisplayName()),
+                    Placeholder.unparsed("owner_name", ownerName),
+                    Placeholder.unparsed("member_count", String.valueOf(customChannel.getMembers().size())),
+                    Placeholder.unparsed("description", customChannel.getDescription()),
+                    Placeholder.unparsed("rules", customChannel.getRules())
+            );
 
-            channelPrefixComponent = ChatUtils.parseNoItalic(player, rawPrefixText)
+            channelPrefixComponent = ChatUtils.parseNoItalic(player, rawPrefixText, Placeholder.unparsed("channel_name", customChannel.getDisplayName()))
                     .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(hoverComponent))
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/playerchannel switch " + customChannel.getId()));
         } else {
@@ -129,27 +135,49 @@ public class ChatListener implements Listener {
             if (sysChannel == null) sysChannel = ChannelManager.getChannel(selectedKey);
             if (sysChannel == null) sysChannel = ChannelManager.getPlayerChannel(player);
 
+            // 檢查發言玩家是否擁有發言系統頻道的權限
+            if (!sysChannel.permission().isEmpty() && !player.hasPermission(sysChannel.permission())) {
+                String noPermMsg = Main.getInstance().getLanguageConfig().getString(
+                        "channel.no-permission",
+                        "<red>你沒有權限進入此頻道！已為你切換回預設頻道。"
+                );
+                ChatUtils.sendMessage(player, noPermMsg);
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> ChannelManager.setPlayerChannel(player, "global"));
+                return;
+            }
+
             String rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]</gradient>";
             if (!sysChannel.color().startsWith("<gradient:")) {
                 rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]";
             }
 
             String prefixKeyStr = sysChannel.prefixKey().isEmpty() ? "無 (選單切換)" : sysChannel.prefixKey();
-            String hoverStr = sysChannel.color() + "<bold>=== 官方頻道: " + sysChannel.name() + " ===</bold></gradient>\n" +
+            String hoverStr = sysChannel.color() + "<bold>=== 官方頻道: <sys_name> ===</bold></gradient>\n" +
                     "<gray>頻道類型: <green>● 官方系統頻道</green>\n" +
-                    "<gray>快捷鍵前綴: <yellow>" + prefixKeyStr + "</yellow>\n" +
-                    "<gray>頻道簡介: <white>" + sysChannel.description() + "</white>\n" +
-                    "<gray>頻道規則: <red>" + sysChannel.rules() + "</red>\n\n" +
+                    "<gray>快捷鍵前綴: <yellow><prefix_key></yellow>\n" +
+                    "<gray>頻道簡介: <white><description></white>\n" +
+                    "<gray>頻道規則: <red><rules></red>\n\n" +
                     "<yellow>▶ 點擊快速切換發言至此頻道</yellow>";
 
-            Component hoverComponent = ChatUtils.parseNoItalic(player, hoverStr);
+            Component hoverComponent = ChatUtils.parseNoItalic(player, hoverStr,
+                    Placeholder.unparsed("sys_name", sysChannel.name()),
+                    Placeholder.unparsed("prefix_key", prefixKeyStr),
+                    Placeholder.unparsed("description", sysChannel.description()),
+                    Placeholder.unparsed("rules", sysChannel.rules())
+            );
 
             channelPrefixComponent = ChatUtils.parseNoItalic(player, rawPrefixText)
                     .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(hoverComponent))
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/channel " + sysChannel.key()));
         }
 
-        Component playerMessage = ChatUtils.parseLegacy(finalMessage);
+        // 檢查顏色權限：有 chatconduit.chat.color 權限者才解析 Legacy 顏色碼，否則為純文字 Component
+        Component playerMessage;
+        if (player.hasPermission("chatconduit.chat.color")) {
+            playerMessage = ChatUtils.parseLegacy(finalMessage);
+        } else {
+            playerMessage = Component.text(finalMessage);
+        }
 
         String rawChatFormat = Main.getInstance().getConfig().getString(
                 "chat-format",
@@ -164,7 +192,7 @@ public class ChatListener implements Listener {
                 Placeholder.component("message", playerMessage)
         );
 
-        // 4. 發送對象判斷
+        // 4. 發送對象判斷 (若頻道有權限限定，過濾接收玩家)
         if (customChannel != null) {
             for (UUID memberUuid : customChannel.getMembers()) {
                 Player member = Bukkit.getPlayer(memberUuid);
@@ -177,8 +205,13 @@ public class ChatListener implements Listener {
             // 派發非同步外接 Webhook 訊息 (若有設定)
             me.xydesu.chatconduit.integration.WebhookManager.sendWebhook(customChannel, player, finalMessage);
         } else {
+            ChannelManager.Channel targetSysChan = matchedSysChan != null ? matchedSysChan : ChannelManager.getPlayerChannel(player);
+            String sysPerm = targetSysChan.permission();
+
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                onlinePlayer.sendMessage(fullChatMessage);
+                if (sysPerm.isEmpty() || onlinePlayer.hasPermission(sysPerm)) {
+                    onlinePlayer.sendMessage(fullChatMessage);
+                }
             }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
         }
