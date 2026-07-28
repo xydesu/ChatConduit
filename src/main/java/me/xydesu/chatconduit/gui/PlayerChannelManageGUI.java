@@ -85,7 +85,11 @@ public class PlayerChannelManageGUI {
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
-                meta.setOwningPlayer(offP);
+                if (isOnline && offP.getPlayer() != null) {
+                    meta.setPlayerProfile(offP.getPlayer().getPlayerProfile());
+                } else {
+                    meta.setOwningPlayer(offP);
+                }
                 String pName = offP.getName() != null ? offP.getName() : memberUuid.toString();
                 meta.displayName(ChatUtils.parseNoItalic((memberIsOwner ? "<gold><bold>[隊長] " : "<gray>[成員] ") + "<white><bold>" + pName + "</bold>"));
 

@@ -42,7 +42,7 @@ public class OnlinePlayersGUI {
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
-                meta.setOwningPlayer(onlinePlayer);
+                meta.setPlayerProfile(onlinePlayer.getPlayerProfile());
                 meta.displayName(ChatUtils.parseNoItalic("<white><bold>" + onlinePlayer.getName() + "</bold>"));
 
                 List<Component> lore = new ArrayList<>();
