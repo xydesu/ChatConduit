@@ -43,27 +43,33 @@ public class ChatUtils {
         }
 
         // 2. 動態解析 PlaceholderAPI 佔位符，並將 Legacy 顏色轉為 Component 安全注入
-        if (player != null && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+        if (player != null && formattedText.indexOf('%') != -1 && Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             Matcher matcher = PAPI_PATTERN.matcher(formattedText);
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = null;
             int index = 0;
 
             while (matcher.find()) {
+                if (sb == null) {
+                    sb = new StringBuilder(formattedText.length() + 32);
+                }
                 String fullPlaceholder = matcher.group(0);
 
                 try {
                     String papiResult = PlaceholderAPI.setPlaceholders(player, fullPlaceholder);
-                    Component papiComponent = LEGACY_SERIALIZER.deserialize(papiResult != null ? papiResult : "");
-
-                    String papiTagName = "papi_" + index++;
-                    resolverBuilder.resolver(Placeholder.component(papiTagName, papiComponent));
-                    matcher.appendReplacement(sb, Matcher.quoteReplacement("<" + papiTagName + ">"));
-                } catch (Exception e) {
-                    matcher.appendReplacement(sb, Matcher.quoteReplacement(fullPlaceholder));
-                }
+                    if (papiResult != null && !papiResult.equals(fullPlaceholder)) {
+                        Component papiComponent = LEGACY_SERIALIZER.deserialize(papiResult);
+                        String papiTagName = "papi_" + index++;
+                        resolverBuilder.resolver(Placeholder.component(papiTagName, papiComponent));
+                        matcher.appendReplacement(sb, Matcher.quoteReplacement("<" + papiTagName + ">"));
+                        continue;
+                    }
+                } catch (Exception ignored) {}
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(fullPlaceholder));
             }
-            matcher.appendTail(sb);
-            formattedText = sb.toString();
+            if (sb != null) {
+                matcher.appendTail(sb);
+                formattedText = sb.toString();
+            }
         }
 
         return MINI_MESSAGE.deserialize(formattedText, resolverBuilder.build());
