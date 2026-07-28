@@ -3,6 +3,7 @@ package me.xydesu.chatconduit.listener;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.gui.PlayerInputManager;
 import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
@@ -26,22 +27,27 @@ public class ChatListener implements Listener {
      */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLegacyChat(AsyncPlayerChatEvent event) {
-        event.setCancelled(true);
         event.getRecipients().clear();
     }
 
     /**
-     * 處理 Paper 新版 AsyncChatEvent (自動忽略已被對話框輸入等 Listener 取消的事件)
+     * 處理 Paper 新版 AsyncChatEvent
      */
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onChat(AsyncChatEvent event) {
-        if (event.isCancelled()) return;
+        Player player = event.getPlayer();
+
+        // 若該發言屬於 GUI 對話框輸入 (例如建立或重命名頻道)，跳過廣播
+        if (PlayerInputManager.isInputPending(player.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
 
         event.viewers().clear();
         event.setCancelled(true);
 
-        Player player = event.getPlayer();
         String rawMessage = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
+        if (rawMessage.isEmpty()) return;
 
         String selectedKey = ChannelManager.getPlayerSelectedKey(player);
         PlayerChannelManager.CustomChannel customChannel = PlayerChannelManager.getChannel(selectedKey);
