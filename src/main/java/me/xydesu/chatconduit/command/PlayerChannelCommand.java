@@ -81,14 +81,10 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 String sentMsg = getLang("channel.invite-sent", "<green>Invite sent to <yellow><player>.").replace("<player>", targetInvite.getName());
                 ChatUtils.sendMessage(player, sentMsg);
 
-                String recvMsg = getLang("channel.invite-received", "<yellow><player> invited you to [<green><name><yellow>]. Use <gold>/playerchannel accept <name> <yellow>to join!")
-                        .replace("<player>", player.getName())
-                        .replace("<name>", myChan.getDisplayName())
-                        .replace("<id>", myChan.getId());
-                ChatUtils.sendMessage(targetInvite, recvMsg);
+                ChatUtils.sendInviteNotification(player, targetInvite, myChan);
                 break;
 
-            // /pc accept <名稱>
+            // /pc accept <名稱/ID>
             case "accept":
                 if (args.length < 2) {
                     ChatUtils.sendMessage(player, getLang("channel.accept-usage", "<red>Usage: /playerchannel accept <Name>"));
@@ -106,6 +102,23 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 String acceptMsg = getLang("channel.accept-success", "<green>Joined <yellow><name>!").replace("<name>", invChan.getDisplayName());
                 ChatUtils.sendMessage(player, acceptMsg);
                 ChannelManager.setPlayerChannel(player, invChan.getId());
+                break;
+
+            // /pc deny <名稱/ID>
+            case "deny":
+            case "reject":
+                if (args.length < 2) {
+                    ChatUtils.sendMessage(player, "<red>用法: /playerchannel deny <頻道名稱/ID>");
+                    return true;
+                }
+                PlayerChannelManager.CustomChannel rejectChan = PlayerChannelManager.getChannel(args[1]);
+                if (rejectChan == null || !rejectChan.getPendingInvites().contains(player.getUniqueId())) {
+                    ChatUtils.sendMessage(player, "<red>你沒有來自該頻道的待處理邀請！");
+                    return true;
+                }
+                rejectChan.getPendingInvites().remove(player.getUniqueId());
+                PlayerChannelManager.save();
+                ChatUtils.sendMessage(player, "<gray>已成功拒絕頻道 <yellow>" + rejectChan.getDisplayName() + "</yellow> 的邀請。");
                 break;
 
             // /pc leave

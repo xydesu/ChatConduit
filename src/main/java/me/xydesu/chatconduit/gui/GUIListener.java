@@ -319,8 +319,7 @@ public class GUIListener implements Listener {
                     PlayerChannelManager.save();
 
                     ChatUtils.sendMessage(player, "<green>已成功邀請 <yellow>" + targetPlayer.getName() + "</yellow> 加入群組頻道。");
-                    String recvMsg = "<yellow>" + player.getName() + " 邀請你加入頻道 [<green>" + customChan.getDisplayName() + "<yellow>]！請使用選單或指令接受！";
-                    ChatUtils.sendMessage(targetPlayer, recvMsg);
+                    ChatUtils.sendInviteNotification(player, targetPlayer, customChan);
 
                     OnlinePlayersGUI.open(player, customChan);
                 }

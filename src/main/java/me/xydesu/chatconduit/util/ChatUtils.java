@@ -112,4 +112,31 @@ public class ChatUtils {
         Component component = parse(player, prefix + messagePathOrContent);
         sender.sendMessage(component);
     }
+
+    /**
+     * 發送帶有互動式 ClickEvent (點擊執行指令) 與 HoverEvent (懸停提示) 的頻道邀請對話訊息 (分兩行呈現)
+     */
+    public static void sendInviteNotification(Player inviter, Player targetPlayer, me.xydesu.chatconduit.channel.PlayerChannelManager.CustomChannel customChan) {
+        String prefix = Main.getInstance().getLanguageConfig().getString("prefix", "");
+
+        // 第一行: 邀請抬頭訊息
+        String line1Text = prefix + "<yellow>" + inviter.getName() + " 邀請你加入頻道 [<green>" + customChan.getDisplayName() + "<yellow>]！";
+        Component line1Component = parseNoItalic(targetPlayer, line1Text);
+
+        // 第二行: 互動按鈕 [✔ 點擊接受] 與 [✖ 點擊拒絕] 放置在下一行
+        Component acceptBtn = parseNoItalic("<green><bold>[✔ 點擊接受]</bold></green>")
+                .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/pc accept " + customChan.getId()))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(parseNoItalic("<green>點擊立即接受並加入頻道 <yellow>" + customChan.getDisplayName())));
+
+        Component space = Component.text("   ");
+
+        Component denyBtn = parseNoItalic("<red><bold>[✖ 點擊拒絕]</bold></red>")
+                .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/pc deny " + customChan.getId()))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(parseNoItalic("<red>點擊拒絕加入頻道 <yellow>" + customChan.getDisplayName())));
+
+        Component line2Component = parseNoItalic("  ").append(acceptBtn).append(space).append(denyBtn);
+
+        targetPlayer.sendMessage(line1Component);
+        targetPlayer.sendMessage(line2Component);
+    }
 }
