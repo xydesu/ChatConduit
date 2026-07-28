@@ -226,8 +226,8 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Slot 11: 存取權限模式切換
-        if (slot == 11) {
+        // Slot 10: 存取權限模式切換
+        if (slot == 10 || slot == 11) {
             PlayerChannelManager.Mode newMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? PlayerChannelManager.Mode.PRIVATE : PlayerChannelManager.Mode.PUBLIC;
             customChan.setMode(newMode);
             PlayerChannelManager.save();
@@ -236,14 +236,14 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Slot 13: 修改頻道顯示名稱
-        if (slot == 13) {
+        // Slot 12: 修改頻道顯示名稱
+        if (slot == 12 || slot == 13) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.RENAME_CHANNEL, customChan.getId());
             return;
         }
 
-        // Slot 15: 頻道色彩主題樣式切換
-        if (slot == 15) {
+        // Slot 14: 頻道色彩主題樣式切換
+        if (slot == 14 || slot == 15) {
             String currentTheme = customChan.getColorTheme();
             int curIdx = COLOR_PRESETS.indexOf(currentTheme);
             int nextIdx = (curIdx + 1) % COLOR_PRESETS.size();
@@ -253,6 +253,12 @@ public class GUIListener implements Listener {
             PlayerChannelManager.save();
             ChatUtils.sendMessage(player, "<green>已為頻道套用新的色彩主題樣式！");
             ChannelSettingsGUI.open(player, customChan);
+            return;
+        }
+
+        // Slot 16: 設定專屬 Discord Webhook 網址
+        if (slot == 16) {
+            PlayerInputManager.expectInput(player, PlayerInputManager.InputType.SET_WEBHOOK, customChan.getId());
             return;
         }
 

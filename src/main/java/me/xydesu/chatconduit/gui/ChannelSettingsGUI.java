@@ -27,7 +27,7 @@ public class ChannelSettingsGUI {
         for (int i = 0; i < 9; i++) inv.setItem(i, glassFiller);
         for (int i = 18; i < 27; i++) inv.setItem(i, glassFiller);
 
-        // Slot 11: 存取模式切換
+        // Slot 10: 存取模式切換
         boolean isPublic = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
         Material modeMat = isPublic ? Material.OAK_DOOR : Material.IRON_DOOR;
         String modeTitle = "<gold><bold>1. 存取權限模式</bold>";
@@ -37,9 +37,9 @@ public class ChannelSettingsGUI {
                 "",
                 "<yellow>▶ 點擊切換模式 (PUBLIC / PRIVATE)</yellow>"
         );
-        inv.setItem(11, createItem(modeMat, modeTitle, modeLore));
+        inv.setItem(10, createItem(modeMat, modeTitle, modeLore));
 
-        // Slot 13: 頻道顯示名稱重命名
+        // Slot 12: 頻道顯示名稱重命名
         String nameTitle = "<gold><bold>2. 修改頻道顯示名稱</bold>";
         List<String> nameLore = List.of(
                 "<gray>當前顯示名稱: " + customChan.getColorTheme() + customChan.getDisplayName() + "</gradient>",
@@ -47,9 +47,9 @@ public class ChannelSettingsGUI {
                 "",
                 "<yellow>▶ 點擊開啟對話框輸入新名稱</yellow>"
         );
-        inv.setItem(13, createItem(Material.NAME_TAG, nameTitle, nameLore));
+        inv.setItem(12, createItem(Material.NAME_TAG, nameTitle, nameLore));
 
-        // Slot 15: 頻道色彩主題切換
+        // Slot 14: 頻道色彩主題切換
         String colorTitle = "<gold><bold>3. 頻道色彩主題樣式</bold>";
         List<String> colorLore = List.of(
                 "<gray>當前色彩預設: " + customChan.getColorTheme() + "樣式預覽 [頻道名稱]</gradient>",
@@ -57,7 +57,21 @@ public class ChannelSettingsGUI {
                 "",
                 "<yellow>▶ 點擊切換下一個色彩主題</yellow>"
         );
-        inv.setItem(15, createItem(Material.CYAN_DYE, colorTitle, colorLore));
+        inv.setItem(14, createItem(Material.CYAN_DYE, colorTitle, colorLore));
+
+        // Slot 16: 專屬 Webhook 網址綁定
+        String webhookUrl = customChan.getWebhookUrl();
+        boolean hasWebhook = webhookUrl != null && !webhookUrl.trim().isEmpty();
+        String hookTitle = "<gold><bold>4. 設定專屬 Discord Webhook</bold>";
+        List<String> hookLore = List.of(
+                "<gray>綁定狀態: " + (hasWebhook ? "<green>✓ 已綁定 Webhook</green>" : "<red>✗ 未綁定 (單向純遊戲內頻道)</red>"),
+                "<gray>網址預覽: <yellow>" + (hasWebhook ? (webhookUrl.length() > 30 ? webhookUrl.substring(0, 27) + "..." : webhookUrl) : "無") + "</yellow>",
+                "<gray>說明: 成員發言時自動 POST 至您的 Discord 頻道",
+                "",
+                "<yellow>▶ 點擊開啟對話框輸入 Webhook URL</yellow>",
+                "<gray>(如需解除綁定請在對話框輸入 clear)</gray>"
+        );
+        inv.setItem(16, createItem(Material.DISPENSER, hookTitle, hookLore));
 
         // Slot 22: 返回
         inv.setItem(22, createItem(Material.ARROW, "<yellow><bold>← 返回群組管理</bold>", List.of("<gray>回到頻道管理頁面")));

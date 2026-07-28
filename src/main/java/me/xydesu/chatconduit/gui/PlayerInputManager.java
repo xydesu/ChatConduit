@@ -25,7 +25,8 @@ public class PlayerInputManager implements Listener {
     public enum InputType {
         CREATE_CHANNEL,
         RENAME_CHANNEL,
-        INVITE_PLAYER
+        INVITE_PLAYER,
+        SET_WEBHOOK
     }
 
     public record InputSession(InputType type, String extraData) {}
@@ -52,6 +53,9 @@ public class PlayerInputManager implements Listener {
         } else if (type == InputType.INVITE_PLAYER) {
             ChatUtils.sendMessage(player, "<gradient:#00d2ff:#3a7bd5><bold>=== 頻道邀請對話框提示 ===</bold></gradient>");
             ChatUtils.sendMessage(player, "<yellow>請在對話框輸入要邀請的線上玩家名稱 <gray>(輸入 cancel 可取消)：");
+        } else if (type == InputType.SET_WEBHOOK) {
+            ChatUtils.sendMessage(player, "<gradient:#00d2ff:#3a7bd5><bold>=== Webhook 設定對話框提示 ===</bold></gradient>");
+            ChatUtils.sendMessage(player, "<yellow>請在對話框輸入 Discord Webhook 網址 <gray>(輸入 clear 可解除綁定，輸入 cancel 可取消)：");
         }
         ChatUtils.sendMessage(player, "");
     }
@@ -77,6 +81,10 @@ public class PlayerInputManager implements Listener {
                     if (session.extraData() != null) {
                         PlayerChannelManager.CustomChannel c = PlayerChannelManager.getChannel(session.extraData());
                         if (c != null) {
+                            if (session.type() == InputType.SET_WEBHOOK || session.type() == InputType.RENAME_CHANNEL) {
+                                ChannelSettingsGUI.open(player, c);
+                                return;
+                            }
                             OnlinePlayersGUI.open(player, c);
                             return;
                         }
@@ -156,6 +164,31 @@ public class PlayerInputManager implements Listener {
                     ChatUtils.sendInviteNotification(player, targetPlayer, customChan);
 
                     OnlinePlayersGUI.open(player, customChan);
+                } else if (session.type() == InputType.SET_WEBHOOK) {
+                    PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
+                    if (customChan == null) {
+                        ChannelSelectGUI.open(player);
+                        return;
+                    }
+
+                    if (input.equalsIgnoreCase("clear")) {
+                        customChan.setWebhookUrl(null);
+                        PlayerChannelManager.save();
+                        ChatUtils.sendMessage(player, "<green>已成功解除該頻道的 Discord Webhook 綁定！");
+                        ChannelSettingsGUI.open(player, customChan);
+                        return;
+                    }
+
+                    if (!input.startsWith("http://") && !input.startsWith("https://")) {
+                        ChatUtils.sendMessage(player, "<red>無效的 Webhook 網址！請確保以 http:// 或 https:// 開頭。");
+                        ChannelSettingsGUI.open(player, customChan);
+                        return;
+                    }
+
+                    customChan.setWebhookUrl(input.trim());
+                    PlayerChannelManager.save();
+                    ChatUtils.sendMessage(player, "<green>已成功為頻道綁定外接 Discord Webhook 網址！");
+                    ChannelSettingsGUI.open(player, customChan);
                 }
             } finally {
                 currentlyProcessing.remove(uuid);

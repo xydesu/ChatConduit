@@ -125,6 +125,9 @@ public class ChatListener implements Listener {
                 }
             }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
+
+            // 派發非同步外接 Webhook 訊息 (若有設定)
+            me.xydesu.chatconduit.integration.WebhookManager.sendWebhook(customChannel, player, finalMessage);
         } else {
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                 onlinePlayer.sendMessage(fullChatMessage);

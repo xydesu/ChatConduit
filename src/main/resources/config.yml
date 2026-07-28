@@ -9,14 +9,22 @@ default-channel: "global"
 # 聊天格式統一模板 (可用 <channel_color>, <channel_name>, <player>, <message>, %papi%)
 chat-format: "<white>[<channel_color><channel_name><white>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
 
-# DiscordSRV 雙向轉發設定
+# DiscordSRV 雙向轉發與 Webhook 設定
 discordsrv:
   enabled: true
   # 是否將玩家自訂的私人/公開群組頻道訊息轉發至 Discord（預設 false 保障玩家群組隱私）
   forward-custom-group-channels: false
 
+  # 玩家自訂頻道專屬 Webhook 設定
+  webhook:
+    # 是否允許頻道隊長設定個人專屬外接 Discord Webhook 連結
+    allow-custom-webhooks: true
+    # Webhook 機器人顯示名稱模板 (%player%: 玩家名稱, %channel%: 頻道名稱)
+    username-format: "%player% [%channel%]"
+    # 玩家皮膚頭像網址渲染服務 (%player%: 玩家名稱, %uuid%: 玩家 UUID)
+    avatar-url: "https://mc-heads.net/avatar/%player%/64"
+
   # 遊戲內頻道與 Discord 文字頻道對應映射表 (格式: 遊戲頻道Key: "Discord頻道ID或頻道名稱")
-  # 可以填寫 Discord 文字頻道的名稱 (例如 "global", "trade") 或 Discord 文字頻道的 ID (例如 "123456789012345678")
   channel-mapping:
     global: "global"
     trade: "trade"

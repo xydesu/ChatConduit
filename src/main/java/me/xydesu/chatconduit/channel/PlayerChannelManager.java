@@ -28,16 +28,22 @@ public class PlayerChannelManager {
         private UUID owner;
         private Mode mode;
         private String colorTheme;
+        private String webhookUrl;
         private final Set<UUID> members = ConcurrentHashMap.newKeySet();
         private final Set<UUID> pendingInvites = ConcurrentHashMap.newKeySet();
 
-        public CustomChannel(String id, String displayName, UUID owner, Mode mode, String colorTheme) {
+        public CustomChannel(String id, String displayName, UUID owner, Mode mode, String colorTheme, String webhookUrl) {
             this.id = id.toLowerCase();
             this.displayName = displayName;
             this.owner = owner;
             this.mode = mode;
             this.colorTheme = colorTheme != null ? colorTheme : "<gradient:#a8c0ff:#3f2b96>";
+            this.webhookUrl = webhookUrl;
             this.members.add(owner);
+        }
+
+        public CustomChannel(String id, String displayName, UUID owner, Mode mode, String colorTheme) {
+            this(id, displayName, owner, mode, colorTheme, null);
         }
 
         public String getId() { return id; }
@@ -49,6 +55,8 @@ public class PlayerChannelManager {
         public void setMode(Mode mode) { this.mode = mode; }
         public String getColorTheme() { return colorTheme != null ? colorTheme : "<gradient:#a8c0ff:#3f2b96>"; }
         public void setColorTheme(String colorTheme) { this.colorTheme = colorTheme; }
+        public String getWebhookUrl() { return webhookUrl; }
+        public void setWebhookUrl(String webhookUrl) { this.webhookUrl = webhookUrl; }
         public Set<UUID> getMembers() { return members; }
         public Set<UUID> getPendingInvites() { return pendingInvites; }
     }
@@ -76,8 +84,9 @@ public class PlayerChannelManager {
                     UUID owner = UUID.fromString(ownerStr);
                     Mode mode = Mode.valueOf(config.getString("channels." + id + ".mode", "PRIVATE"));
                     String theme = config.getString("channels." + id + ".color-theme", "<gradient:#a8c0ff:#3f2b96>");
+                    String webhook = config.getString("channels." + id + ".webhook-url", null);
 
-                    CustomChannel channel = new CustomChannel(id, name, owner, mode, theme);
+                    CustomChannel channel = new CustomChannel(id, name, owner, mode, theme, webhook);
 
                     List<String> memberList = config.getStringList("channels." + id + ".members");
                     for (String m : memberList) {
@@ -109,6 +118,7 @@ public class PlayerChannelManager {
                     config.set(path + "owner", ch.getOwner().toString());
                     config.set(path + "mode", ch.getMode().name());
                     config.set(path + "color-theme", ch.getColorTheme());
+                    config.set(path + "webhook-url", ch.getWebhookUrl());
 
                     List<String> memberStrings = ch.getMembers().stream().map(UUID::toString).toList();
                     config.set(path + "members", memberStrings);
