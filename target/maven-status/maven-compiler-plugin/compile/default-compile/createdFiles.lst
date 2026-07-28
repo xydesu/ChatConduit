@@ -1,0 +1,12 @@
+me\xydesu\chatConduit\Channel\PlayerChannelManager.class
+me\xydesu\chatConduit\Channel\PlayerChannelManager$Mode.class
+me\xydesu\chatConduit\Commands\ChannelCommand.class
+me\xydesu\chatConduit\Listener\PlayerListener.class
+me\xydesu\chatConduit\Main.class
+me\xydesu\chatConduit\Listener\ChatListener.class
+me\xydesu\chatConduit\Channel\PlayerChannelManager$CustomChannel.class
+me\xydesu\chatConduit\util\ChatUtils.class
+me\xydesu\chatConduit\Commands\ChatConduitCommand.class
+me\xydesu\chatConduit\Channel\ChannelManager.class
+me\xydesu\chatConduit\Channel\ChannelManager$Channel.class
+me\xydesu\chatConduit\Commands\PlayerChannelCommand.class

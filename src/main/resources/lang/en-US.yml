@@ -1,0 +1,69 @@
+# English Language Configuration
+prefix: "<gradient:#55ffff:#00aa00>[ChatConduit]</gradient> "
+
+messages:
+  no-permission: "<red>You do not have permission to execute this command!"
+  reload-success: "<green>Configuration and language files reloaded successfully!"
+  unknown-command: "<red>Unknown command, please use <yellow>/chatconduit help</yellow>."
+
+channel:
+  current: "<gray>Your current active channel: <yellow><channel_name>"
+  switched: "<green>Switched active channel to: <yellow><channel_name>"
+  not-found: "<red>Channel not found!"
+  no-permission: "<red>You do not have permission to access or switch to this channel!"
+  not-in-group: "<red>You are no longer in this group channel! Reverted to default channel."
+
+  # Channel Command Descriptions
+  list-header: "<green>=== Available Channels ==="
+  list-item: "<gray>- <yellow><key> <gray>(<white><name><gray>) Prefix: <gold><prefix_key>"
+
+  # Player Custom Channels (/pc)
+  create-usage: "<red>Usage: /playerchannel create <ChannelName>"
+  create-success: "<green>Successfully created channel <yellow><name>!"
+  create-exists: "<red>A channel with this name already exists!"
+
+  invite-usage: "<red>Usage: /playerchannel invite <Player>"
+  invite-not-owner: "<red>You must be the owner of this channel to perform this action!"
+  invite-player-not-found: "<red>Player not found!"
+  invite-sent: "<green>Invitation sent to <yellow><player>."
+  invite-received: "<yellow><player> invited you to [<green><name><yellow>]. Type <gold>/playerchannel accept <name> <yellow>to join!"
+
+  accept-usage: "<red>Usage: /playerchannel accept <ChannelName>"
+  accept-no-invite: "<red>You do not have a pending invitation for this channel!"
+  accept-success: "<green>Successfully joined channel <yellow><name>!"
+
+  # Member Management
+  kick-usage: "<red>Usage: /playerchannel manage kick <Player>"
+  kick-success: "<green>Successfully kicked <yellow><player> <green>from the channel."
+  kick-not-member: "<red>This player is not in your channel!"
+  kick-self: "<red>You cannot kick yourself!"
+  kicked-notify: "<red>You have been kicked from channel <yellow><name><red>."
+
+  leave-not-in-channel: "<red>You are not currently in a custom channel!"
+  leave-owner-forbidden: "<red>As the channel owner, you cannot leave! Use /pc manage delete or transfer."
+  leave-success: "<green>You have left channel <yellow><name><green>."
+
+  transfer-usage: "<red>Usage: /playerchannel manage transfer <Player>"
+  transfer-not-member: "<red>Target player must be online and a member of this channel!"
+  transfer-success: "<green>Transferred channel ownership to <yellow><player><green>."
+  transfer-notify: "<green>You are now the owner of channel <yellow><name><green>!"
+
+  delete-success: "<red>Successfully deleted channel <yellow><name><red>."
+
+help:
+  header: "<green>=== ChatConduit Commands ==="
+  help-cmd: "<yellow>/chatconduit help <gray>- Show this help menu"
+  reload-cmd: "<yellow>/chatconduit reload <gray>- Reload configuration"
+
+  channel-header: "<green>=== Channel Commands ==="
+  channel-switch: "<yellow>/channel <Name> <gray>- Switch active channel"
+
+  pc-header: "<green>=== Player Channel Management (/pc) ==="
+  pc-create: "<yellow>/pc create <Name> <gray>- Create custom channel"
+  pc-invite: "<yellow>/pc invite <Player> <gray>- Invite player"
+  pc-accept: "<yellow>/pc accept <Name> <gray>- Accept invite"
+  pc-leave: "<yellow>/pc leave <gray>- Leave current channel"
+  pc-members: "<yellow>/pc members <gray>- List channel members"
+  pc-kick: "<yellow>/pc manage kick <Player> <gray>- Kick member"
+  pc-transfer: "<yellow>/pc manage transfer <Player> <gray>- Transfer ownership"
+  pc-delete: "<yellow>/pc manage delete <gray>- Delete channel"

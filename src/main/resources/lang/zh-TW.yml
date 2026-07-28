@@ -1,0 +1,69 @@
+# 繁體中文語言設定檔
+prefix: "<gradient:#55ffff:#00aa00>[ChatConduit]</gradient> "
+
+messages:
+  no-permission: "<red>你沒有權限執行此指令！"
+  reload-success: "<green>設定檔與語言檔已成功重載！"
+  unknown-command: "<red>未知的指令，請使用 <yellow>/chatconduit help</yellow>。"
+
+channel:
+  current: "<gray>你目前預設發言頻道為：<yellow><channel_name>"
+  switched: "<green>已切換預設發言頻道至：<yellow><channel_name>"
+  not-found: "<red>找不到指定的頻道！"
+  no-permission: "<red>你沒有權限進入或切換至此頻道！"
+  not-in-group: "<red>你已經不在該群組頻道內！已退回預設頻道。"
+
+  # 頻道清單相關
+  list-header: "<green>=== 伺服器可用頻道清單 ==="
+  list-item: "<gray>- <yellow><key> <gray>(<white><name><gray>) 快速鍵: <gold><prefix_key>"
+
+  # 玩家自訂頻道管理 (/pc)
+  create-usage: "<red>用法: /playerchannel create <頻道名稱>"
+  create-success: "<green>成功建立群組頻道 <yellow><name>！"
+  create-exists: "<red>該頻道名稱已存在！"
+
+  invite-usage: "<red>用法: /playerchannel invite <玩家名稱>"
+  invite-not-owner: "<red>你必須是你當前所在自訂頻道的隊長才能執行此操作！"
+  invite-player-not-found: "<red>找不到該玩家！"
+  invite-sent: "<green>已傳送邀請給 <yellow><player>。"
+  invite-received: "<yellow><player> 邀請你加入頻道 [<green><name><yellow>]，請輸入 <gold>/playerchannel accept <name> <yellow>加入！"
+
+  accept-usage: "<red>用法: /playerchannel accept <頻道名稱>"
+  accept-no-invite: "<red>你沒有收到該頻道的邀請！"
+  accept-success: "<green>成功加入群組頻道 <yellow><name>！"
+
+  # 玩家頻道成員管理
+  kick-usage: "<red>用法: /playerchannel manage kick <玩家名稱>"
+  kick-success: "<green>已成功將 <yellow><player> <green>踢出頻道。"
+  kick-not-member: "<red>該玩家不在你的頻道內！"
+  kick-self: "<red>你不能將自己踢出頻道！"
+  kicked-notify: "<red>你已被踢出頻道 <yellow><name><red>。"
+
+  leave-not-in-channel: "<red>你目前不處於任何玩家自訂頻道中！"
+  leave-owner-forbidden: "<red>作為頻道隊長你無法直接退出！請使用 /pc manage delete 或 transfer。"
+  leave-success: "<green>你已成功退出頻道 <yellow><name><green>。"
+
+  transfer-usage: "<red>用法: /playerchannel manage transfer <玩家名稱>"
+  transfer-not-member: "<red>目標玩家必須在線且為該頻道的成員！"
+  transfer-success: "<green>已將頻道隊長轉讓給 <yellow><player><green>。"
+  transfer-notify: "<green>你現在是頻道 <yellow><name> <green>的新隊長！"
+
+  delete-success: "<red>已成功解散並刪除頻道 <yellow><name><red>。"
+
+help:
+  header: "<green>=== ChatConduit 幫助選單 ==="
+  help-cmd: "<yellow>/chatconduit help <gray>- 顯示幫助訊息"
+  reload-cmd: "<yellow>/chatconduit reload <gray>- 重載設定檔"
+
+  channel-header: "<green>=== 頻道指令選單 ==="
+  channel-switch: "<yellow>/channel <名稱> <gray>- 切換預設發言頻道"
+
+  pc-header: "<green>=== 玩家個人頻道管理 (/pc) ==="
+  pc-create: "<yellow>/pc create <名稱> <gray>- 建立個人頻道"
+  pc-invite: "<yellow>/pc invite <玩家> <gray>- 邀請玩家加入頻道"
+  pc-accept: "<yellow>/pc accept <名稱> <gray>- 接受頻道邀請"
+  pc-leave: "<yellow>/pc leave <gray>- 退出當前頻道"
+  pc-members: "<yellow>/pc members <gray>- 查看頻道成員清單"
+  pc-kick: "<yellow>/pc manage kick <玩家> <gray>- 將玩家踢出頻道"
+  pc-transfer: "<yellow>/pc manage transfer <玩家> <gray>- 轉讓隊長職位"
+  pc-delete: "<yellow>/pc manage delete <gray>- 解散當前頻道"
