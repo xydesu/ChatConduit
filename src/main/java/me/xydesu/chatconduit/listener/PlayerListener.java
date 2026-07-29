@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -12,12 +13,15 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerListener implements Listener {
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerJoinDataLoad(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        // 非同步加載玩家頻道與訊息偏好設定，避免主執行緒阻塞
+        // 最優先非同步加載玩家頻道與訊息偏好設定，避免主執行緒阻塞
         ChannelManager.loadPlayerDataAsync(player);
+    }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoinMessage(PlayerJoinEvent event) {
         Component joinMsg = event.joinMessage();
         if (joinMsg != null) {
             event.joinMessage(null);
@@ -29,7 +33,7 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
         me.xydesu.chatconduit.gui.PlayerInputManager.clearPendingInput(event.getPlayer().getUniqueId());
 
@@ -48,7 +52,7 @@ public class PlayerListener implements Listener {
         ChannelManager.unloadPlayerData(event.getPlayer().getUniqueId());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Component deathMsg = event.deathMessage();
         if (deathMsg != null) {
