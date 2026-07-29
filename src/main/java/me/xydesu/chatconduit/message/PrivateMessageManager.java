@@ -109,6 +109,13 @@ public class PrivateMessageManager {
             if (remoteData != null && remoteData.getServerId() != null) {
                 String targetServerId = remoteData.getServerId();
 
+                String messageJson = null;
+                if (sender.hasPermission("chatconduit.chat.color")) {
+                    try {
+                        messageJson = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(ChatUtils.parseLegacy(rawMessage));
+                    } catch (Exception ignored) {}
+                }
+
                 // 構建跨服私訊封包
                 PrivateMessagePacket packet = new PrivateMessagePacket(
                         sender.getUniqueId().toString(),
@@ -118,7 +125,8 @@ public class PrivateMessageManager {
                         remoteData.getName(),
                         targetServerId,
                         rawMessage,
-                        System.currentTimeMillis()
+                        System.currentTimeMillis(),
+                        messageJson
                 );
 
                 // 發送至 Redis PubSub
@@ -143,7 +151,7 @@ public class PrivateMessageManager {
      */
     private static void sendLocalPrivateMessage(Player sender, Player target, String serverId, String rawMessage) {
         renderAndSendSenderMessage(sender, target.getName(), serverId, rawMessage);
-        renderAndSendReceiverMessage(target, sender.getName(), serverId, rawMessage);
+        renderAndSendReceiverMessage(target, sender.getName(), serverId, rawMessage, null);
 
         setReplyTarget(sender.getUniqueId(), target.getName());
         setReplyTarget(target.getUniqueId(), sender.getName());
@@ -163,9 +171,15 @@ public class PrivateMessageManager {
         if (localTarget != null && localTarget.isOnline()) {
             String senderName = packet.getSenderName();
             String senderServerId = packet.getSenderServerId() != null ? packet.getSenderServerId() : "Remote";
-            String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(packet.getRawMessage());
 
-            renderAndSendReceiverMessage(localTarget, senderName, senderServerId, cleanedMessage);
+            Component customComp = null;
+            if (packet.getMessageJson() != null && !packet.getMessageJson().isEmpty()) {
+                try {
+                    customComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
+                } catch (Exception ignored) {}
+            }
+
+            renderAndSendReceiverMessage(localTarget, senderName, senderServerId, packet.getRawMessage(), customComp);
 
             // 更新接收者的回覆對象為遠端發送者
             setReplyTarget(localTarget.getUniqueId(), senderName);
@@ -195,7 +209,7 @@ public class PrivateMessageManager {
     /**
      * 為收件者渲染並發送私訊
      */
-    private static void renderAndSendReceiverMessage(Player receiver, String senderName, String senderServerId, String rawMessage) {
+    private static void renderAndSendReceiverMessage(Player receiver, String senderName, String senderServerId, String rawMessage, Component customMessageComponent) {
         String template = Main.getInstance().getConfig().getString(
                 "private-message.receiver-format",
                 "<gray>[<yellow>{sender}</yellow><dark_gray>(<aqua>{sender_server}</aqua>)</dark_gray> -> <green>我</green>] <white>{message}"
@@ -205,9 +219,15 @@ public class PrivateMessageManager {
                 .replace("{sender}", senderName)
                 .replace("{sender_server}", senderServerId != null ? senderServerId : "");
 
-        Component messageComponent = ChatUtils.parseLegacy(rawMessage);
+        Component messageComponent = customMessageComponent;
+        if (messageComponent == null) {
+            String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(rawMessage);
+            messageComponent = ChatUtils.parseLegacy(cleanedMessage);
+        }
+        final Component finalMsgComp = messageComponent;
+
         Component fullComponent = ChatUtils.parse(receiver, formatted)
-                .replaceText(builder -> builder.matchLiteral("{message}").replacement(messageComponent));
+                .replaceText(builder -> builder.matchLiteral("{message}").replacement(finalMsgComp));
 
         receiver.sendMessage(fullComponent);
 

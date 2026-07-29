@@ -193,12 +193,14 @@ public class ChatListener implements Listener {
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/channel " + sysChannel.key()));
         }
 
-        // 檢查顏色權限：有 chatconduit.chat.color 權限者才解析 Legacy 顏色碼，否則為純文字 Component
-        Component playerMessage;
-        if (player.hasPermission("chatconduit.chat.color")) {
-            playerMessage = ChatUtils.parseLegacy(finalMessage);
-        } else {
-            playerMessage = Component.text(finalMessage);
+        // 優先使用原始 event.message() 以保留 InteractiveChat 等插件產生的互動組件 (Hover, Click, Item/Inv 等)
+        Component playerMessage = event.message();
+        if (playerMessage == null || (playerMessage.children().isEmpty() && playerMessage.hoverEvent() == null && playerMessage.clickEvent() == null)) {
+            if (player.hasPermission("chatconduit.chat.color")) {
+                playerMessage = ChatUtils.parseLegacy(finalMessage);
+            } else {
+                playerMessage = Component.text(finalMessage);
+            }
         }
 
         String rawChatFormat = Main.getInstance().getConfig().getString(
@@ -253,6 +255,11 @@ public class ChatListener implements Listener {
 
         // 5. 跨伺服器 Redis 訊息廣播 (異步)
         if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
+            String messageJson = null;
+            try {
+                messageJson = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(playerMessage);
+            } catch (Exception ignored) {}
+
             me.xydesu.chatconduit.redis.ChatMessagePacket packet = new me.xydesu.chatconduit.redis.ChatMessagePacket(
                     player.getUniqueId().toString(),
                     player.getName(),
@@ -260,7 +267,8 @@ public class ChatListener implements Listener {
                     finalMessage,
                     currentServerId,
                     System.currentTimeMillis(),
-                    formatWithPapi
+                    formatWithPapi,
+                    messageJson
             );
             me.xydesu.chatconduit.redis.RedisManager.publishChatMessage(packet);
         }

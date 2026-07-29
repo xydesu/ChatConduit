@@ -18,15 +18,20 @@ public class ChatMessagePacket {
     private String serverId;
     private long timestamp;
     private String chatFormat;
+    private String messageJson;
 
     public ChatMessagePacket() {
     }
 
     public ChatMessagePacket(String senderUuid, String senderName, String channelName, String rawMessage, String serverId, long timestamp) {
-        this(senderUuid, senderName, channelName, rawMessage, serverId, timestamp, null);
+        this(senderUuid, senderName, channelName, rawMessage, serverId, timestamp, null, null);
     }
 
     public ChatMessagePacket(String senderUuid, String senderName, String channelName, String rawMessage, String serverId, long timestamp, String chatFormat) {
+        this(senderUuid, senderName, channelName, rawMessage, serverId, timestamp, chatFormat, null);
+    }
+
+    public ChatMessagePacket(String senderUuid, String senderName, String channelName, String rawMessage, String serverId, long timestamp, String chatFormat, String messageJson) {
         this.senderUuid = senderUuid;
         this.senderName = senderName;
         this.channelName = channelName;
@@ -34,6 +39,7 @@ public class ChatMessagePacket {
         this.serverId = serverId;
         this.timestamp = timestamp;
         this.chatFormat = chatFormat;
+        this.messageJson = messageJson;
     }
 
     public String getSenderUuid() {
@@ -90,6 +96,14 @@ public class ChatMessagePacket {
 
     public void setChatFormat(String chatFormat) {
         this.chatFormat = chatFormat;
+    }
+
+    public String getMessageJson() {
+        return messageJson;
+    }
+
+    public void setMessageJson(String messageJson) {
+        this.messageJson = messageJson;
     }
 
     /**

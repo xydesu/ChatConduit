@@ -19,6 +19,7 @@ public class PrivateMessagePacket {
     private String targetServerId;
     private String rawMessage;
     private long timestamp;
+    private String messageJson;
 
     public PrivateMessagePacket() {
     }
@@ -26,6 +27,12 @@ public class PrivateMessagePacket {
     public PrivateMessagePacket(String senderUuid, String senderName, String senderServerId,
                                 String targetUuid, String targetName, String targetServerId,
                                 String rawMessage, long timestamp) {
+        this(senderUuid, senderName, senderServerId, targetUuid, targetName, targetServerId, rawMessage, timestamp, null);
+    }
+
+    public PrivateMessagePacket(String senderUuid, String senderName, String senderServerId,
+                                String targetUuid, String targetName, String targetServerId,
+                                String rawMessage, long timestamp, String messageJson) {
         this.senderUuid = senderUuid;
         this.senderName = senderName;
         this.senderServerId = senderServerId;
@@ -34,6 +41,7 @@ public class PrivateMessagePacket {
         this.targetServerId = targetServerId;
         this.rawMessage = rawMessage;
         this.timestamp = timestamp;
+        this.messageJson = messageJson;
     }
 
     public String getSenderUuid() {
@@ -98,6 +106,14 @@ public class PrivateMessagePacket {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getMessageJson() {
+        return messageJson;
+    }
+
+    public void setMessageJson(String messageJson) {
+        this.messageJson = messageJson;
     }
 
     public String toJson() {
