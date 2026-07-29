@@ -84,7 +84,7 @@ public final class Main extends JavaPlugin {
         // 初始化 Redis 跨服通訊模組
         me.xydesu.chatconduit.redis.RedisManager.init();
 
-        getLogger().info("ChatConduit (含全 Chest GUI 零指令系統、HikariCP 資料庫與 Redis 多伺服器支持) 已成功啟動！");
+        sendStartupBanner();
     }
 
     @Override
@@ -98,6 +98,79 @@ public final class Main extends JavaPlugin {
         PlayerChannelManager.saveImmediately();
         // 關閉資料庫連線池
         me.xydesu.chatconduit.database.DatabaseManager.close();
+
+        sendShutdownBanner();
+    }
+
+    private void sendStartupBanner() {
+        String version = getDescription().getVersion();
+        String author = String.join(", ", getDescription().getAuthors());
+        if (author.isEmpty()) {
+            author = "xydesu";
+        }
+
+        String dbType = me.xydesu.chatconduit.database.DatabaseManager.getDbType();
+        String dbStatus = dbType != null ? dbType.toUpperCase() : "UNKNOWN";
+
+        String redisStatus = me.xydesu.chatconduit.redis.RedisManager.isEnabled()
+                ? "<green>Enabled</green> <gray>(Server: " + me.xydesu.chatconduit.redis.RedisManager.getServerId() + ")</gray>"
+                : "<red>Disabled</red>";
+
+        String discordSrvStatus = getServer().getPluginManager().isPluginEnabled("DiscordSRV")
+                ? "<green>Hooked</green>"
+                : "<yellow>Not Found</yellow>";
+
+        String papiStatus = getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")
+                ? "<green>Hooked</green>"
+                : "<yellow>Not Found</yellow>";
+
+        int sysChanCount = ChannelManager.getChannels().size();
+        int playerChanCount = PlayerChannelManager.getCustomChannels().size();
+
+        String[] banner = {
+            "",
+            "<gradient:#00FFA3:#00B8FF><bold>  ____ _           _   ____                _   _ </bold></gradient>",
+            "<gradient:#00FFA3:#00B8FF><bold> / ___| |__   __ _| |_/ ___|___  _ __   __| |_| |</bold></gradient>",
+            "<gradient:#00FFA3:#00B8FF><bold>| |   | '_ \\ / _` | __| |   / _ \\| '_ \\ / _` | | |</bold></gradient>",
+            "<gradient:#00FFA3:#00B8FF><bold>| |___| | | | (_| | |_| |__| (_) | | | | (_| |_|_|</bold></gradient>",
+            "<gradient:#00FFA3:#00B8FF><bold> \\____|_| |_|\\__,_|\\__|\\____\\___/|_| |_|\\__,_(_|_)</bold></gradient>",
+            "",
+            "<dark_gray>┌────────────────────────────────────────────────────────┐</dark_gray>",
+            "<dark_gray>│</dark_gray>  <gradient:#00FFA3:#00B8FF><bold>ChatConduit</bold></gradient> <gray>v" + version + "</gray> <dark_gray>| Created by</dark_gray> <gold>" + author + "</gold>",
+            "<dark_gray>├────────────────────────────────────────────────────────┤</dark_gray>",
+            "<dark_gray>│</dark_gray>  <gray>• Database Driver :</gray> <green>HikariCP (" + dbStatus + ")</green>",
+            "<dark_gray>│</dark_gray>  <gray>• Redis Sync      :</gray> " + redisStatus,
+            "<dark_gray>│</dark_gray>  <gray>• DiscordSRV      :</gray> " + discordSrvStatus,
+            "<dark_gray>│</dark_gray>  <gray>• PlaceholderAPI  :</gray> " + papiStatus,
+            "<dark_gray>│</dark_gray>  <gray>• Channels Loaded :</gray> <aqua>" + sysChanCount + " System</aqua> <dark_gray>/</dark_gray> <aqua>" + playerChanCount + " Player</aqua>",
+            "<dark_gray>└────────────────────────────────────────────────────────┘</dark_gray>",
+            "<green>✔ ChatConduit 零指令聊天頻道系統已成功啟動運作！</green>",
+            ""
+        };
+
+        for (String line : banner) {
+            getServer().getConsoleSender().sendMessage(me.xydesu.chatconduit.util.ChatUtils.parse(null, line));
+        }
+    }
+
+    private void sendShutdownBanner() {
+        String version = getDescription().getVersion();
+        String[] banner = {
+            "",
+            "<dark_gray>┌────────────────────────────────────────────────────────┐</dark_gray>",
+            "<dark_gray>│</dark_gray>  <gradient:#FF416C:#FF4B2B><bold>ChatConduit</bold></gradient> <gray>v" + version + "</gray> <dark_gray>| Shutting down...</dark_gray>",
+            "<dark_gray>├────────────────────────────────────────────────────────┤</dark_gray>",
+            "<dark_gray>│</dark_gray>  <gray>• Saving Player Data       :</gray> <green>DONE</green>",
+            "<dark_gray>│</dark_gray>  <gray>• Closing Database Pool    :</gray> <green>DONE</green>",
+            "<dark_gray>│</dark_gray>  <gray>• Closing Redis Connections:</gray> <green>DONE</green>",
+            "<dark_gray>└────────────────────────────────────────────────────────┘</dark_gray>",
+            "<yellow>✖ ChatConduit 插件已成功安全關閉與卸載。</yellow>",
+            ""
+        };
+
+        for (String line : banner) {
+            getServer().getConsoleSender().sendMessage(me.xydesu.chatconduit.util.ChatUtils.parse(null, line));
+        }
     }
 
     public static Main getInstance() {
@@ -144,3 +217,4 @@ public final class Main extends JavaPlugin {
         me.xydesu.chatconduit.redis.RedisManager.init();
     }
 }
+
