@@ -11,6 +11,13 @@ player-channels:
   max-per-player: 3
   # 對話框輸入 (GUI Input) 超時時間 (秒)
   session-timeout-seconds: 45
+  # 頻道名稱長度限制 (字元數)
+  name-min-length: 1
+  name-max-length: 20
+  # 頻道簡介長度上限 (字元數)
+  description-max-length: 60
+  # 頻道守則長度上限 (字元數)
+  rules-max-length: 60
 
 # 資料庫 (Database) 設定
 database:

@@ -23,7 +23,9 @@ channel:
   create-exists: "<red>A channel with this name already exists!"
   create-limit-reached: "<red>You have reached the maximum channel creation limit (max <limit>)!"
   name-blacklisted: "<red>This channel name contains a reserved keyword and cannot be used!"
-  name-invalid: "<red>Invalid channel name (must be 1-20 characters long without special characters)!"
+  name-invalid: "<red>Invalid channel name (must be <min>-<max> characters long without special characters)!"
+  description-invalid: "<red>Channel description must be between 1 and <max> characters!"
+  rules-invalid: "<red>Channel rules must be between 1 and <max> characters!"
   input-timeout: "<red>Chat input session expired and was cancelled automatically."
   only-members-manage: "<red>You must be a member of this channel to manage it!"
 

@@ -135,8 +135,13 @@ public class PlayerInputManager implements Listener {
                 String cleanInput = sanitizeInput(input);
 
                 if (session.type() == InputType.CREATE_CHANNEL) {
-                    if (cleanInput.isEmpty() || cleanInput.length() > 20) {
-                        String msg = Main.getInstance().getLanguageConfig().getString("channel.name-invalid", "<red>頻道名稱格式無效！");
+                    int nameMin = Main.getInstance().getConfig().getInt("player-channels.name-min-length", 1);
+                    int nameMax = Main.getInstance().getConfig().getInt("player-channels.name-max-length", 20);
+
+                    if (cleanInput.length() < nameMin || cleanInput.length() > nameMax) {
+                        String msg = Main.getInstance().getLanguageConfig().getString("channel.name-invalid", "<red>頻道名稱格式無效！")
+                                .replace("<min>", String.valueOf(nameMin))
+                                .replace("<max>", String.valueOf(nameMax));
                         ChatUtils.sendMessage(player, msg);
                         ChannelSelectGUI.open(player);
                         return;
@@ -173,7 +178,9 @@ public class PlayerInputManager implements Listener {
                             ChannelSelectGUI.open(player);
                         }
                         default -> {
-                            String msg = Main.getInstance().getLanguageConfig().getString("channel.name-invalid", "<red>頻道名稱格式無效！");
+                            String msg = Main.getInstance().getLanguageConfig().getString("channel.name-invalid", "<red>頻道名稱格式無效！")
+                                    .replace("<min>", String.valueOf(nameMin))
+                                    .replace("<max>", String.valueOf(nameMax));
                             ChatUtils.sendMessage(player, msg);
                             ChannelSelectGUI.open(player);
                         }
@@ -186,8 +193,13 @@ public class PlayerInputManager implements Listener {
                         return;
                     }
 
-                    if (cleanInput.isEmpty() || cleanInput.length() > 20) {
-                        ChatUtils.sendMessage(player, "<red>頻道顯示名稱長度必須介於 1 至 20 個字元！");
+                    int nameMin = Main.getInstance().getConfig().getInt("player-channels.name-min-length", 1);
+                    int nameMax = Main.getInstance().getConfig().getInt("player-channels.name-max-length", 20);
+                    if (cleanInput.length() < nameMin || cleanInput.length() > nameMax) {
+                        String msg = Main.getInstance().getLanguageConfig().getString("channel.name-invalid", "<red>頻道名稱格式無效！")
+                                .replace("<min>", String.valueOf(nameMin))
+                                .replace("<max>", String.valueOf(nameMax));
+                        ChatUtils.sendMessage(player, msg);
                         ChannelSettingsGUI.open(player, customChan);
                         return;
                     }
@@ -260,8 +272,11 @@ public class PlayerInputManager implements Listener {
                         return;
                     }
 
-                    if (cleanInput.isEmpty() || cleanInput.length() > 60) {
-                        ChatUtils.sendMessage(player, "<red>頻道簡介長度必須介於 1 至 60 個字元！");
+                    int descMax = Main.getInstance().getConfig().getInt("player-channels.description-max-length", 60);
+                    if (cleanInput.isEmpty() || cleanInput.length() > descMax) {
+                        String msg = Main.getInstance().getLanguageConfig().getString("channel.description-invalid", "<red>頻道簡介長度必須介於 1 至 <max> 個字元！")
+                                .replace("<max>", String.valueOf(descMax));
+                        ChatUtils.sendMessage(player, msg);
                         ChannelSettingsGUI.open(player, customChan);
                         return;
                     }
@@ -277,8 +292,11 @@ public class PlayerInputManager implements Listener {
                         return;
                     }
 
-                    if (cleanInput.isEmpty() || cleanInput.length() > 60) {
-                        ChatUtils.sendMessage(player, "<red>頻道規則長度必須介於 1 至 60 個字元！");
+                    int rulesMax = Main.getInstance().getConfig().getInt("player-channels.rules-max-length", 60);
+                    if (cleanInput.isEmpty() || cleanInput.length() > rulesMax) {
+                        String msg = Main.getInstance().getLanguageConfig().getString("channel.rules-invalid", "<red>頻道守則長度必須介於 1 至 <max> 個字元！")
+                                .replace("<max>", String.valueOf(rulesMax));
+                        ChatUtils.sendMessage(player, msg);
                         ChannelSettingsGUI.open(player, customChan);
                         return;
                     }

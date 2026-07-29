@@ -133,7 +133,9 @@ public class PlayerChannelManager {
     public static CreateResult tryCreateChannel(String name, Player owner) {
         if (name == null) return CreateResult.INVALID_NAME;
         String cleanName = name.trim();
-        if (cleanName.isEmpty() || cleanName.length() > 20) return CreateResult.INVALID_NAME;
+        int minLen = Main.getInstance().getConfig().getInt("player-channels.name-min-length", 1);
+        int maxLen = Main.getInstance().getConfig().getInt("player-channels.name-max-length", 20);
+        if (cleanName.length() < minLen || cleanName.length() > maxLen) return CreateResult.INVALID_NAME;
         String id = cleanName.toLowerCase();
 
         if (isReservedKeyword(id)) return CreateResult.RESERVED_KEYWORD;
