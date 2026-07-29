@@ -47,7 +47,7 @@ public class MessageSettingsGUI {
                 "",
                 "<yellow>▶ 點擊切換顯示/隱藏</yellow>"
         );
-        inv.setItem(11, createItem(deathMaterial, "<red><bold>☠️ 死亡訊息通知</bold></red>", deathLore, deathEnabled));
+        inv.setItem(11, createItem(deathMaterial, "<red><bold>☠ 死亡訊息通知</bold></red>", deathLore, deathEnabled));
 
         // Slot 15: 進離場訊息切換按鈕
         Material joinMaterial = joinEnabled ? Material.OAK_DOOR : Material.IRON_DOOR;
