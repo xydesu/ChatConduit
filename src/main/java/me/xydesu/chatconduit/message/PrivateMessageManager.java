@@ -163,9 +163,9 @@ public class PrivateMessageManager {
         if (localTarget != null && localTarget.isOnline()) {
             String senderName = packet.getSenderName();
             String senderServerId = packet.getSenderServerId() != null ? packet.getSenderServerId() : "Remote";
-            String rawMessage = packet.getRawMessage();
+            String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(packet.getRawMessage());
 
-            renderAndSendReceiverMessage(localTarget, senderName, senderServerId, rawMessage);
+            renderAndSendReceiverMessage(localTarget, senderName, senderServerId, cleanedMessage);
 
             // 更新接收者的回覆對象為遠端發送者
             setReplyTarget(localTarget.getUniqueId(), senderName);

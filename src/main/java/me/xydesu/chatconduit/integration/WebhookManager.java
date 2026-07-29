@@ -164,18 +164,7 @@ public class WebhookManager {
      * 清理 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為乾淨的 [item])
      */
     public static String cleanInteractiveChatPlaceholders(String text) {
-        if (text == null || text.isEmpty()) return "";
-        Matcher matcher = INTERACTIVE_CHAT_PATTERN.matcher(text);
-        StringBuilder sb = new StringBuilder();
-        while (matcher.find()) {
-            String tag = matcher.group(1);
-            if (!tag.startsWith("[")) {
-                tag = "[" + tag + "]";
-            }
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(tag));
-        }
-        matcher.appendTail(sb);
-        return sb.toString();
+        return me.xydesu.chatconduit.util.ChatUtils.cleanInteractiveChatPlaceholders(text);
     }
 
     private static String escapeJson(String text) {

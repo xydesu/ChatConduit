@@ -159,8 +159,9 @@ public class RedisMessageListener extends JedisPubSub {
             channelPrefixComponent = ChatUtils.parseNoItalic(null, "<gray>[" + channelKeyOrName + "]");
         }
 
-        // 訊息文字元件
-        Component playerMessageComponent = ChatUtils.parseLegacy(rawMessage);
+        // 訊息文字元件 (清理遠端 InteractiveChat 標籤，避免遠端記憶體無快取時出現 Unable to parse placeholder 錯誤)
+        String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(rawMessage);
+        Component playerMessageComponent = ChatUtils.parseLegacy(cleanedMessage);
 
         String rawChatFormat = packet.getChatFormat();
         if (rawChatFormat == null || rawChatFormat.isEmpty()) {

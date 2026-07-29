@@ -29,6 +29,8 @@ public class ChatUtils {
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
     private static final Pattern PAPI_PATTERN = Pattern.compile("%([^%]+)%");
+    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <chat=UUID:[ping]:>)
+    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<chat=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
 
     /**
      * 解析 MiniMessage 格式字串，自動處理 PlaceholderAPI 佔位符與 Legacy 顏色碼
@@ -281,5 +283,26 @@ public class ChatUtils {
             head.setItemMeta(meta);
         }
         return head;
+    }
+
+    /**
+     * 清理 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為乾淨的 [item])
+     *
+     * @param text 待清理的文字
+     * @return 淨化後的文字
+     */
+    public static String cleanInteractiveChatPlaceholders(String text) {
+        if (text == null || text.isEmpty()) return "";
+        Matcher matcher = INTERACTIVE_CHAT_PATTERN.matcher(text);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String tag = matcher.group(1);
+            if (!tag.startsWith("[")) {
+                tag = "[" + tag + "]";
+            }
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(tag));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 }
