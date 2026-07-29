@@ -20,7 +20,7 @@ public class PlayerListener implements Listener {
         ChannelManager.loadPlayerDataAsync(player);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerJoinMessage(PlayerJoinEvent event) {
         Component joinMsg = event.joinMessage();
         if (joinMsg != null) {
@@ -33,7 +33,7 @@ public class PlayerListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerQuit(PlayerQuitEvent event) {
         me.xydesu.chatconduit.gui.PlayerInputManager.clearPendingInput(event.getPlayer().getUniqueId());
 
@@ -52,7 +52,7 @@ public class PlayerListener implements Listener {
         ChannelManager.unloadPlayerData(event.getPlayer().getUniqueId());
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Component deathMsg = event.deathMessage();
         if (deathMsg != null) {
