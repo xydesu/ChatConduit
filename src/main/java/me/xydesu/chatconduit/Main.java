@@ -28,6 +28,7 @@ public final class Main extends JavaPlugin {
         saveDefaultLanguageFiles();
         loadLanguageConfig();
         me.xydesu.chatconduit.gui.GUIManager.load();
+        me.xydesu.chatconduit.integration.InteractiveChatIntegration.resetCache();
 
         // 初始化資料庫連線池與自動遷移
         me.xydesu.chatconduit.database.DatabaseManager.init();

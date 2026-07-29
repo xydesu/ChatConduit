@@ -58,7 +58,7 @@ public class WebhookManager {
                 .replace("%uuid%", player.getUniqueId().toString());
 
         // 清理 InteractiveChat 插件產生的內部未解析標籤 <chat=UUID:[item]:> 轉為乾淨的 [item]
-        String cleanMsg = cleanInteractiveChatPlaceholders(message);
+        String cleanMsg = InteractiveChatIntegration.cleanOrFormatPlaceholders(message);
 
         // 轉義 JSON 特殊字元
         String jsonPayload = String.format(
