@@ -106,6 +106,8 @@ public class DatabaseManager {
                     + "player_name VARCHAR(32) NOT NULL, "
                     + "current_channel VARCHAR(64) NOT NULL, "
                     + "listening_channels TEXT, "
+                    + "death_messages_enabled TINYINT(1) NOT NULL DEFAULT 1, "
+                    + "join_messages_enabled TINYINT(1) NOT NULL DEFAULT 1, "
                     + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
@@ -132,6 +134,8 @@ public class DatabaseManager {
                     + "player_name TEXT NOT NULL, "
                     + "current_channel TEXT NOT NULL, "
                     + "listening_channels TEXT, "
+                    + "death_messages_enabled INTEGER NOT NULL DEFAULT 1, "
+                    + "join_messages_enabled INTEGER NOT NULL DEFAULT 1, "
                     + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
                     + ");";
 
@@ -158,6 +162,17 @@ public class DatabaseManager {
             stmt.execute(createPlayerDataSql);
             stmt.execute(createPlayerChannelsSql);
             stmt.execute(createChannelMembersSql);
+
+            // 自動遷移舊版資料表結構（加欄位時忽略已存在錯誤）
+            try {
+                String typeDef = isMySQL ? "TINYINT(1) NOT NULL DEFAULT 1" : "INTEGER NOT NULL DEFAULT 1";
+                stmt.execute("ALTER TABLE chatconduit_player_data ADD COLUMN death_messages_enabled " + typeDef + ";");
+            } catch (SQLException ignored) {}
+            try {
+                String typeDef = isMySQL ? "TINYINT(1) NOT NULL DEFAULT 1" : "INTEGER NOT NULL DEFAULT 1";
+                stmt.execute("ALTER TABLE chatconduit_player_data ADD COLUMN join_messages_enabled " + typeDef + ";");
+            } catch (SQLException ignored) {}
+
             Main.getInstance().getLogger().info("資料庫資料表結構初始化驗證完成！");
         } catch (SQLException e) {
             Main.getInstance().getLogger().log(Level.SEVERE, "建立資料表結構時失敗:", e);

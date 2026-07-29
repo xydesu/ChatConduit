@@ -40,7 +40,7 @@ public class DataMigrationManager {
                                 UUID uuid = UUID.fromString(uuidStr);
                                 String channelKey = config.getString("players." + uuidStr);
                                 if (channelKey != null) {
-                                    PlayerDAO.savePlayerData(uuid, "MigratedPlayer", channelKey.toLowerCase(), Collections.emptySet());
+                                    PlayerDAO.savePlayerData(uuid, "MigratedPlayer", channelKey.toLowerCase(), Collections.emptySet(), true, true);
                                     count++;
                                 }
                             } catch (IllegalArgumentException ignored) {}

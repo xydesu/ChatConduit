@@ -6,6 +6,10 @@ messages:
   reload-success: "<green>Configuration and language files reloaded successfully!"
   unknown-command: "<red>Unknown command, please use <yellow>/chatconduit help</yellow>."
 
+gui:
+  title-channel-select: "<gradient:#00d2ff:#3a7bd5><bold>Chat Channel Control Panel</bold></gradient>"
+  title-message-settings: "<gradient:#ff9a9e:#fecfef><bold>Message Display Settings</bold></gradient>"
+
 channel:
   current: "<gray>Your current active channel: <yellow><channel_name>"
   switched: "<green>Switched active channel to: <yellow><channel_name>"

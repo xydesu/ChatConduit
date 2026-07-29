@@ -175,6 +175,15 @@ public class ChannelSelectGUI {
         ), pendingCount > 0);
         inv.setItem(50, inviteItem);
 
+        // Slot 51: 個人訊息顯示設定 (開關死亡與進出訊息)
+        ItemStack msgSettingsItem = createItem(Material.BELL, "<gradient:#ff9a9e:#fecfef><bold>🔔 個人訊息顯示設定</bold></gradient>", List.of(
+                "<gray>開關個人畫面顯示之系統廣播",
+                "<gray>可切換: <yellow>死亡訊息</yellow> 與 <yellow>進出伺服器通知</yellow>",
+                "",
+                "<yellow>▶ 點擊開啟偏好設定選單</yellow>"
+        ), false);
+        inv.setItem(51, msgSettingsItem);
+
         player.openInventory(inv);
     }
 

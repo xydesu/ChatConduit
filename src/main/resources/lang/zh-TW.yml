@@ -6,6 +6,10 @@ messages:
   reload-success: "<green>設定檔與語言檔已成功重載！"
   unknown-command: "<red>未知的指令，請使用 <yellow>/chatconduit help</yellow>。"
 
+gui:
+  title-channel-select: "<gradient:#00d2ff:#3a7bd5><bold>聊天頻道控制台</bold></gradient>"
+  title-message-settings: "<gradient:#ff9a9e:#fecfef><bold>個人訊息顯示設定</bold></gradient>"
+
 channel:
   current: "<gray>你目前預設發言頻道為：<yellow><channel_name>"
   switched: "<green>已切換預設發言頻道至：<yellow><channel_name>"

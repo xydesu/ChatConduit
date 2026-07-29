@@ -5,6 +5,11 @@ server-id: "survival-1"
 # 提示: 若非跨服訊息或 server-id 為空，{server} 將自動不顯示
 chat-format: "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
 
+# 玩家個人預設偏好設定 (訊息顯示開關預設狀態: true 表示開啟, false 表示關閉)
+default-settings:
+  death-messages-enabled: true
+  join-messages-enabled: true
+
 # 玩家自訂群組頻道相關安全與數量限制設定
 player-channels:
   # 單一玩家最多允許創建的群組頻道數量

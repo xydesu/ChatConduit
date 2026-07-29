@@ -52,6 +52,7 @@ public class GUIListener implements Listener {
                 case PENDING_INVITES -> handlePendingInvitesClick(player, slot, clickedItem, event.getClick());
                 case ONLINE_PLAYERS_SELECT -> handleOnlinePlayersSelectClick(player, holder.getExtraData(), slot, clickedItem);
                 case CHANNEL_SETTINGS -> handleSettingsClick(player, holder.getExtraData(), slot, clickedItem);
+                case MESSAGE_SETTINGS -> handleMessageSettingsClick(player, slot, clickedItem);
             }
         }
     }
@@ -79,6 +80,10 @@ public class GUIListener implements Listener {
         }
         if (slot == 50) {
             PendingInvitesGUI.open(player);
+            return;
+        }
+        if (slot == 51) {
+            MessageSettingsGUI.open(player);
             return;
         }
 
@@ -404,6 +409,30 @@ public class GUIListener implements Listener {
                     OnlinePlayersGUI.open(player, customChan);
                 }
             }
+        }
+    }
+
+    private void handleMessageSettingsClick(Player player, int slot, ItemStack clickedItem) {
+        if (slot == 11) {
+            boolean current = ChannelManager.isDeathMessagesEnabled(player);
+            ChannelManager.setDeathMessagesEnabled(player, !current);
+            String stateStr = !current ? "<green>顯示 (ON)</green>" : "<red>隱藏 (OFF)</red>";
+            ChatUtils.sendMessage(player, "<gray>已將死亡訊息通知切換為： " + stateStr);
+            MessageSettingsGUI.open(player);
+            return;
+        }
+
+        if (slot == 15) {
+            boolean current = ChannelManager.isJoinMessagesEnabled(player);
+            ChannelManager.setJoinMessagesEnabled(player, !current);
+            String stateStr = !current ? "<green>顯示 (ON)</green>" : "<red>隱藏 (OFF)</red>";
+            ChatUtils.sendMessage(player, "<gray>已將玩家進出通知切換為： " + stateStr);
+            MessageSettingsGUI.open(player);
+            return;
+        }
+
+        if (slot == 22) {
+            ChannelSelectGUI.open(player);
         }
     }
 }
