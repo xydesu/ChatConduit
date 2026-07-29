@@ -13,7 +13,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class OnlinePlayersGUI {
 
@@ -30,11 +33,14 @@ public class OnlinePlayersGUI {
         for (int i = 45; i < 54; i++) inv.setItem(i, glassFiller);
 
         int slot = 9;
+        java.util.Set<UUID> addedUuids = new java.util.HashSet<>();
+
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (slot >= 45) break;
 
             // 過濾已是成員的玩家
             if (customChan.getMembers().contains(onlinePlayer.getUniqueId())) continue;
+            addedUuids.add(onlinePlayer.getUniqueId());
 
             boolean isInvited = customChan.getPendingInvites().contains(onlinePlayer.getUniqueId());
             String curChanKey = ChannelManager.getPlayerSelectedKey(onlinePlayer);
@@ -46,7 +52,7 @@ public class OnlinePlayersGUI {
                 meta.displayName(ChatUtils.parseNoItalic("<white><bold>" + onlinePlayer.getName() + "</bold>"));
 
                 List<Component> lore = new ArrayList<>();
-                lore.add(ChatUtils.parseNoItalic("<gray>連線狀態: <green>● 線上中 (" + onlinePlayer.getWorld().getName() + ")</green>"));
+                lore.add(ChatUtils.parseNoItalic("<gray>連線狀態: <green>● 本服線上 (" + onlinePlayer.getWorld().getName() + ")</green>"));
                 lore.add(ChatUtils.parseNoItalic("<gray>當前頻道: <yellow>" + curChanKey + "</yellow>"));
                 lore.add(ChatUtils.parseNoItalic("<gray>連線延遲: <yellow>" + onlinePlayer.getPing() + " ms</yellow>"));
                 lore.add(ChatUtils.parseNoItalic(""));
@@ -59,6 +65,44 @@ public class OnlinePlayersGUI {
                 head.setItemMeta(meta);
             }
             inv.setItem(slot++, head);
+        }
+
+        // 補載入跨服/已知玩家頭顱
+        if (slot < 45) {
+            List<me.xydesu.chatconduit.database.dao.PlayerDAO.PlayerData> knownPlayers = me.xydesu.chatconduit.database.dao.PlayerDAO.getAllKnownPlayers();
+            for (me.xydesu.chatconduit.database.dao.PlayerDAO.PlayerData known : knownPlayers) {
+                if (slot >= 45) break;
+                if (known.uuid() == null || known.uuid().equals(inviter.getUniqueId())) continue;
+                if (addedUuids.contains(known.uuid())) continue;
+                if (customChan.getMembers().contains(known.uuid())) continue;
+
+                addedUuids.add(known.uuid());
+                boolean isInvited = customChan.getPendingInvites().contains(known.uuid());
+
+                ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+                SkullMeta meta = (SkullMeta) head.getItemMeta();
+                if (meta != null) {
+                    org.bukkit.OfflinePlayer offP = Bukkit.getOfflinePlayer(known.uuid());
+                    meta.setOwningPlayer(offP);
+
+                    String pName = known.playerName() != null ? known.playerName() : offP.getName();
+                    if (pName == null) pName = "跨服玩家";
+                    meta.displayName(ChatUtils.parseNoItalic("<white><bold>" + pName + "</bold>"));
+
+                    List<Component> lore = new ArrayList<>();
+                    lore.add(ChatUtils.parseNoItalic("<gray>連線狀態: <yellow>● 跨服/已知玩家</yellow>"));
+                    lore.add(ChatUtils.parseNoItalic("<gray>記錄頻道: <yellow>" + (known.currentChannel() != null ? known.currentChannel() : "無") + "</yellow>"));
+                    lore.add(ChatUtils.parseNoItalic(""));
+                    if (isInvited) {
+                        lore.add(ChatUtils.parseNoItalic("<gold>✉ 已發送邀請 (等待對方接受)</gold>"));
+                    } else {
+                        lore.add(ChatUtils.parseNoItalic("<yellow>▶ 點擊發送跨服邀請給此玩家</yellow>"));
+                    }
+                    meta.lore(lore);
+                    head.setItemMeta(meta);
+                }
+                inv.setItem(slot++, head);
+            }
         }
 
         // Slot 45: 返回

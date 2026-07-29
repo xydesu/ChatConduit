@@ -76,4 +76,37 @@ public class PlayerDAO {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 獲取所有已記錄的玩家資料清單
+     *
+     * @return PlayerData 的列表
+     */
+    public static List<PlayerData> getAllKnownPlayers() {
+        List<PlayerData> list = new ArrayList<>();
+        String sql = "SELECT uuid, player_name, current_channel, listening_channels, death_messages_enabled, join_messages_enabled FROM chatconduit_player_data LIMIT 100";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                try {
+                    UUID uuid = UUID.fromString(rs.getString("uuid"));
+                    String name = rs.getString("player_name");
+                    String currentChannel = rs.getString("current_channel");
+                    String listeningRaw = rs.getString("listening_channels");
+                    boolean deathMsg = rs.getInt("death_messages_enabled") != 0;
+                    boolean joinMsg = rs.getInt("join_messages_enabled") != 0;
+
+                    Set<String> listeningSet = new HashSet<>();
+                    if (listeningRaw != null && !listeningRaw.trim().isEmpty()) {
+                        listeningSet.addAll(Arrays.asList(listeningRaw.split(",")));
+                    }
+                    list.add(new PlayerData(uuid, name, currentChannel, listeningSet, deathMsg, joinMsg));
+                } catch (Exception ignored) {}
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
