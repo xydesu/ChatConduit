@@ -29,8 +29,8 @@ public class ChatUtils {
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
     private static final Pattern PAPI_PATTERN = Pattern.compile("%([^%]+)%");
-    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <chat=UUID:[ping]:>)
-    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<chat=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
+    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <ic=UUID:[ping]:>)
+    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<(?:chat|ic|interactivechat)=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
 
     /**
      * 解析 MiniMessage 格式字串，自動處理 PlaceholderAPI 佔位符與 Legacy 顏色碼

@@ -175,7 +175,8 @@ public class PrivateMessageManager {
             Component customComp = null;
             if (packet.getMessageJson() != null && !packet.getMessageJson().isEmpty()) {
                 try {
-                    customComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
+                    String cleanedJson = ChatUtils.cleanInteractiveChatPlaceholders(packet.getMessageJson());
+                    customComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(cleanedJson);
                 } catch (Exception ignored) {}
             }
 
