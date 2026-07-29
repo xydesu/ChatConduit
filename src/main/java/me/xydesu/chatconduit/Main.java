@@ -78,6 +78,16 @@ public final class Main extends JavaPlugin {
             getCommand("mutelist").setTabCompleter(muteCmd);
         }
 
+        me.xydesu.chatconduit.command.MsgCommand msgCmd = new me.xydesu.chatconduit.command.MsgCommand();
+        if (getCommand("msg") != null) {
+            getCommand("msg").setExecutor(msgCmd);
+            getCommand("msg").setTabCompleter(msgCmd);
+        }
+        if (getCommand("reply") != null) {
+            getCommand("reply").setExecutor(msgCmd);
+            getCommand("reply").setTabCompleter(msgCmd);
+        }
+
         // 初始化 DiscordSRV 溝通模組
         me.xydesu.chatconduit.integration.DiscordSRVHook.init();
 

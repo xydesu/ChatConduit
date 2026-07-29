@@ -25,6 +25,12 @@ commands:
   mutelist:
     description: 查看受禁言玩家清單
     permission: chatconduit.admin.mutelist
+  msg:
+    description: 發送跨服/本地私訊給指定玩家
+    aliases: [tell, w, pm, whisper]
+  reply:
+    description: 快速回覆最後一位與您私訊的玩家
+    aliases: [r]
 
 permissions:
   chatconduit.admin.mute:

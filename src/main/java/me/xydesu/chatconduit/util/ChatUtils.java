@@ -178,6 +178,16 @@ public class ChatUtils {
     }
 
     /**
+     * 從語言檔獲取指定路徑的格式化字串
+     *
+     * @param path 語言檔路徑 (例如 "msg.disabled")
+     * @return 語言檔設定的字串內容
+     */
+    public static String getMessage(String path) {
+        return Main.getInstance().getLanguageConfig().getString(path, path);
+    }
+
+    /**
      * 發送帶有插件 Prefix 的系統訊息給玩家或控制台
      *
      * @param sender                接收訊息的對象 (Player 或 Console)

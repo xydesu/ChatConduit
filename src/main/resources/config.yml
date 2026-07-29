@@ -10,6 +10,12 @@ default-settings:
   death-messages-enabled: true
   join-messages-enabled: true
 
+# 私人訊息 (/msg, /tell, /r) 格式設定
+private-message:
+  enabled: true
+  sender-format: "<gray>[<green>我</green> -> <yellow>{target}</yellow><dark_gray>(<aqua>{target_server}</aqua>)</dark_gray>] <white>{message}"
+  receiver-format: "<gray>[<yellow>{sender}</yellow><dark_gray>(<aqua>{sender_server}</aqua>)</dark_gray> -> <green>我</green>] <white>{message}"
+
 # 玩家自訂群組頻道相關安全與數量限制設定
 player-channels:
   # 單一玩家最多允許創建的群組頻道數量

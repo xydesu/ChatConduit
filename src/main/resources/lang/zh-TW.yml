@@ -101,3 +101,11 @@ mute:
   list-empty: "<yellow>目前沒有任何被禁言的玩家。"
   list-header: "<gradient:#ff416c:#ff4b2b><bold>=== 當前被禁言玩家清單 (共 <count> 人) ===</bold></gradient>"
   list-item: "<gray>- <yellow><player></yellow> | 剩餘時間: <aqua><time></aqua> | 原因: <white><reason></white> | 執行者: <gray><by></gray>"
+
+msg:
+  usage: "<red>用法: /msg <玩家名稱> <訊息內容>"
+  reply-usage: "<red>用法: /reply <訊息內容>"
+  player-not-found: "<red>找不到指定的線上玩家：<yellow><target>"
+  cannot-msg-self: "<red>你不能傳送私訊給自己！"
+  no-reply-target: "<red>你目前沒有可以回覆的私訊對象！"
+  disabled: "<red>私訊功能目前已被管理員停用。"

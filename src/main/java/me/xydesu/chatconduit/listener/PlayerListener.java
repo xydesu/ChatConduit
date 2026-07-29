@@ -22,12 +22,17 @@ public class PlayerListener implements Listener {
         lastJoinQuitTime = System.currentTimeMillis();
         // 最優先非同步加載玩家頻道與訊息偏好設定，避免主執行緒阻塞
         ChannelManager.loadPlayerDataAsync(player);
+        // 註冊玩家線上狀態至 Redis 快取
+        me.xydesu.chatconduit.redis.RedisPlayerRegistry.registerPlayer(player, me.xydesu.chatconduit.redis.RedisManager.getServerId());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerQuit(PlayerQuitEvent event) {
         lastJoinQuitTime = System.currentTimeMillis();
         me.xydesu.chatconduit.gui.PlayerInputManager.clearPendingInput(event.getPlayer().getUniqueId());
+        me.xydesu.chatconduit.message.PrivateMessageManager.removeReplyTarget(event.getPlayer().getUniqueId());
+        // 從 Redis 快取中移除玩家
+        me.xydesu.chatconduit.redis.RedisPlayerRegistry.unregisterPlayer(event.getPlayer());
         // 玩家離線時非同步寫入保存，並從記憶體 Map 卸載資料防止洩漏
         ChannelManager.savePlayerData(event.getPlayer().getUniqueId());
         ChannelManager.unloadPlayerData(event.getPlayer().getUniqueId());

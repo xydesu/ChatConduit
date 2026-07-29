@@ -101,3 +101,11 @@ mute:
   list-empty: "<yellow>Currently there are no muted players."
   list-header: "<gradient:#ff416c:#ff4b2b><bold>=== Currently Muted Players (<count>) ===</bold></gradient>"
   list-item: "<gray>- <yellow><player></yellow> | Remaining: <aqua><time></aqua> | Reason: <white><reason></white> | By: <gray><by></gray>"
+
+msg:
+  usage: "<red>Usage: /msg <player> <message>"
+  reply-usage: "<red>Usage: /reply <message>"
+  player-not-found: "<red>Specified online player not found: <yellow><target>"
+  cannot-msg-self: "<red>You cannot send a private message to yourself!"
+  no-reply-target: "<red>You have no recent private message recipient to reply to!"
+  disabled: "<red>Private messaging is currently disabled by administrator."

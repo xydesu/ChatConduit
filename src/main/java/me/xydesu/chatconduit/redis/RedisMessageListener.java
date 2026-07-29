@@ -56,6 +56,20 @@ public class RedisMessageListener extends JedisPubSub {
                 }
             }
 
+            // 嘗試解析為 PrivateMessagePacket
+            if (message.contains("\"targetName\"") && message.contains("\"rawMessage\"") && !message.contains("\"channelName\"")) {
+                PrivateMessagePacket pmPacket = PrivateMessagePacket.fromJson(message);
+                if (pmPacket != null && pmPacket.getSenderServerId() != null) {
+                    // 忽略來自本伺服器的發送封包 (本服發送者已直接本地處理)
+                    if (!pmPacket.getSenderServerId().equalsIgnoreCase(RedisManager.getServerId())) {
+                        Bukkit.getScheduler().runTask(Main.getInstance(), () ->
+                                me.xydesu.chatconduit.message.PrivateMessageManager.handleIncomingPrivateMessage(pmPacket)
+                        );
+                    }
+                    return;
+                }
+            }
+
             ChatMessagePacket packet = ChatMessagePacket.fromJson(message);
             if (packet == null) return;
 

@@ -182,6 +182,41 @@ public class RedisManager {
         });
     }
 
+    /**
+     * 發送私訊封包至 Redis
+     *
+     * @param packet 私訊封包
+     */
+    public static void publishPrivateMessage(PrivateMessagePacket packet) {
+        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
+            return;
+        }
+
+        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.publish(redisChannel, packet.toJson());
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "發送 Redis 私訊廣播失敗:", e);
+            }
+        });
+    }
+
+    /**
+     * 獲取 Jedis 連線資源，供組件內部進行同步或非同步 Redis 操作
+     * 調用者有責任調用 jedis.close() 來歸還連線池資源
+     */
+    public static Jedis getJedis() {
+        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
+            return null;
+        }
+        try {
+            return jedisPool.getResource();
+        } catch (Exception e) {
+            Main.getInstance().getLogger().log(Level.FINE, "獲取 Jedis 資源失敗:", e);
+            return null;
+        }
+    }
+
 
     /**
      * 關閉 Redis 資源與連線池
