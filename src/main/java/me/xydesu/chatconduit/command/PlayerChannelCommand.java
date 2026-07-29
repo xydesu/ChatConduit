@@ -136,13 +136,20 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
 
                 if (targetInvite != null && targetInvite.isOnline()) {
                     myChan.getPendingInvites().add(targetInvite.getUniqueId());
-                    PlayerChannelManager.save();
+                    PlayerChannelManager.saveChannel(myChan);
 
                     String sentMsg = getLang("channel.invite-sent", "<green>Invite sent to <yellow><player>.").replace("<player>", targetInvite.getName());
                     ChatUtils.sendMessage(player, sentMsg);
                     ChatUtils.sendInviteNotification(player, targetInvite, myChan);
                 } else if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
-                    // 若本地找不到該玩家，但啟用了 Redis，發送跨服廣播邀請
+                    // 嘗試紀錄離線玩家 UUID (若本服存在該玩家快取)
+                    org.bukkit.OfflinePlayer offPlayer = Bukkit.getOfflinePlayer(targetName);
+                    if (offPlayer != null && offPlayer.getUniqueId() != null) {
+                        myChan.getPendingInvites().add(offPlayer.getUniqueId());
+                        PlayerChannelManager.saveChannel(myChan);
+                    }
+
+                    // 若本地找不到線上玩家，透過 Redis 發送跨服廣播邀請
                     me.xydesu.chatconduit.redis.ChannelInvitePacket invitePacket = new me.xydesu.chatconduit.redis.ChannelInvitePacket(
                             me.xydesu.chatconduit.redis.ChannelInvitePacket.Action.INVITE,
                             player.getUniqueId().toString(),
@@ -167,14 +174,14 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     ChatUtils.sendMessage(player, getLang("channel.accept-usage", "<red>Usage: /playerchannel accept <Name>"));
                     return true;
                 }
-                PlayerChannelManager.CustomChannel invChan = PlayerChannelManager.getChannel(args[1]);
+                PlayerChannelManager.CustomChannel invChan = PlayerChannelManager.getOrLoadChannel(args[1]);
                 if (invChan == null || !invChan.getPendingInvites().contains(player.getUniqueId())) {
                     ChatUtils.sendMessage(player, getLang("channel.accept-no-invite", "<red>No pending invite for this channel!"));
                     return true;
                 }
                 invChan.getPendingInvites().remove(player.getUniqueId());
                 invChan.getMembers().add(player.getUniqueId());
-                PlayerChannelManager.save();
+                PlayerChannelManager.saveChannel(invChan);
 
                 String acceptMsg = getLang("channel.accept-success", "<green>Joined <yellow><name>!").replace("<name>", invChan.getDisplayName());
                 ChatUtils.sendMessage(player, acceptMsg);
@@ -204,13 +211,13 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     ChatUtils.sendMessage(player, "<red>用法: /playerchannel deny <頻道名稱/ID>");
                     return true;
                 }
-                PlayerChannelManager.CustomChannel rejectChan = PlayerChannelManager.getChannel(args[1]);
+                PlayerChannelManager.CustomChannel rejectChan = PlayerChannelManager.getOrLoadChannel(args[1]);
                 if (rejectChan == null || !rejectChan.getPendingInvites().contains(player.getUniqueId())) {
                     ChatUtils.sendMessage(player, "<red>你沒有來自該頻道的待處理邀請！");
                     return true;
                 }
                 rejectChan.getPendingInvites().remove(player.getUniqueId());
-                PlayerChannelManager.save();
+                PlayerChannelManager.saveChannel(rejectChan);
                 ChatUtils.sendMessage(player, "<gray>已成功拒絕頻道 <yellow>" + rejectChan.getDisplayName() + "</yellow> 的邀請。");
 
                 // 跨服廣播拒絕通知

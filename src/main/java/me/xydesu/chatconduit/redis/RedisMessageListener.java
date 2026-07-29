@@ -176,12 +176,36 @@ public class RedisMessageListener extends JedisPubSub {
             case INVITE -> {
                 // 檢查目標玩家是否在本伺服器在線
                 Player targetPlayer = Bukkit.getPlayerExact(packet.getTargetPlayerName());
+                if (targetPlayer == null || !targetPlayer.isOnline()) {
+                    targetPlayer = Bukkit.getPlayer(packet.getTargetPlayerName());
+                }
+
                 if (targetPlayer != null && targetPlayer.isOnline()) {
-                    PlayerChannelManager.CustomChannel channel = PlayerChannelManager.getChannel(packet.getChannelId());
-                    if (channel != null) {
-                        channel.getPendingInvites().add(targetPlayer.getUniqueId());
-                        PlayerChannelManager.save();
+                    PlayerChannelManager.CustomChannel channel = PlayerChannelManager.getOrLoadChannel(packet.getChannelId());
+                    if (channel == null) {
+                        UUID senderUuid = null;
+                        try {
+                            if (packet.getSenderUuid() != null) {
+                                senderUuid = UUID.fromString(packet.getSenderUuid());
+                            }
+                        } catch (Exception ignored) {}
+
+                        if (senderUuid == null) {
+                            senderUuid = UUID.randomUUID();
+                        }
+
+                        channel = new PlayerChannelManager.CustomChannel(
+                                packet.getChannelId(),
+                                packet.getChannelDisplayName() != null ? packet.getChannelDisplayName() : packet.getChannelId(),
+                                senderUuid,
+                                PlayerChannelManager.Mode.PRIVATE,
+                                "<gradient:#a8c0ff:#3f2b96>"
+                        );
+                        PlayerChannelManager.registerChannel(channel);
                     }
+
+                    channel.getPendingInvites().add(targetPlayer.getUniqueId());
+                    PlayerChannelManager.saveChannel(channel);
 
                     // 發送跨服互動邀請推播給目標玩家
                     ChatUtils.sendRemoteInviteNotification(
@@ -195,7 +219,7 @@ public class RedisMessageListener extends JedisPubSub {
             }
             case ACCEPT -> {
                 // 有玩家在遠端接受了頻道邀請
-                PlayerChannelManager.CustomChannel channel = PlayerChannelManager.getChannel(packet.getChannelId());
+                PlayerChannelManager.CustomChannel channel = PlayerChannelManager.getOrLoadChannel(packet.getChannelId());
                 if (channel != null) {
                     // 同步成員清單
                     try {
@@ -203,7 +227,7 @@ public class RedisMessageListener extends JedisPubSub {
                         channel.getPendingInvites().remove(targetUuid);
                         if (!channel.getMembers().contains(targetUuid)) {
                             channel.getMembers().add(targetUuid);
-                            PlayerChannelManager.save();
+                            PlayerChannelManager.saveChannel(channel);
                         }
                     } catch (Exception ignored) {}
 
@@ -218,6 +242,9 @@ public class RedisMessageListener extends JedisPubSub {
             case REJECT -> {
                 // 目標玩家拒絕了邀請，通知隊長
                 Player senderPlayer = Bukkit.getPlayerExact(packet.getSenderName());
+                if (senderPlayer == null || !senderPlayer.isOnline()) {
+                    senderPlayer = Bukkit.getPlayer(packet.getSenderName());
+                }
                 if (senderPlayer != null && senderPlayer.isOnline()) {
                     ChatUtils.sendMessage(senderPlayer, "<gray>玩家 <yellow>" + packet.getTargetPlayerName() + "</yellow> 拒絕了加入頻道 <yellow>" + packet.getChannelDisplayName() + "</yellow> 的邀請。");
                 }

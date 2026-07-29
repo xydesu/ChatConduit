@@ -14,8 +14,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.profile.PlayerProfile;
-import org.bukkit.profile.ProfileProperty;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -192,7 +192,7 @@ public class ChatUtils {
         SkullMeta meta = (SkullMeta) head.getItemMeta();
         if (meta != null) {
             if (base64Texture != null && !base64Texture.isEmpty()) {
-                PlayerProfile profile = org.bukkit.Bukkit.createProfile(UUID.nameUUIDFromBytes(base64Texture.getBytes()), null);
+                PlayerProfile profile = Bukkit.createProfile(UUID.nameUUIDFromBytes(base64Texture.getBytes()), null);
                 profile.setProperty(new ProfileProperty("textures", base64Texture));
                 meta.setPlayerProfile(profile);
             }

@@ -96,6 +96,32 @@ public class PlayerChannelManager {
         return customChannels.get(id.toLowerCase());
     }
 
+    /**
+     * 獲取頻道，若快取中不存在則嘗試從資料庫即時讀取並載入快取
+     */
+    public static CustomChannel getOrLoadChannel(String id) {
+        if (id == null) return null;
+        String key = id.toLowerCase();
+        CustomChannel chan = customChannels.get(key);
+        if (chan != null) return chan;
+
+        CustomChannel loaded = PlayerChannelDAO.loadCustomChannel(key);
+        if (loaded != null) {
+            customChannels.put(key, loaded);
+            return loaded;
+        }
+        return null;
+    }
+
+    /**
+     * 手動註冊/寫入頻道至快取
+     */
+    public static void registerChannel(CustomChannel channel) {
+        if (channel != null && channel.getId() != null) {
+            customChannels.put(channel.getId().toLowerCase(), channel);
+        }
+    }
+
     public static Map<String, CustomChannel> getCustomChannels() {
         return Collections.unmodifiableMap(customChannels);
     }

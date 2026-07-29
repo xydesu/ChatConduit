@@ -63,6 +63,54 @@ public class PlayerChannelDAO {
     }
 
     /**
+     * 從資料庫載入特定名稱/ID 的玩家自建頻道與成員
+     *
+     * @param channelId 頻道識別碼
+     * @return CustomChannel 物件，若不存在則回傳 null
+     */
+    public static CustomChannel loadCustomChannel(String channelId) {
+        if (channelId == null || channelId.isEmpty()) return null;
+
+        String targetId = channelId.toLowerCase();
+        String sqlChannel = "SELECT channel_name, display_name, owner_uuid, is_private, webhook_url FROM chatconduit_player_channels WHERE channel_name = ?";
+        String sqlMembers = "SELECT player_uuid FROM chatconduit_channel_members WHERE channel_name = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement psChan = conn.prepareStatement(sqlChannel)) {
+
+            psChan.setString(1, targetId);
+            try (ResultSet rsChan = psChan.executeQuery()) {
+                if (rsChan.next()) {
+                    String id = rsChan.getString("channel_name");
+                    String displayName = rsChan.getString("display_name");
+                    UUID owner = UUID.fromString(rsChan.getString("owner_uuid"));
+                    boolean isPrivate = rsChan.getInt("is_private") == 1;
+                    String webhookUrl = rsChan.getString("webhook_url");
+
+                    Mode mode = isPrivate ? Mode.PRIVATE : Mode.PUBLIC;
+                    CustomChannel channel = new CustomChannel(id, displayName, owner, mode, "<gradient:#a8c0ff:#3f2b96>", webhookUrl, "自訂對話頻道", "遵守社群規範");
+
+                    try (PreparedStatement psMem = conn.prepareStatement(sqlMembers)) {
+                        psMem.setString(1, id);
+                        try (ResultSet rsMem = psMem.executeQuery()) {
+                            while (rsMem.next()) {
+                                try {
+                                    UUID memberUuid = UUID.fromString(rsMem.getString("player_uuid"));
+                                    channel.getMembers().add(memberUuid);
+                                } catch (IllegalArgumentException ignored) {}
+                            }
+                        }
+                    }
+                    return channel;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * 儲存或更新自訂頻道
      */
     public static void saveCustomChannel(CustomChannel channel) {
