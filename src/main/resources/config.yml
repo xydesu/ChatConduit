@@ -16,6 +16,25 @@ player-channels:
   # 對話框輸入 (GUI Input) 超時時間 (秒)
   session-timeout-seconds: 45
 
+# 資料庫 (Database) 設定
+database:
+  # 資料庫類型 (可選: "sqlite", "mysql")
+  type: "sqlite"
+  # SQLite 資料庫檔名 (位於 plugins/ChatConduit/ 內)
+  sqlite-file: "storage.db"
+
+  # MySQL / MariaDB 設定 (僅當 type 設定為 "mysql" 時生效)
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "chatconduit"
+    username: "root"
+    password: ""
+    # HikariCP 連線池設定
+    pool-size: 10
+    max-lifetime: 1800000 # 毫秒 (30分鐘)
+    connection-timeout: 10000 # 毫秒 (10秒)
+
 
 # DiscordSRV 雙向轉發與 Webhook 設定
 discordsrv:

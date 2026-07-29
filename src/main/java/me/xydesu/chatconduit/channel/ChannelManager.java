@@ -1,27 +1,23 @@
 package me.xydesu.chatconduit.channel;
 
 import me.xydesu.chatconduit.Main;
+import me.xydesu.chatconduit.database.dao.PlayerDAO;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 頻道總管理器（結合記憶體快取與非同步 DAO 儲存）
+ */
 public class ChannelManager {
 
     private static final Map<String, Channel> systemChannels = new ConcurrentHashMap<>();
     private static final Map<UUID, String> playerSelectedChannel = new ConcurrentHashMap<>();
     private static volatile List<Channel> prefixChannelsCache = List.of();
     private static String defaultChannelKey = "global";
-
-    private static File dataFile;
-    private static FileConfiguration dataConfig;
-    private static final Object FILE_LOCK = new Object();
 
     public record Channel(String key, String name, String color, String prefixKey, String permission, String description, String rules) {}
 
@@ -46,7 +42,6 @@ public class ChannelManager {
             }
         }
 
-        // 預先過濾並排序 Prefix 頻道快取清單
         prefixChannelsCache = systemChannels.values().stream()
                 .filter(c -> c.prefixKey() != null && !c.prefixKey().isEmpty())
                 .sorted(Comparator.comparingInt((Channel c) -> c.prefixKey().length()).reversed())
@@ -54,90 +49,46 @@ public class ChannelManager {
     }
 
     /**
-     * 載入玩家頻道選擇資料 (player-data.yml)
+     * 載入玩家頻道選擇資料（由資料庫轉寫入記憶體快取）
      */
     public static void loadPlayerData() {
-        synchronized (FILE_LOCK) {
-            playerSelectedChannel.clear();
-            dataFile = new File(Main.getInstance().getDataFolder(), "player-data.yml");
-            if (!dataFile.exists()) {
-                try {
-                    dataFile.createNewFile();
-                } catch (IOException e) {
-                    Main.getInstance().getLogger().warning("無法建立 player-data.yml: " + e.getMessage());
-                }
-            }
-            dataConfig = YamlConfiguration.loadConfiguration(dataFile);
-
-            if (dataConfig.contains("players")) {
-                ConfigurationSection playersSection = dataConfig.getConfigurationSection("players");
-                if (playersSection != null) {
-                    for (String uuidStr : playersSection.getKeys(false)) {
-                        try {
-                            UUID uuid = UUID.fromString(uuidStr);
-                            String channelKey = dataConfig.getString("players." + uuidStr);
-                            if (channelKey != null) {
-                                playerSelectedChannel.put(uuid, channelKey.toLowerCase());
-                            }
-                        } catch (IllegalArgumentException ignored) {}
-                    }
-                }
-            }
-        }
+        playerSelectedChannel.clear();
     }
 
-    private static volatile boolean isDirty = false;
-    private static org.bukkit.scheduler.BukkitTask pendingSaveTask = null;
+    /**
+     * 儲存單一玩家頻道選擇資料（非同步寫入資料庫）
+     */
+    public static void savePlayerData(Player player) {
+        if (player == null) return;
+        savePlayerData(player.getUniqueId(), player.getName());
+    }
 
     /**
-     * 儲存單一玩家資料（防抖延遲非同步寫入硬碟）
+     * 根據 UUID 與名稱非同步儲存玩家頻道資料
      */
     public static void savePlayerData(UUID uuid) {
-        if (dataConfig == null) return;
-        String key = playerSelectedChannel.getOrDefault(uuid, defaultChannelKey);
-
-        synchronized (FILE_LOCK) {
-            dataConfig.set("players." + uuid.toString(), key);
-            isDirty = true;
-        }
-
-        scheduleDebouncedSave();
+        if (uuid == null) return;
+        Player player = Bukkit.getPlayer(uuid);
+        String name = player != null ? player.getName() : "Unknown";
+        savePlayerData(uuid, name);
     }
 
-    private static synchronized void scheduleDebouncedSave() {
-        if (!Main.getInstance().isEnabled()) {
-            saveAllPlayerData();
-            return;
-        }
-        if (pendingSaveTask == null || pendingSaveTask.isCancelled()) {
-            pendingSaveTask = Bukkit.getScheduler().runTaskLaterAsynchronously(Main.getInstance(), () -> {
-                try {
-                    saveAllPlayerData();
-                } finally {
-                    synchronized (ChannelManager.class) {
-                        pendingSaveTask = null;
-                    }
-                }
-            }, 60L); // 3 秒 (60 ticks) 防抖延遲
-        }
+    public static void savePlayerData(UUID uuid, String playerName) {
+        if (uuid == null) return;
+        String key = playerSelectedChannel.getOrDefault(uuid, defaultChannelKey);
+        Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> {
+            PlayerDAO.savePlayerData(uuid, playerName, key, Collections.emptySet());
+        });
     }
 
     /**
-     * 儲存所有線上與紀錄中的玩家資料 (關服或 Reload 時調用，可同步執行)
+     * 儲存所有線上玩家資料 (關服或 Reload 時調用)
      */
     public static void saveAllPlayerData() {
-        if (dataConfig == null) return;
-        synchronized (FILE_LOCK) {
-            if (!isDirty) return;
-            for (Map.Entry<UUID, String> entry : playerSelectedChannel.entrySet()) {
-                dataConfig.set("players." + entry.getKey().toString(), entry.getValue());
-            }
-            try {
-                dataConfig.save(dataFile);
-                isDirty = false;
-            } catch (IOException e) {
-                Main.getInstance().getLogger().severe("無法儲存所有玩家數據: " + e.getMessage());
-            }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            UUID uuid = player.getUniqueId();
+            String key = playerSelectedChannel.getOrDefault(uuid, defaultChannelKey);
+            PlayerDAO.savePlayerData(uuid, player.getName(), key, Collections.emptySet());
         }
     }
 
@@ -157,13 +108,9 @@ public class ChannelManager {
     public static String getPlayerSelectedKey(Player player) {
         if (player == null) return defaultChannelKey;
         return playerSelectedChannel.computeIfAbsent(player.getUniqueId(), uuid -> {
-            synchronized (FILE_LOCK) {
-                if (dataConfig != null && dataConfig.contains("players." + uuid.toString())) {
-                    String val = dataConfig.getString("players." + uuid.toString());
-                    if (val != null && !val.isEmpty()) {
-                        return val.toLowerCase();
-                    }
-                }
+            PlayerDAO.PlayerData data = PlayerDAO.getPlayerData(uuid);
+            if (data != null && data.currentChannel() != null && !data.currentChannel().isEmpty()) {
+                return data.currentChannel().toLowerCase();
             }
             return defaultChannelKey;
         });
@@ -176,12 +123,13 @@ public class ChannelManager {
     }
 
     public static void setPlayerChannel(Player player, String channelKey) {
+        if (player == null) return;
         playerSelectedChannel.put(player.getUniqueId(), channelKey.toLowerCase());
-        savePlayerData(player.getUniqueId());
+        savePlayerData(player);
     }
 
     /**
-     * 玩家離線時清理記憶體 Map 資源，防止常駐記憶體洩漏
+     * 玩家離線時清理記憶體 Map 資源
      */
     public static void unloadPlayerData(UUID uuid) {
         if (uuid != null) {
@@ -189,4 +137,3 @@ public class ChannelManager {
         }
     }
 }
-

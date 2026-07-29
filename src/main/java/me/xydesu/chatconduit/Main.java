@@ -28,6 +28,10 @@ public final class Main extends JavaPlugin {
         saveDefaultLanguageFiles();
         loadLanguageConfig();
 
+        // 初始化資料庫連線池與自動遷移
+        me.xydesu.chatconduit.database.DatabaseManager.init();
+        me.xydesu.chatconduit.database.DataMigrationManager.runMigrationCheck();
+
         // 載入頻道與玩家資料
         ChannelManager.loadChannels();
         ChannelManager.loadPlayerData(); // 載入玩家當前發言頻道紀錄
@@ -61,7 +65,7 @@ public final class Main extends JavaPlugin {
         // 初始化 DiscordSRV 溝通模組
         me.xydesu.chatconduit.integration.DiscordSRVHook.init();
 
-        getLogger().info("ChatConduit (含全 Chest GUI 零指令系統) 已成功啟動！");
+        getLogger().info("ChatConduit (含全 Chest GUI 零指令系統與 HikariCP 資料庫) 已成功啟動！");
     }
 
     @Override
@@ -70,6 +74,8 @@ public final class Main extends JavaPlugin {
         // 關服時自動儲存所有資料 (同步寫入)
         ChannelManager.saveAllPlayerData();
         PlayerChannelManager.saveImmediately();
+        // 關閉資料庫連線池
+        me.xydesu.chatconduit.database.DatabaseManager.close();
     }
 
     public static Main getInstance() {
