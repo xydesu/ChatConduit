@@ -81,7 +81,70 @@ public class ChatUtils {
             }
         }
 
+        // 3. 自動將 formattedText 中可能存在的 Legacy 顏色碼 (&c, &a, §c, §a, &#RRGGBB) 轉為 MiniMessage 標籤
+        formattedText = translateLegacyToMiniMessage(formattedText);
+
         return MINI_MESSAGE.deserialize(formattedText, resolverBuilder.build());
+    }
+
+    /**
+     * 將傳統 Legacy 顏色碼 (&0~&f, §0~§f, &#RRGGBB, &x&r&r&g&g&b&b) 轉換為 MiniMessage 標籤
+     *
+     * @param text 包含 Legacy 顏色碼的原始字串
+     * @return 轉換完畢的 MiniMessage 格式字串
+     */
+    public static String translateLegacyToMiniMessage(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        // 1. 處理 Hex 顏色碼 &x&r&r&g&g&b&b 或 §x§r§r§g§g§b§b
+        text = text.replaceAll("(?i)[&§]x[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])", "<#$1$2$3$4$5$6>");
+
+        // 2. 處理 Hex 顏色碼 &#RRGGBB 或 §#RRGGBB
+        text = text.replaceAll("(?i)[&§]#([0-9a-fA-F]{6})", "<#$1>");
+
+        // 3. 處理傳統單一字元顏色與樣式碼 (&0~&f, &k~&r, §0~§f, §k~§r)
+        StringBuilder sb = new StringBuilder(text.length());
+        char[] chars = text.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+            if ((c == '&' || c == '§') && i + 1 < chars.length) {
+                char code = Character.toLowerCase(chars[i + 1]);
+                String tag = switch (code) {
+                    case '0' -> "<black>";
+                    case '1' -> "<dark_blue>";
+                    case '2' -> "<dark_green>";
+                    case '3' -> "<dark_aqua>";
+                    case '4' -> "<dark_red>";
+                    case '5' -> "<dark_purple>";
+                    case '6' -> "<gold>";
+                    case '7' -> "<gray>";
+                    case '8' -> "<dark_gray>";
+                    case '9' -> "<blue>";
+                    case 'a' -> "<green>";
+                    case 'b' -> "<aqua>";
+                    case 'c' -> "<red>";
+                    case 'd' -> "<light_purple>";
+                    case 'e' -> "<yellow>";
+                    case 'f' -> "<white>";
+                    case 'k' -> "<obfuscated>";
+                    case 'l' -> "<bold>";
+                    case 'm' -> "<strikethrough>";
+                    case 'n' -> "<underlined>";
+                    case 'o' -> "<italic>";
+                    case 'r' -> "<reset>";
+                    default -> null;
+                };
+                if (tag != null) {
+                    sb.append(tag);
+                    i++; // 跳過下一個字元
+                    continue;
+                }
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     /**
