@@ -107,12 +107,51 @@ public class ChannelManager {
 
     public static String getPlayerSelectedKey(Player player) {
         if (player == null) return defaultChannelKey;
-        return playerSelectedChannel.computeIfAbsent(player.getUniqueId(), uuid -> {
+        return playerSelectedChannel.getOrDefault(player.getUniqueId(), defaultChannelKey);
+    }
+
+    /**
+     * 非同步載入玩家頻道設定，避免阻塞主執行緒
+     */
+    public static void loadPlayerDataAsync(Player player) {
+        if (player == null) return;
+        UUID uuid = player.getUniqueId();
+        Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> {
             PlayerDAO.PlayerData data = PlayerDAO.getPlayerData(uuid);
+            String channelKey = defaultChannelKey;
             if (data != null && data.currentChannel() != null && !data.currentChannel().isEmpty()) {
-                return data.currentChannel().toLowerCase();
+                channelKey = data.currentChannel().toLowerCase();
             }
-            return defaultChannelKey;
+            playerSelectedChannel.put(uuid, channelKey);
+
+            String finalKey = channelKey;
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                if (!player.isOnline()) return;
+                PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(finalKey);
+                ChannelManager.Channel sysChan = ChannelManager.getChannel(finalKey);
+
+                if (customChan != null) {
+                    if (!customChan.getMembers().contains(uuid)) {
+                        setPlayerChannel(player, defaultChannelKey);
+                        String resetMsg = Main.getInstance().getLanguageConfig().getString(
+                                "channel.reverted-on-join",
+                                "<gray>提示：您先前所在的群組頻道已離開或解散，已自動為您切換回預設頻道。"
+                        );
+                        me.xydesu.chatconduit.util.ChatUtils.sendMessage(player, resetMsg);
+                    }
+                } else if (sysChan != null) {
+                    if (!sysChan.permission().isEmpty() && !player.hasPermission(sysChan.permission())) {
+                        setPlayerChannel(player, defaultChannelKey);
+                        String resetMsg = Main.getInstance().getLanguageConfig().getString(
+                                "channel.reverted-on-join-no-perm",
+                                "<gray>提示：您先前選擇的系統頻道已無存取權限，已自動為您切換回預設頻道。"
+                        );
+                        me.xydesu.chatconduit.util.ChatUtils.sendMessage(player, resetMsg);
+                    }
+                } else if (!finalKey.equals(defaultChannelKey)) {
+                    setPlayerChannel(player, defaultChannelKey);
+                }
+            });
         });
     }
 
