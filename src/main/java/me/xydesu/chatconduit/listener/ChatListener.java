@@ -184,8 +184,15 @@ public class ChatListener implements Listener {
                 "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
         );
 
+        String formatWithPapi = rawChatFormat;
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            try {
+                formatWithPapi = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, rawChatFormat);
+            } catch (Exception ignored) {}
+        }
+
         String currentServerId = me.xydesu.chatconduit.redis.RedisManager.getServerId();
-        String formattedTemplate = rawChatFormat.replace("{server}", currentServerId != null ? currentServerId : "");
+        String formattedTemplate = formatWithPapi.replace("{server}", currentServerId != null ? currentServerId : "");
 
         Component fullChatMessage = ChatUtils.parse(
                 player,
@@ -230,7 +237,8 @@ public class ChatListener implements Listener {
                     channelIdentifier,
                     finalMessage,
                     currentServerId,
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
+                    formatWithPapi
             );
             me.xydesu.chatconduit.redis.RedisManager.publishChatMessage(packet);
         }

@@ -18,19 +18,22 @@ class RedisPacketTest {
     @DisplayName("測試 ChatMessagePacket JSON 序列化與反序列化")
     void testChatMessagePacketJsonSerialization() {
         String uuidStr = UUID.randomUUID().toString();
+        String chatFormat = "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[Admin] <white><player>> <white><message>";
         ChatMessagePacket originalPacket = new ChatMessagePacket(
                 uuidStr,
                 "xydesu",
                 "global",
                 "Hello Redis multi-server!",
                 "survival-1",
-                1700000000000L
+                1700000000000L,
+                chatFormat
         );
 
         String json = originalPacket.toJson();
         assertNotNull(json);
         assertTrue(json.contains("\"senderUuid\":\"" + uuidStr + "\""));
         assertTrue(json.contains("\"senderName\":\"xydesu\""));
+        assertTrue(json.contains("\"chatFormat\":\"" + chatFormat.replace("\"", "\\\"") + "\""));
 
         ChatMessagePacket deserialized = ChatMessagePacket.fromJson(json);
         assertNotNull(deserialized);
@@ -40,6 +43,7 @@ class RedisPacketTest {
         assertEquals(originalPacket.getRawMessage(), deserialized.getRawMessage());
         assertEquals(originalPacket.getServerId(), deserialized.getServerId());
         assertEquals(originalPacket.getTimestamp(), deserialized.getTimestamp());
+        assertEquals(chatFormat, deserialized.getChatFormat());
     }
 
     @Test

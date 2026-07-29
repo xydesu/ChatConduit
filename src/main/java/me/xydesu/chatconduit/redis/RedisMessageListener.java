@@ -130,16 +130,26 @@ public class RedisMessageListener extends JedisPubSub {
         // 訊息文字元件
         Component playerMessageComponent = ChatUtils.parseLegacy(rawMessage);
 
-        String rawChatFormat = Main.getInstance().getConfig().getString(
-                "chat-format",
-                "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
-        );
+        String rawChatFormat = packet.getChatFormat();
+        if (rawChatFormat == null || rawChatFormat.isEmpty()) {
+            rawChatFormat = Main.getInstance().getConfig().getString(
+                    "chat-format",
+                    "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
+            );
+        }
 
         // 如果模板含有 {server}，將其替換為 remoteServerId；否則若無伺服器則消除
         String formattedTemplate = rawChatFormat.replace("{server}", remoteServerId);
 
+        org.bukkit.OfflinePlayer senderOfflinePlayer = null;
+        if (packet.getSenderUuid() != null && !packet.getSenderUuid().isEmpty()) {
+            try {
+                senderOfflinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(packet.getSenderUuid()));
+            } catch (Exception ignored) {}
+        }
+
         Component fullChatMessage = ChatUtils.parse(
-                null,
+                senderOfflinePlayer,
                 formattedTemplate,
                 Placeholder.component("channel_prefix", channelPrefixComponent),
                 Placeholder.unparsed("player", senderName),

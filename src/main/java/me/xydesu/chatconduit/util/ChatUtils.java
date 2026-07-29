@@ -32,12 +32,12 @@ public class ChatUtils {
     /**
      * 解析 MiniMessage 格式字串，自動處理 PlaceholderAPI 佔位符與 Legacy 顏色碼
      *
-     * @param player    對應的玩家 (若為 null 則跳過 PAPI 解析)
+     * @param player    對應的玩家 (支援 Player 或 OfflinePlayer，若為 null 則跳過 PAPI 解析)
      * @param format    帶有 MiniMessage 標籤或 %papi% 佔位符的格式字串
      * @param extraTags 額外傳入的 MiniMessage 標籤 (例如 <player>, <message>)
      * @return 解析完成的 Adventure Component
      */
-    public static Component parse(Player player, String format, TagResolver... extraTags) {
+    public static Component parse(OfflinePlayer player, String format, TagResolver... extraTags) {
         if (format == null || format.isEmpty()) {
             return Component.empty();
         }
@@ -94,7 +94,7 @@ public class ChatUtils {
         return parse(null, text, extraTags).decoration(TextDecoration.ITALIC, false);
     }
 
-    public static Component parseNoItalic(Player player, String format, TagResolver... extraTags) {
+    public static Component parseNoItalic(OfflinePlayer player, String format, TagResolver... extraTags) {
         if (format == null || format.isEmpty()) {
             return Component.empty().decoration(TextDecoration.ITALIC, false);
         }
