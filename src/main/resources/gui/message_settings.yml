@@ -1,0 +1,33 @@
+title: "<gradient:#ff9a9e:#fecfef><bold>個人訊息顯示設定</bold></gradient>"
+size: 27
+
+items:
+  filler-glass:
+    slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26]
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<gray> "
+
+  death-messages:
+    slot: 11
+    name: "<red><bold>☠ 死亡訊息通知</bold></red>"
+    lore:
+      - "<gray>開關其他玩家或個人死亡時之系統通知"
+      - "<gray>當前狀態: <death_status>"
+      - ""
+      - "<yellow>▶ 點擊切換顯示/隱藏</yellow>"
+
+  join-messages:
+    slot: 15
+    name: "<gold><bold>🚪 玩家進出通知</bold></gold>"
+    lore:
+      - "<gray>開關玩家加入與離開伺服器時之系統通知"
+      - "<gray>當前狀態: <join_status>"
+      - ""
+      - "<yellow>▶ 點擊切換顯示/隱藏</yellow>"
+
+  back-button:
+    slot: 22
+    material: ARROW
+    name: "<yellow><bold>◀ 返回頻道控制台</bold></yellow>"
+    lore:
+      - "<gray>點擊返回主選單"

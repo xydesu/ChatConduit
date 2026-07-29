@@ -7,16 +7,17 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class PlayerChannelManageGUI {
@@ -45,38 +46,53 @@ public class PlayerChannelManageGUI {
     }
 
     public static void openForChannel(Player player, PlayerChannelManager.CustomChannel customChan) {
-        String titleStr = "<gradient:#a8c0ff:#3f2b96><bold>群組管理 - " + customChan.getDisplayName() + "</bold></gradient>";
+        FileConfiguration config = GUIManager.getConfig("player_channel_manage");
+
+        String titleStr = GUIManager.getTitle("player_channel_manage", "<gradient:#a8c0ff:#3f2b96><bold>群組管理 - <channel_name></bold></gradient>")
+                .replace("<channel_name>", customChan.getDisplayName());
         Component titleComponent = ChatUtils.parse(player, titleStr);
 
+        int size = GUIManager.getSize("player_channel_manage", 54);
         GUIHolder holder = new GUIHolder(GUIHolder.GUIType.PLAYER_CHANNEL_MANAGE, customChan.getId());
-        Inventory inv = Bukkit.createInventory(holder, 54, titleComponent);
+        Inventory inv = Bukkit.createInventory(holder, size, titleComponent);
 
-        // 裝飾
-        ItemStack glassFiller = createItem(Material.GRAY_STAINED_GLASS_PANE, "<gray> ");
-        for (int i = 0; i < 9; i++) inv.setItem(i, glassFiller);
-        for (int i = 45; i < 54; i++) inv.setItem(i, glassFiller);
+        // 裝飾邊框
+        ItemStack glassFiller = GUIManager.createItem(config, "filler-glass", Material.GRAY_STAINED_GLASS_PANE, null);
+        int[] fillerSlots = GUIManager.getSlots(config, "items.filler-glass.slots", new int[]{0,1,2,3,5,6,7,8,46,47,48,50,52});
+        for (int s : fillerSlots) {
+            if (s < size) inv.setItem(s, glassFiller);
+        }
 
         boolean isOwner = customChan.getOwner().equals(player.getUniqueId());
 
         // Slot 4: 頻道詳細設定按鈕
-        Material modeMat = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? Material.OAK_DOOR : Material.IRON_DOOR;
-        String modeName = "<gold><bold>⚙ 頻道詳細設定: " + customChan.getDisplayName() + "</bold>";
-        List<String> modeLore = new ArrayList<>();
-        modeLore.add("<gray>隊長: <yellow>" + (Bukkit.getOfflinePlayer(customChan.getOwner()).getName() != null ? Bukkit.getOfflinePlayer(customChan.getOwner()).getName() : customChan.getOwner().toString()));
-        modeLore.add("<gray>存取模式: " + (customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>公共 (PUBLIC)" : "<red>私人 (PRIVATE)"));
-        modeLore.add("<gray>成員總數: <yellow>" + customChan.getMembers().size() + " 人");
-        modeLore.add("");
-        if (isOwner) {
-            modeLore.add("<yellow>▶ 點擊開啟詳細設定選單 (更名/模式/色彩)</yellow>");
-        } else {
-            modeLore.add("<gray>僅隊長可開啟與修改頻道詳細設定");
-        }
-        inv.setItem(4, createItem(modeMat, modeName, modeLore));
+        int infoSlot = GUIManager.getSlot(config, "channel-info", 4);
+        if (infoSlot < size) {
+            Material modeMat = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? Material.OAK_DOOR : Material.IRON_DOOR;
+            OfflinePlayer ownerP = Bukkit.getOfflinePlayer(customChan.getOwner());
+            String ownerName = ownerP.getName() != null ? ownerP.getName() : customChan.getOwner().toString();
+            String accessMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>公共 (PUBLIC)</green>" : "<red>私人 (PRIVATE)</red>";
+            String ownerTip = isOwner ? "<yellow>▶ 點擊開啟詳細設定選單 (更名/模式/色彩)</yellow>" : "<gray>僅隊長可開啟與修改頻道詳細設定";
 
-        // Slot 9 ~ 44: 成員頭顱清單（帶有豐富個人資訊）
-        int slot = 9;
+            Map<String, String> infoReplacements = Map.of(
+                    "<channel_name>", customChan.getDisplayName(),
+                    "<owner_name>", ownerName,
+                    "<access_mode>", accessMode,
+                    "<member_count>", String.valueOf(customChan.getMembers().size()),
+                    "<owner_tip>", ownerTip
+            );
+            inv.setItem(infoSlot, GUIManager.createItem(config, "channel-info", modeMat, infoReplacements));
+        }
+
+        // 成員頭顱清單
+        int[] memberSlots = GUIManager.getSlots(config, "slots.member-heads", new int[]{
+                9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+                27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44
+        });
+        int memberIdx = 0;
+
         for (UUID memberUuid : customChan.getMembers()) {
-            if (slot >= 45) break;
+            if (memberIdx >= memberSlots.length) break;
 
             OfflinePlayer offP = Bukkit.getOfflinePlayer(memberUuid);
             boolean memberIsOwner = memberUuid.equals(customChan.getOwner());
@@ -111,7 +127,7 @@ public class PlayerChannelManageGUI {
                     }
                 }
 
-                lore.add(ChatUtils.parseNoItalic("<gray>UUID: <dark_gray>" + memberUuid.toString().substring(0, 18) + "...</dark_gray>"));
+                lore.add(ChatUtils.parseNoItalic("<gray>UUID: <dark_gray>" + memberUuid.toString().substring(0, Math.min(18, memberUuid.toString().length())) + "...</dark_gray>"));
 
                 if (isOwner && !memberIsOwner) {
                     lore.add(ChatUtils.parseNoItalic(""));
@@ -121,57 +137,37 @@ public class PlayerChannelManageGUI {
                 meta.lore(lore);
                 head.setItemMeta(meta);
             }
-            inv.setItem(slot++, head);
+            int slot = memberSlots[memberIdx++];
+            if (slot < size) inv.setItem(slot, head);
         }
 
         // 底部功能按鈕
-        inv.setItem(45, createItem(Material.ARROW, "<yellow><bold>← 返回頻道大廳</bold>", List.of("<gray>回到頻道選擇選單")));
+        int backSlot = GUIManager.getSlot(config, "back-button", 45);
+        if (backSlot < size) {
+            inv.setItem(backSlot, GUIManager.createItem(config, "back-button", Material.ARROW, null));
+        }
 
         if (isOwner) {
-            inv.setItem(49, createItem(Material.WRITABLE_BOOK, "<green><bold>✉ 邀請線上玩家加入</bold>", List.of(
-                    "<gray>開啟線上玩家頭像選單進行邀請",
-                    "",
-                    "<yellow>▶ 點擊開啟線上邀請面板</yellow>"
-            )));
+            int inviteSlot = GUIManager.getSlot(config, "invite-players", 49);
+            if (inviteSlot < size) {
+                inv.setItem(inviteSlot, GUIManager.createItem(config, "invite-players", Material.WRITABLE_BOOK, null));
+            }
         }
 
         if (!isOwner) {
-            inv.setItem(51, createItem(Material.OAK_DOOR, "<red><bold>🚪 退出群組頻道</bold>", List.of(
-                    "<gray>退出此頻道並返回公共頻道",
-                    "",
-                    "<red>▶ 點擊確認退出</red>"
-            )));
+            int leaveSlot = GUIManager.getSlot(config, "leave-channel", 51);
+            if (leaveSlot < size) {
+                inv.setItem(leaveSlot, GUIManager.createItem(config, "leave-channel", Material.OAK_DOOR, null));
+            }
         }
 
         if (isOwner) {
-            inv.setItem(53, createItem(Material.TNT, "<red><bold>✖ 解散並刪除頻道</bold>", List.of(
-                    "<gray>解散此頻道並踢出所有人",
-                    "",
-                    "<red>▶ 點擊確認解散頻道</red>"
-            )));
+            int disbandSlot = GUIManager.getSlot(config, "disband-channel", 53);
+            if (disbandSlot < size) {
+                inv.setItem(disbandSlot, GUIManager.createItem(config, "disband-channel", Material.TNT, null));
+            }
         }
 
         player.openInventory(inv);
-    }
-
-    private static ItemStack createItem(Material material, String name, List<String> lore) {
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.displayName(ChatUtils.parseNoItalic(name));
-            if (lore != null && !lore.isEmpty()) {
-                List<Component> parsedLore = new ArrayList<>();
-                for (String line : lore) {
-                    parsedLore.add(ChatUtils.parseNoItalic(line));
-                }
-                meta.lore(parsedLore);
-            }
-            item.setItemMeta(meta);
-        }
-        return item;
-    }
-
-    private static ItemStack createItem(Material material, String name) {
-        return createItem(material, name, null);
     }
 }

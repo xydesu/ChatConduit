@@ -5,113 +5,121 @@ import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChannelSettingsGUI {
 
     public static void open(Player player, PlayerChannelManager.CustomChannel customChan) {
-        String titleStr = "<gradient:#00d2ff:#3a7bd5><bold>頻道詳細設定 - " + customChan.getDisplayName() + "</bold></gradient>";
+        FileConfiguration config = GUIManager.getConfig("channel_settings");
+
+        String titleStr = GUIManager.getTitle("channel_settings", "<gradient:#00d2ff:#3a7bd5><bold>頻道詳細設定 - <channel_name></bold></gradient>")
+                .replace("<channel_name>", customChan.getDisplayName());
         Component titleComponent = ChatUtils.parse(player, titleStr);
 
+        int size = GUIManager.getSize("channel_settings", 27);
         GUIHolder holder = new GUIHolder(GUIHolder.GUIType.CHANNEL_SETTINGS, customChan.getId());
-        Inventory inv = Bukkit.createInventory(holder, 27, titleComponent);
+        Inventory inv = Bukkit.createInventory(holder, size, titleComponent);
 
         // 裝飾邊框
-        ItemStack glassFiller = createItem(Material.GRAY_STAINED_GLASS_PANE, "<gray> ");
-        for (int i = 0; i < 9; i++) inv.setItem(i, glassFiller);
-        for (int i = 18; i < 27; i++) inv.setItem(i, glassFiller);
+        ItemStack glassFiller = GUIManager.createItem(config, "filler-glass", Material.GRAY_STAINED_GLASS_PANE, null);
+        int[] fillerSlots = GUIManager.getSlots(config, "items.filler-glass.slots", new int[]{0,1,2,3,4,5,6,7,8,9,15,18,19,20,21,23,24,25,26});
+        for (int s : fillerSlots) {
+            if (s < size) inv.setItem(s, glassFiller);
+        }
 
         // Slot 10: 存取模式切換
         boolean isPublic = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
         Material modeMat = isPublic ? Material.OAK_DOOR : Material.IRON_DOOR;
-        String modeTitle = "<gold><bold>1. 存取權限模式</bold>";
-        List<String> modeLore = List.of(
-                "<gray>當前模式: " + (isPublic ? "<green>公共 (PUBLIC)" : "<red>私人 (PRIVATE)"),
-                "<gray>說明: " + (isPublic ? "所有人可在選單自由加入" : "僅限隊長邀請加入"),
-                "",
-                "<yellow>▶ 點擊切換模式 (PUBLIC / PRIVATE)</yellow>"
+        Map<String, String> modeReplacements = Map.of(
+                "<mode_status>", isPublic ? "<green>公共 (PUBLIC)</green>" : "<red>私人 (PRIVATE)</red>",
+                "<mode_desc>", isPublic ? "所有人可在選單自由加入" : "僅限隊長邀請加入"
         );
-        inv.setItem(10, createItem(modeMat, modeTitle, modeLore));
+        int modeSlot = GUIManager.getSlot(config, "access-mode", 10);
+        if (modeSlot < size) {
+            inv.setItem(modeSlot, GUIManager.createItem(config, "access-mode", modeMat, modeReplacements));
+        }
 
         // Slot 11: 頻道顯示名稱重命名
-        String nameTitle = "<gold><bold>2. 修改頻道顯示名稱</bold>";
-        List<String> nameLore = List.of(
-                "<gray>當前顯示名稱: " + customChan.getColorTheme() + customChan.getDisplayName() + "</gradient>",
-                "<gray>說明: 在聊天面板呈現的頻道抬頭名稱",
-                "",
-                "<yellow>▶ 點擊開啟對話框輸入新名稱</yellow>"
-        );
-        inv.setItem(11, createItem(Material.NAME_TAG, nameTitle, nameLore));
+        int renameSlot = GUIManager.getSlot(config, "rename-channel", 11);
+        if (renameSlot < size) {
+            Map<String, String> renameReplacements = Map.of(
+                    "<current_name>", customChan.getColorTheme() + customChan.getDisplayName() + "</gradient>"
+            );
+            inv.setItem(renameSlot, GUIManager.createItem(config, "rename-channel", Material.NAME_TAG, renameReplacements));
+        }
 
         // Slot 12: 頻道簡介說明設定
-        String descTitle = "<gold><bold>3. 頻道簡介說明</bold>";
-        List<String> descLore = List.of(
-                "<gray>當前簡介: <white>" + customChan.getDescription() + "</white>",
-                "<gray>說明: 展示於全服聊天欄頻道 Prefix 滑鼠懸停提示中",
-                "",
-                "<yellow>▶ 點擊開啟對話框修改頻道簡介</yellow>"
-        );
-        inv.setItem(12, createItem(Material.BOOK, descTitle, descLore));
+        int descSlot = GUIManager.getSlot(config, "channel-description", 12);
+        if (descSlot < size) {
+            Map<String, String> descReplacements = Map.of(
+                    "<current_desc>", customChan.getDescription()
+            );
+            inv.setItem(descSlot, GUIManager.createItem(config, "channel-description", Material.BOOK, descReplacements));
+        }
 
         // Slot 13: 頻道規則守則設定
-        String rulesTitle = "<gold><bold>4. 頻道規則與規範</bold>";
-        List<String> rulesLore = List.of(
-                "<gray>當前規則: <white>" + customChan.getRules() + "</white>",
-                "<gray>說明: 成員與外部玩家懸停頻道標籤時呈現的規章",
-                "",
-                "<yellow>▶ 點擊開啟對話框修改頻道守則</yellow>"
-        );
-        inv.setItem(13, createItem(Material.PAPER, rulesTitle, rulesLore));
+        int rulesSlot = GUIManager.getSlot(config, "channel-rules", 13);
+        if (rulesSlot < size) {
+            Map<String, String> rulesReplacements = Map.of(
+                    "<current_rules>", customChan.getRules()
+            );
+            inv.setItem(rulesSlot, GUIManager.createItem(config, "channel-rules", Material.PAPER, rulesReplacements));
+        }
 
         // Slot 14: 頻道色彩主題切換
-        String colorTitle = "<gold><bold>5. 頻道色彩主題樣式</bold>";
-        List<String> colorLore = List.of(
-                "<gray>當前色彩預設: " + customChan.getColorTheme() + "樣式預覽 [頻道名稱]</gradient>",
-                "<gray>說明: 改變該群組在聊天欄顯示的色彩主題",
-                "",
-                "<yellow>▶ 點擊切換下一個色彩主題</yellow>"
-        );
-        inv.setItem(14, createItem(Material.CYAN_DYE, colorTitle, colorLore));
+        int colorSlot = GUIManager.getSlot(config, "color-theme", 14);
+        if (colorSlot < size) {
+            Map<String, String> colorReplacements = Map.of(
+                    "<theme_preview>", customChan.getColorTheme() + "樣式預覽 [頻道名稱]</gradient>"
+            );
+            inv.setItem(colorSlot, GUIManager.createItem(config, "color-theme", Material.CYAN_DYE, colorReplacements));
+        }
 
         // Slot 16: 專屬 Webhook 網址綁定
         String webhookUrl = customChan.getWebhookUrl();
         boolean hasWebhook = webhookUrl != null && !webhookUrl.trim().isEmpty();
-        String hookTitle = "<gold><bold>6. 設定專屬 Discord Webhook</bold>";
-        List<String> hookLore = List.of(
-                "<gray>綁定狀態: " + (hasWebhook ? "<green>✓ 已綁定 Webhook</green>" : "<red>✗ 未綁定 (單向純遊戲內頻道)</red>"),
-                "<gray>網址預覽: <yellow>" + (hasWebhook ? (webhookUrl.length() > 30 ? webhookUrl.substring(0, 27) + "..." : webhookUrl) : "無") + "</yellow>",
-                "<gray>說明: 成員發言時自動 POST 至您的 Discord 頻道",
-                "",
-                "<yellow>▶ 點擊開啟對話框輸入 Webhook URL</yellow>",
-                "<gray>(如需解除綁定請在對話框輸入 clear)</gray>"
-        );
-        String discordHeadTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2RhOTQ0OWNlYTEyMTE5YzIyY2E1YjkzYzI4Y2JlOWRmMzE1MjFjYTE1OWE1ZWE1ZmFhNWZmYjVhMTc4MGY1NyJ9fX0=";
-        inv.setItem(16, ChatUtils.createCustomHead(discordHeadTexture, hookTitle, hookLore));
+        int hookSlot = GUIManager.getSlot(config, "webhook-setting", 16);
+        if (hookSlot < size) {
+            Map<String, String> hookReplacements = Map.of(
+                    "<webhook_status>", hasWebhook ? "<green>✓ 已綁定 Webhook</green>" : "<red>✗ 未綁定 (單向純遊戲內頻道)</red>",
+                    "<webhook_preview>", hasWebhook ? (webhookUrl.length() > 30 ? webhookUrl.substring(0, 27) + "..." : webhookUrl) : "無"
+            );
+            inv.setItem(hookSlot, GUIManager.createItem(config, "webhook-setting", Material.PLAYER_HEAD, hookReplacements));
+        }
 
         // Slot 17: 測試 Webhook 連線
-        Material testMat = hasWebhook ? Material.TARGET : Material.GRAY_DYE;
-        String testTitle = "<gold><bold>7. 測試 Webhook 連線</bold>";
-        List<String> testLore = hasWebhook ? List.of(
-                "<gray>狀態: <green>已綁定，可進行測試",
-                "<gray>說明: 發送測試 Payload 驗證 Discord 接收狀態",
-                "",
-                "<yellow>▶ 點擊發送測試訊息至 Discord 頻道</yellow>"
-        ) : List.of(
-                "<gray>狀態: <red>未綁定 Webhook</red>",
-                "<gray>說明: 必須先設定 Webhook 網址後才能發送測試訊息",
-                "",
-                "<red>✕ 請點擊左側圖示輸入 URL 綁定</red>"
-        );
-        inv.setItem(17, createItem(testMat, testTitle, testLore));
+        int testSlot = GUIManager.getSlot(config, "test-webhook", 17);
+        if (testSlot < size) {
+            Material testMat = hasWebhook ? Material.TARGET : Material.GRAY_DYE;
+            String testTitle = "<gold><bold>7. 測試 Webhook 連線</bold>";
+            List<String> testLore = hasWebhook ? List.of(
+                    "<gray>狀態: <green>已綁定，可進行測試",
+                    "<gray>說明: 發送測試 Payload 驗證 Discord 接收狀態",
+                    "",
+                    "<yellow>▶ 點擊發送測試訊息至 Discord 頻道</yellow>"
+            ) : List.of(
+                    "<gray>狀態: <red>未綁定 Webhook</red>",
+                    "<gray>說明: 必須先設定 Webhook 網址後才能發送測試訊息",
+                    "",
+                    "<red>✕ 請點擊左側圖示輸入 URL 綁定</red>"
+            );
+            inv.setItem(testSlot, createItem(testMat, testTitle, testLore));
+        }
 
         // Slot 22: 返回
-        inv.setItem(22, createItem(Material.ARROW, "<yellow><bold>← 返回群組管理</bold>", List.of("<gray>回到頻道管理頁面")));
+        int backSlot = GUIManager.getSlot(config, "back-button", 22);
+        if (backSlot < size) {
+            inv.setItem(backSlot, GUIManager.createItem(config, "back-button", Material.ARROW, null));
+        }
 
         player.openInventory(inv);
     }
@@ -131,9 +139,5 @@ public class ChannelSettingsGUI {
             item.setItemMeta(meta);
         }
         return item;
-    }
-
-    private static ItemStack createItem(Material material, String name) {
-        return createItem(material, name, null);
     }
 }

@@ -1,12 +1,13 @@
 package me.xydesu.chatconduit.gui;
 
+import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
-import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -15,43 +16,50 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChannelSelectGUI {
 
     public static void open(Player player) {
-
         open(player, 1);
     }
 
     public static void open(Player player, int page) {
-        String titleStr = Main.getInstance().getLanguageConfig().getString(
+        FileConfiguration config = GUIManager.getConfig("channel_select");
+
+        String titleStr = GUIManager.getTitle("channel_select", Main.getInstance().getLanguageConfig().getString(
                 "gui.title-channel-select",
                 "<gradient:#00d2ff:#3a7bd5><bold>聊天頻道控制台</bold></gradient>"
-        );
+        ));
         Component titleComponent = ChatUtils.parse(player, titleStr);
 
+        int size = GUIManager.getSize("channel_select", 54);
         GUIHolder holder = new GUIHolder(GUIHolder.GUIType.CHANNEL_SELECT, null, page);
-        Inventory inv = Bukkit.createInventory(holder, 54, titleComponent);
+        Inventory inv = Bukkit.createInventory(holder, size, titleComponent);
         holder.setInventory(inv);
 
         String currentChannelKey = ChannelManager.getPlayerSelectedKey(player);
 
-        // 邊框與背景裝飾
-        ItemStack glassFiller = createItem(Material.GRAY_STAINED_GLASS_PANE, "<gray> ");
-        for (int i = 0; i < 9; i++) {
-            inv.setItem(i, glassFiller);
-            inv.setItem(i + 45, glassFiller);
-        }
-        for (int row = 1; row < 5; row++) {
-            inv.setItem(row * 9, glassFiller);
-            inv.setItem(row * 9 + 8, glassFiller);
+        // 滿填灰色玻璃邊框與分隔線裝飾
+        ItemStack glassFiller = GUIManager.createItem(config, "filler-glass", Material.GRAY_STAINED_GLASS_PANE, null);
+        int[] fillerSlots = GUIManager.getSlots(config, "items.filler-glass.slots", new int[]{0,1,2,3,4,5,6,7,8,9,17,18,26,44,45,53});
+        for (int s : fillerSlots) {
+            if (s < size) inv.setItem(s, glassFiller);
         }
 
-        // 系統公用頻道圖示 (Row 2 ~ 3)
+        ItemStack lineFiller = GUIManager.createItem(config, "divider-line", Material.BLUE_STAINED_GLASS_PANE, null);
+        int[] lineSlots = GUIManager.getSlots(config, "items.divider-line.slots", new int[]{27,28,29,30,31,32,33,34,35});
+        for (int s : lineSlots) {
+            if (s < size) inv.setItem(s, lineFiller);
+        }
+
+        // 系統公用頻道圖示
+        int[] sysSlots = GUIHolder.getSysSlots();
         int sysSlotIdx = 0;
         for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
-            if (sysSlotIdx >= GUIHolder.SYS_SLOTS.length) break;
+            if (sysSlotIdx >= sysSlots.length) break;
 
             boolean isSelected = currentChannelKey.equalsIgnoreCase(sysChan.key());
             boolean hasPermission = sysChan.permission().isEmpty() || player.hasPermission(sysChan.permission());
@@ -73,16 +81,11 @@ public class ChannelSelectGUI {
             }
 
             ItemStack item = createItem(material, displayName, lore, isSelected);
-            inv.setItem(GUIHolder.SYS_SLOTS[sysSlotIdx++], item);
+            int targetSlot = sysSlots[sysSlotIdx++];
+            if (targetSlot < size) inv.setItem(targetSlot, item);
         }
 
-        // 分隔線
-        ItemStack lineFiller = createItem(Material.BLUE_STAINED_GLASS_PANE, "<blue> ");
-        for (int i = 27; i < 36; i++) {
-            inv.setItem(i, lineFiller);
-        }
-
-        // 玩家自訂與公開群組頻道 (Row 5 - 支援分頁)
+        // 玩家自訂群組頻道
         List<PlayerChannelManager.CustomChannel> availableChannels = new ArrayList<>();
         for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
             boolean isMember = custChan.getMembers().contains(player.getUniqueId());
@@ -92,14 +95,18 @@ public class ChannelSelectGUI {
             }
         }
 
-        int totalPages = Math.max(1, (int) Math.ceil(availableChannels.size() / 7.0));
+        int[] custSlots = GUIHolder.getCustSlots();
+        int perPage = custSlots.length > 0 ? custSlots.length : 7;
+
+        int totalPages = Math.max(1, (int) Math.ceil(availableChannels.size() / (double) perPage));
         int currentPage = Math.min(Math.max(1, page), totalPages);
 
-        int startIndex = (currentPage - 1) * 7;
-        int endIndex = Math.min(availableChannels.size(), currentPage * 7);
+        int startIndex = (currentPage - 1) * perPage;
+        int endIndex = Math.min(availableChannels.size(), currentPage * perPage);
 
         int custSlotIdx = 0;
         for (int i = startIndex; i < endIndex; i++) {
+            if (custSlotIdx >= custSlots.length) break;
             PlayerChannelManager.CustomChannel custChan = availableChannels.get(i);
             boolean isMember = custChan.getMembers().contains(player.getUniqueId());
             boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
@@ -123,66 +130,57 @@ public class ChannelSelectGUI {
             }
 
             ItemStack item = createItem(Material.BOOKSHELF, displayName, lore, isSelected);
-            inv.setItem(GUIHolder.CUST_SLOTS[custSlotIdx++], item);
+            int targetSlot = custSlots[custSlotIdx++];
+            if (targetSlot < size) inv.setItem(targetSlot, item);
         }
-
 
         // 分頁控制按鈕
         if (currentPage > 1) {
-            ItemStack prevPage = createItem(Material.ARROW, "<yellow>◀ 上一頁 (第 " + (currentPage - 1) + " 頁)</yellow>");
-            inv.setItem(46, prevPage);
+            int slot = GUIManager.getSlot(config, "prev-page", 46);
+            ItemStack prevPage = GUIManager.createItem(config, "prev-page", Material.ARROW, Map.of("<page>", String.valueOf(currentPage - 1)));
+            if (slot < size) inv.setItem(slot, prevPage);
         }
+
         if (currentPage < totalPages) {
-            ItemStack nextPage = createItem(Material.ARROW, "<yellow>下一頁 ▶ (第 " + (currentPage + 1) + " 頁)</yellow>");
-            inv.setItem(52, nextPage);
+            int slot = GUIManager.getSlot(config, "next-page", 52);
+            ItemStack nextPage = GUIManager.createItem(config, "next-page", Material.ARROW, Map.of("<page>", String.valueOf(currentPage + 1)));
+            if (slot < size) inv.setItem(slot, nextPage);
         }
 
         // 底部功能按鈕
-        // Slot 47: ＋ 建立新頻道
-        ItemStack createChannelItem = createItem(Material.EMERALD, "<green><bold>＋ 建立新群組頻道</bold>", List.of(
-                "<gray>點擊即可輸入名稱建立自己的專屬頻道",
-                "",
-                "<yellow>▶ 點擊進行建立</yellow>"
-        ), false);
-        inv.setItem(47, createChannelItem);
+        int createSlot = GUIManager.getSlot(config, "create-channel", 47);
+        if (createSlot < size) {
+            inv.setItem(createSlot, GUIManager.createItem(config, "create-channel", Material.EMERALD, null));
+        }
 
-        // Slot 48: 群組頻道管理說明/按鈕
-        ItemStack manageItem = createItem(Material.NAME_TAG, "<gold><bold>⚙ 群組頻道管理</bold>", List.of(
-                "<gray>提示：在上方自訂群組頻道圖示上",
-                "<gold>右鍵點擊</gold> <gray>即可直接開啟該頻道管理面板！",
-                "",
-                "<yellow>▶ 點擊開啟目前所屬群組面板</yellow>"
-        ), false);
-        inv.setItem(48, manageItem);
+        int manageSlot = GUIManager.getSlot(config, "manage-channel", 48);
+        if (manageSlot < size) {
+            inv.setItem(manageSlot, GUIManager.createItem(config, "manage-channel", Material.NAME_TAG, null));
+        }
 
-        // Slot 49: 關閉選單
-        ItemStack closeItem = createItem(Material.BARRIER, "<red><bold>✖ 關閉選單</bold>", List.of("<gray>點擊關閉此介面"), false);
-        inv.setItem(49, closeItem);
+        int closeSlot = GUIManager.getSlot(config, "close-menu", 49);
+        if (closeSlot < size) {
+            inv.setItem(closeSlot, GUIManager.createItem(config, "close-menu", Material.BARRIER, null));
+        }
 
-        // Slot 50: 待處理邀請
         int pendingCount = 0;
         for (PlayerChannelManager.CustomChannel c : PlayerChannelManager.getCustomChannels().values()) {
             if (c.getPendingInvites().contains(player.getUniqueId())) {
                 pendingCount++;
             }
         }
-        String inviteName = "<green><bold>✉ 頻道邀請</bold> " + (pendingCount > 0 ? "<red>(" + pendingCount + ")" : "");
-        ItemStack inviteItem = createItem(Material.WRITABLE_BOOK, inviteName, List.of(
-                "<gray>查看收到的群組頻道邀請",
-                "<gray>當前未處理邀請: <yellow>" + pendingCount + " 個",
-                "",
-                "<yellow>▶ 點擊開啟邀請選單</yellow>"
-        ), pendingCount > 0);
-        inv.setItem(50, inviteItem);
+        int inviteSlot = GUIManager.getSlot(config, "pending-invites", 50);
+        if (inviteSlot < size) {
+            Map<String, String> replacements = new HashMap<>();
+            replacements.put("<pending_badge>", pendingCount > 0 ? "<red>(" + pendingCount + ")" : "");
+            replacements.put("<pending_count>", String.valueOf(pendingCount));
+            inv.setItem(inviteSlot, GUIManager.createItem(config, "pending-invites", Material.WRITABLE_BOOK, replacements));
+        }
 
-        // Slot 51: 個人訊息顯示設定 (開關死亡與進出訊息)
-        ItemStack msgSettingsItem = createItem(Material.BELL, "<gradient:#ff9a9e:#fecfef><bold>🔔 個人訊息顯示設定</bold></gradient>", List.of(
-                "<gray>開關個人畫面顯示之系統廣播",
-                "<gray>可切換: <yellow>死亡訊息</yellow> 與 <yellow>進出伺服器通知</yellow>",
-                "",
-                "<yellow>▶ 點擊開啟偏好設定選單</yellow>"
-        ), false);
-        inv.setItem(51, msgSettingsItem);
+        int msgSettingsSlot = GUIManager.getSlot(config, "message-settings", 51);
+        if (msgSettingsSlot < size) {
+            inv.setItem(msgSettingsSlot, GUIManager.createItem(config, "message-settings", Material.BELL, null));
+        }
 
         player.openInventory(inv);
     }
@@ -220,9 +218,5 @@ public class ChannelSelectGUI {
             item.setItemMeta(meta);
         }
         return item;
-    }
-
-    private static ItemStack createItem(Material material, String name) {
-        return createItem(material, name, null, false);
     }
 }

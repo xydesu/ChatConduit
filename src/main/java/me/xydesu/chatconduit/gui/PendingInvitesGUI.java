@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -17,20 +18,27 @@ import java.util.List;
 public class PendingInvitesGUI {
 
     public static void open(Player player) {
-        String titleStr = "<green><bold>頻道邀請列表</bold></green>";
+        FileConfiguration config = GUIManager.getConfig("pending_invites");
+
+        String titleStr = GUIManager.getTitle("pending_invites", "<green><bold>頻道邀請列表</bold></green>");
         Component titleComponent = ChatUtils.parse(player, titleStr);
 
+        int size = GUIManager.getSize("pending_invites", 27);
         GUIHolder holder = new GUIHolder(GUIHolder.GUIType.PENDING_INVITES);
-        Inventory inv = Bukkit.createInventory(holder, 27, titleComponent);
+        Inventory inv = Bukkit.createInventory(holder, size, titleComponent);
 
-        // 裝飾
-        ItemStack glassFiller = createItem(Material.GRAY_STAINED_GLASS_PANE, "<gray> ");
-        for (int i = 0; i < 9; i++) inv.setItem(i, glassFiller);
-        for (int i = 18; i < 27; i++) inv.setItem(i, glassFiller);
+        // 裝飾邊框
+        ItemStack glassFiller = GUIManager.createItem(config, "filler-glass", Material.GRAY_STAINED_GLASS_PANE, null);
+        int[] fillerSlots = GUIManager.getSlots(config, "items.filler-glass.slots", new int[]{0,1,2,3,4,5,6,7,8,18,19,20,21,23,24,25,26});
+        for (int s : fillerSlots) {
+            if (s < size) inv.setItem(s, glassFiller);
+        }
 
-        int slot = 9;
+        int[] paperSlots = GUIManager.getSlots(config, "slots.invite-papers", new int[]{9,10,11,12,13,14,15,16,17});
+        int paperIdx = 0;
+
         for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
-            if (slot >= 18) break;
+            if (paperIdx >= paperSlots.length) break;
             if (!custChan.getPendingInvites().contains(player.getUniqueId())) continue;
 
             OfflinePlayer ownerP = Bukkit.getOfflinePlayer(custChan.getOwner());
@@ -44,17 +52,21 @@ public class PendingInvitesGUI {
             lore.add("<green>▶ 左鍵點擊: 接受邀請並加入頻道</green>");
             lore.add("<red>▶ 右鍵點擊: 拒絕此邀請</red>");
 
-            ItemStack item = createItem(Material.PAPER, itemName, lore, custChan.getId());
-            inv.setItem(slot++, item);
+            ItemStack item = createItem(Material.PAPER, itemName, lore);
+            int slot = paperSlots[paperIdx++];
+            if (slot < size) inv.setItem(slot, item);
         }
 
         // Slot 22: 返回
-        inv.setItem(22, createItem(Material.ARROW, "<yellow><bold>← 返回頻道大廳</bold>", List.of("<gray>回到頻道選擇選單"), null));
+        int backSlot = GUIManager.getSlot(config, "back-button", 22);
+        if (backSlot < size) {
+            inv.setItem(backSlot, GUIManager.createItem(config, "back-button", Material.ARROW, null));
+        }
 
         player.openInventory(inv);
     }
 
-    private static ItemStack createItem(Material material, String name, List<String> lore, String channelId) {
+    private static ItemStack createItem(Material material, String name, List<String> lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -69,9 +81,5 @@ public class PendingInvitesGUI {
             item.setItemMeta(meta);
         }
         return item;
-    }
-
-    private static ItemStack createItem(Material material, String name) {
-        return createItem(material, name, null, null);
     }
 }

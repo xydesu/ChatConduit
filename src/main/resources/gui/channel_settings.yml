@@ -1,0 +1,81 @@
+title: "<gradient:#00d2ff:#3a7bd5><bold>頻道詳細設定 - <channel_name></bold></gradient>"
+size: 27
+
+items:
+  filler-glass:
+    slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 18, 19, 20, 21, 23, 24, 25, 26]
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<gray> "
+
+  access-mode:
+    slot: 10
+    name: "<gold><bold>1. 存取權限模式</bold></gold>"
+    lore:
+      - "<gray>當前模式: <mode_status>"
+      - "<gray>說明: <mode_desc>"
+      - ""
+      - "<yellow>▶ 點擊切換模式 (PUBLIC / PRIVATE)</yellow>"
+
+  rename-channel:
+    slot: 11
+    material: NAME_TAG
+    name: "<gold><bold>2. 修改頻道顯示名稱</bold></gold>"
+    lore:
+      - "<gray>當前顯示名稱: <current_name>"
+      - "<gray>說明: 在聊天面板呈現的頻道抬頭名稱"
+      - ""
+      - "<yellow>▶ 點擊開啟對話框輸入新名稱</yellow>"
+
+  channel-description:
+    slot: 12
+    material: BOOK
+    name: "<gold><bold>3. 頻道簡介說明</bold></gold>"
+    lore:
+      - "<gray>當前簡介: <white><current_desc></white>"
+      - "<gray>說明: 展示於全服聊天欄頻道 Prefix 滑鼠懸停提示中"
+      - ""
+      - "<yellow>▶ 點擊開啟對話框修改頻道簡介</yellow>"
+
+  channel-rules:
+    slot: 13
+    material: PAPER
+    name: "<gold><bold>4. 頻道規則與規範</bold></gold>"
+    lore:
+      - "<gray>當前規則: <white><current_rules></white>"
+      - "<gray>說明: 成員與外部玩家懸停頻道標籤時呈現的規章"
+      - ""
+      - "<yellow>▶ 點擊開啟對話框修改頻道守則</yellow>"
+
+  color-theme:
+    slot: 14
+    material: CYAN_DYE
+    name: "<gold><bold>5. 頻道色彩主題樣式</bold></gold>"
+    lore:
+      - "<gray>當前色彩預設: <theme_preview>"
+      - "<gray>說明: 改變該群組在聊天欄顯示的色彩主題"
+      - ""
+      - "<yellow>▶ 點擊切換下一個色彩主題</yellow>"
+
+  webhook-setting:
+    slot: 16
+    skull-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2RhOTQ0OWNlYTEyMTE5YzIyY2E1YjkzYzI4Y2JlOWRmMzE1MjFjYTE1OWE1ZWE1ZmFhNWZmYjVhMTc4MGY1NyJ9fX0="
+    name: "<gold><bold>6. 設定專屬 Discord Webhook</bold></gold>"
+    lore:
+      - "<gray>綁定狀態: <webhook_status>"
+      - "<gray>網址預覽: <yellow><webhook_preview></yellow>"
+      - "<gray>說明: 成員發言時自動 POST 至您的 Discord 頻道"
+      - ""
+      - "<yellow>▶ 點擊開啟對話框輸入 Webhook URL</yellow>"
+      - "<gray>(如需解除綁定請在對話框輸入 clear)</gray>"
+
+  test-webhook:
+    slot: 17
+    name: "<gold><bold>7. 測試 Webhook 連線</bold></gold>"
+    # Lore 與 Material 將在程式中根據 hasWebhook 狀態動態調整
+
+  back-button:
+    slot: 22
+    material: ARROW
+    name: "<yellow><bold>← 返回群組管理</bold></yellow>"
+    lore:
+      - "<gray>回到頻道管理頁面"

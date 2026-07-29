@@ -1,0 +1,18 @@
+title: "<green><bold>頻道邀請列表</bold></green>"
+size: 27
+
+slots:
+  invite-papers: [9, 10, 11, 12, 13, 14, 15, 16, 17]
+
+items:
+  filler-glass:
+    slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 18, 19, 20, 21, 23, 24, 25, 26]
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<gray> "
+
+  back-button:
+    slot: 22
+    material: ARROW
+    name: "<yellow><bold>← 返回頻道大廳</bold></yellow>"
+    lore:
+      - "<gray>回到頻道選擇選單"

@@ -9,6 +9,14 @@ public class GUIHolder implements InventoryHolder {
     public static final int[] SYS_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
     public static final int[] CUST_SLOTS = {37, 38, 39, 40, 41, 42, 43};
 
+    public static int[] getSysSlots() {
+        return GUIManager.getSlots(GUIManager.getConfig("channel_select"), "slots.system-channels", SYS_SLOTS);
+    }
+
+    public static int[] getCustSlots() {
+        return GUIManager.getSlots(GUIManager.getConfig("channel_select"), "slots.custom-channels", CUST_SLOTS);
+    }
+
     private final GUIType guiType;
 
     private final String extraData;

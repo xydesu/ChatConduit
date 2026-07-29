@@ -6,10 +6,10 @@ import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
@@ -21,24 +21,34 @@ import java.util.UUID;
 public class OnlinePlayersGUI {
 
     public static void open(Player inviter, PlayerChannelManager.CustomChannel customChan) {
-        String titleStr = "<green><bold>選擇邀請玩家 - " + customChan.getDisplayName() + "</bold></green>";
+        FileConfiguration config = GUIManager.getConfig("online_players");
+
+        String titleStr = GUIManager.getTitle("online_players", "<green><bold>選擇邀請玩家 - <channel_name></bold></green>")
+                .replace("<channel_name>", customChan.getDisplayName());
         Component titleComponent = ChatUtils.parse(inviter, titleStr);
 
+        int size = GUIManager.getSize("online_players", 54);
         GUIHolder holder = new GUIHolder(GUIHolder.GUIType.ONLINE_PLAYERS_SELECT, customChan.getId());
-        Inventory inv = Bukkit.createInventory(holder, 54, titleComponent);
+        Inventory inv = Bukkit.createInventory(holder, size, titleComponent);
 
         // 裝飾邊框
-        ItemStack glassFiller = createItem(Material.GRAY_STAINED_GLASS_PANE, "<gray> ");
-        for (int i = 0; i < 9; i++) inv.setItem(i, glassFiller);
-        for (int i = 45; i < 54; i++) inv.setItem(i, glassFiller);
+        ItemStack glassFiller = GUIManager.createItem(config, "filler-glass", Material.GRAY_STAINED_GLASS_PANE, null);
+        int[] fillerSlots = GUIManager.getSlots(config, "items.filler-glass.slots", new int[]{0,1,2,3,4,5,6,7,8,46,47,48,49,50,51,52});
+        for (int s : fillerSlots) {
+            if (s < size) inv.setItem(s, glassFiller);
+        }
 
-        int slot = 9;
-        java.util.Set<UUID> addedUuids = new java.util.HashSet<>();
+        int[] headSlots = GUIManager.getSlots(config, "slots.player-heads", new int[]{
+                9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+                27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44
+        });
+
+        int headIdx = 0;
+        Set<UUID> addedUuids = new HashSet<>();
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            if (slot >= 45) break;
+            if (headIdx >= headSlots.length) break;
 
-            // 過濾已是成員的玩家
             if (customChan.getMembers().contains(onlinePlayer.getUniqueId())) continue;
             addedUuids.add(onlinePlayer.getUniqueId());
 
@@ -64,14 +74,15 @@ public class OnlinePlayersGUI {
                 meta.lore(lore);
                 head.setItemMeta(meta);
             }
-            inv.setItem(slot++, head);
+            int slot = headSlots[headIdx++];
+            if (slot < size) inv.setItem(slot, head);
         }
 
         // 補載入跨服/已知玩家頭顱
-        if (slot < 45) {
+        if (headIdx < headSlots.length) {
             List<me.xydesu.chatconduit.database.dao.PlayerDAO.PlayerData> knownPlayers = me.xydesu.chatconduit.database.dao.PlayerDAO.getAllKnownPlayers();
             for (me.xydesu.chatconduit.database.dao.PlayerDAO.PlayerData known : knownPlayers) {
-                if (slot >= 45) break;
+                if (headIdx >= headSlots.length) break;
                 if (known.uuid() == null || known.uuid().equals(inviter.getUniqueId())) continue;
                 if (addedUuids.contains(known.uuid())) continue;
                 if (customChan.getMembers().contains(known.uuid())) continue;
@@ -101,41 +112,23 @@ public class OnlinePlayersGUI {
                     meta.lore(lore);
                     head.setItemMeta(meta);
                 }
-                inv.setItem(slot++, head);
+                int slot = headSlots[headIdx++];
+                if (slot < size) inv.setItem(slot, head);
             }
         }
 
         // Slot 45: 返回
-        inv.setItem(45, createItem(Material.ARROW, "<yellow><bold>← 返回頻道管理</bold>", List.of("<gray>回到頻道管理頁面")));
+        int backSlot = GUIManager.getSlot(config, "back-button", 45);
+        if (backSlot < size) {
+            inv.setItem(backSlot, GUIManager.createItem(config, "back-button", Material.ARROW, null));
+        }
 
         // Slot 53: 手動輸入玩家 ID 進行邀請
-        inv.setItem(53, createItem(Material.NAME_TAG, "<green><bold>⌨ 手動輸入玩家 ID 進行邀請</bold>", List.of(
-                "<gray>可在對話框手動輸入目標玩家名稱進行邀請",
-                "",
-                "<yellow>▶ 點擊開啟手動輸入對話框</yellow>"
-        )));
+        int manualSlot = GUIManager.getSlot(config, "manual-invite", 53);
+        if (manualSlot < size) {
+            inv.setItem(manualSlot, GUIManager.createItem(config, "manual-invite", Material.NAME_TAG, null));
+        }
 
         inviter.openInventory(inv);
-    }
-
-    private static ItemStack createItem(Material material, String name, List<String> lore) {
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.displayName(ChatUtils.parseNoItalic(name));
-            if (lore != null && !lore.isEmpty()) {
-                List<Component> parsedLore = new ArrayList<>();
-                for (String line : lore) {
-                    parsedLore.add(ChatUtils.parseNoItalic(line));
-                }
-                meta.lore(parsedLore);
-            }
-            item.setItemMeta(meta);
-        }
-        return item;
-    }
-
-    private static ItemStack createItem(Material material, String name) {
-        return createItem(material, name, null);
     }
 }

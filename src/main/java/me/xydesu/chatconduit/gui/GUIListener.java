@@ -1,13 +1,14 @@
 package me.xydesu.chatconduit.gui;
 
+import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
-import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -58,55 +59,65 @@ public class GUIListener implements Listener {
     }
 
     private void handleChannelSelectClick(Player player, int page, int slot, ItemStack clickedItem, ClickType clickType) {
-        if (slot == 46) {
+        FileConfiguration config = GUIManager.getConfig("channel_select");
+
+        if (slot == GUIManager.getSlot(config, "prev-page", 46)) {
             ChannelSelectGUI.open(player, Math.max(1, page - 1));
             return;
         }
-        if (slot == 52) {
+        if (slot == GUIManager.getSlot(config, "next-page", 52)) {
             ChannelSelectGUI.open(player, page + 1);
             return;
         }
-        if (slot == 47) {
+        if (slot == GUIManager.getSlot(config, "create-channel", 47)) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.CREATE_CHANNEL);
             return;
         }
-        if (slot == 48) {
+        if (slot == GUIManager.getSlot(config, "manage-channel", 48)) {
             PlayerChannelManageGUI.open(player);
             return;
         }
-        if (slot == 49) {
+        if (slot == GUIManager.getSlot(config, "close-menu", 49)) {
             player.closeInventory();
             return;
         }
-        if (slot == 50) {
+        if (slot == GUIManager.getSlot(config, "pending-invites", 50)) {
             PendingInvitesGUI.open(player);
             return;
         }
-        if (slot == 51) {
+        if (slot == GUIManager.getSlot(config, "message-settings", 51)) {
             MessageSettingsGUI.open(player);
             return;
         }
 
-        if ((slot >= 10 && slot <= 16) || (slot >= 19 && slot <= 25)) {
-            int sysSlotIdx = 0;
-            for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
-                if (sysSlotIdx >= GUIHolder.SYS_SLOTS.length) break;
-                int currentSlot = GUIHolder.SYS_SLOTS[sysSlotIdx++];
-                if (currentSlot == slot) {
-                    if (!sysChan.permission().isEmpty() && !player.hasPermission(sysChan.permission())) {
-                        ChatUtils.sendMessage(player, Main.getInstance().getLanguageConfig().getString("channel.no-permission", "<red>你沒有權限進入此頻道！"));
-                        return;
-                    }
-                    ChannelManager.setPlayerChannel(player, sysChan.key());
-                    String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", sysChan.name());
-                    ChatUtils.sendMessage(player, switchMsg);
-                    ChannelSelectGUI.open(player, page);
+        int[] sysSlots = GUIHolder.getSysSlots();
+        int sysSlotIdx = 0;
+        for (ChannelManager.Channel sysChan : ChannelManager.getChannels().values()) {
+            if (sysSlotIdx >= sysSlots.length) break;
+            int currentSlot = sysSlots[sysSlotIdx++];
+            if (currentSlot == slot) {
+                if (!sysChan.permission().isEmpty() && !player.hasPermission(sysChan.permission())) {
+                    ChatUtils.sendMessage(player, Main.getInstance().getLanguageConfig().getString("channel.no-permission", "<red>你沒有權限進入此頻道！"));
                     return;
                 }
+                ChannelManager.setPlayerChannel(player, sysChan.key());
+                String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", sysChan.name());
+                ChatUtils.sendMessage(player, switchMsg);
+                ChannelSelectGUI.open(player, page);
+                return;
             }
         }
 
-        if (slot >= 37 && slot <= 43) {
+        int[] custSlots = GUIHolder.getCustSlots();
+        int custSlotIdx = -1;
+        for (int i = 0; i < custSlots.length; i++) {
+            if (custSlots[i] == slot) {
+                custSlotIdx = i;
+                break;
+            }
+        }
+
+        if (custSlotIdx != -1) {
             List<PlayerChannelManager.CustomChannel> availableChannels = new java.util.ArrayList<>();
             for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
                 boolean isMember = custChan.getMembers().contains(player.getUniqueId());
@@ -116,44 +127,35 @@ public class GUIListener implements Listener {
                 }
             }
 
-            int custSlotIdx = -1;
-            for (int i = 0; i < GUIHolder.CUST_SLOTS.length; i++) {
-                if (GUIHolder.CUST_SLOTS[i] == slot) {
-                    custSlotIdx = i;
-                    break;
-                }
-            }
+            int perPage = custSlots.length > 0 ? custSlots.length : 7;
+            int targetIndex = (page - 1) * perPage + custSlotIdx;
 
-            if (custSlotIdx != -1) {
-                int targetIndex = (page - 1) * 7 + custSlotIdx;
-                if (targetIndex >= 0 && targetIndex < availableChannels.size()) {
-                    PlayerChannelManager.CustomChannel custChan = availableChannels.get(targetIndex);
-                    boolean isMember = custChan.getMembers().contains(player.getUniqueId());
-                    boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
+            if (targetIndex >= 0 && targetIndex < availableChannels.size()) {
+                PlayerChannelManager.CustomChannel custChan = availableChannels.get(targetIndex);
+                boolean isMember = custChan.getMembers().contains(player.getUniqueId());
+                boolean isPublic = custChan.getMode() == PlayerChannelManager.Mode.PUBLIC;
 
-                    if (clickType.isRightClick()) {
-                        if (isMember) {
-                            PlayerChannelManageGUI.openForChannel(player, custChan);
-                        } else {
-                            String msg = Main.getInstance().getLanguageConfig().getString("channel.only-members-manage", "<red>你必須是該頻道的成員才能進行管理！");
-                            ChatUtils.sendMessage(player, msg);
-                        }
-                        return;
+                if (clickType.isRightClick()) {
+                    if (isMember) {
+                        PlayerChannelManageGUI.openForChannel(player, custChan);
+                    } else {
+                        String msg = Main.getInstance().getLanguageConfig().getString("channel.only-members-manage", "<red>你必須是該頻道的成員才能進行管理！");
+                        ChatUtils.sendMessage(player, msg);
                     }
-
-
-                    if (!isMember && isPublic) {
-                        custChan.getMembers().add(player.getUniqueId());
-                        PlayerChannelManager.save();
-                        ChatUtils.sendMessage(player, "<green>已成功加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
-                        PlayerChannelManager.broadcastToMembers(custChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！", player.getUniqueId());
-                    }
-                    ChannelManager.setPlayerChannel(player, custChan.getId());
-                    String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", custChan.getDisplayName());
-                    ChatUtils.sendMessage(player, switchMsg);
-                    ChannelSelectGUI.open(player, page);
                     return;
                 }
+
+                if (!isMember && isPublic) {
+                    custChan.getMembers().add(player.getUniqueId());
+                    PlayerChannelManager.save();
+                    ChatUtils.sendMessage(player, "<green>已成功加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
+                    PlayerChannelManager.broadcastToMembers(custChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！", player.getUniqueId());
+                }
+                ChannelManager.setPlayerChannel(player, custChan.getId());
+                String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", custChan.getDisplayName());
+                ChatUtils.sendMessage(player, switchMsg);
+                ChannelSelectGUI.open(player, page);
+                return;
             }
         }
     }
@@ -165,10 +167,10 @@ public class GUIListener implements Listener {
             return;
         }
 
+        FileConfiguration config = GUIManager.getConfig("player_channel_manage");
         boolean isOwner = customChan.getOwner().equals(player.getUniqueId());
 
-        // Slot 4: 打開頻道詳細設定面板
-        if (slot == 4) {
+        if (slot == GUIManager.getSlot(config, "channel-info", 4)) {
             if (isOwner) {
                 ChannelSettingsGUI.open(player, customChan);
             } else {
@@ -177,17 +179,17 @@ public class GUIListener implements Listener {
             return;
         }
 
-        if (slot == 45) {
+        if (slot == GUIManager.getSlot(config, "back-button", 45)) {
             ChannelSelectGUI.open(player);
             return;
         }
 
-        if (slot == 49 && isOwner) {
+        if (slot == GUIManager.getSlot(config, "invite-players", 49) && isOwner) {
             OnlinePlayersGUI.open(player, customChan);
             return;
         }
 
-        if (slot == 51 && !isOwner) {
+        if (slot == GUIManager.getSlot(config, "leave-channel", 51) && !isOwner) {
             customChan.getMembers().remove(player.getUniqueId());
             PlayerChannelManager.save();
             ChannelManager.setPlayerChannel(player, "global");
@@ -197,7 +199,7 @@ public class GUIListener implements Listener {
             return;
         }
 
-        if (slot == 53 && isOwner) {
+        if (slot == GUIManager.getSlot(config, "disband-channel", 53) && isOwner) {
             String delName = customChan.getDisplayName();
             PlayerChannelManager.deleteChannel(customChan.getId());
             ChannelManager.setPlayerChannel(player, "global");
@@ -257,8 +259,9 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Slot 10: 存取權限模式切換
-        if (slot == 10) {
+        FileConfiguration config = GUIManager.getConfig("channel_settings");
+
+        if (slot == GUIManager.getSlot(config, "access-mode", 10)) {
             PlayerChannelManager.Mode newMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? PlayerChannelManager.Mode.PRIVATE : PlayerChannelManager.Mode.PUBLIC;
             customChan.setMode(newMode);
             PlayerChannelManager.save();
@@ -267,26 +270,22 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Slot 11: 修改頻道顯示名稱
-        if (slot == 11) {
+        if (slot == GUIManager.getSlot(config, "rename-channel", 11)) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.RENAME_CHANNEL, customChan.getId());
             return;
         }
 
-        // Slot 12: 修改頻道簡介說明
-        if (slot == 12) {
+        if (slot == GUIManager.getSlot(config, "channel-description", 12)) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.SET_DESCRIPTION, customChan.getId());
             return;
         }
 
-        // Slot 13: 修改頻道規則規範
-        if (slot == 13) {
+        if (slot == GUIManager.getSlot(config, "channel-rules", 13)) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.SET_RULES, customChan.getId());
             return;
         }
 
-        // Slot 14: 頻道色彩主題樣式切換
-        if (slot == 14) {
+        if (slot == GUIManager.getSlot(config, "color-theme", 14)) {
             String currentTheme = customChan.getColorTheme();
             int curIdx = COLOR_PRESETS.indexOf(currentTheme);
             int nextIdx = (curIdx + 1) % COLOR_PRESETS.size();
@@ -299,14 +298,12 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Slot 16: 設定專屬 Discord Webhook 網址
-        if (slot == 16) {
+        if (slot == GUIManager.getSlot(config, "webhook-setting", 16)) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.SET_WEBHOOK, customChan.getId());
             return;
         }
 
-        // Slot 17: 測試 Webhook 連線
-        if (slot == 17) {
+        if (slot == GUIManager.getSlot(config, "test-webhook", 17)) {
             String webhookUrl = customChan.getWebhookUrl();
             if (webhookUrl == null || webhookUrl.trim().isEmpty()) {
                 String msg = Main.getInstance().getLanguageConfig().getString("channel.webhook-not-bound", "<red>該頻道尚未綁定 Discord Webhook 網址！");
@@ -337,42 +334,54 @@ public class GUIListener implements Listener {
             return;
         }
 
-        // Slot 22: 返回頻道管理頁面
-        if (slot == 22) {
+        if (slot == GUIManager.getSlot(config, "back-button", 22)) {
             PlayerChannelManageGUI.openForChannel(player, customChan);
         }
     }
 
     private void handlePendingInvitesClick(Player player, int slot, ItemStack clickedItem, ClickType clickType) {
-        if (slot == 22) {
+        FileConfiguration config = GUIManager.getConfig("pending_invites");
+
+        if (slot == GUIManager.getSlot(config, "back-button", 22)) {
             ChannelSelectGUI.open(player);
             return;
         }
 
         if (clickedItem.getType() == Material.PAPER) {
-            int currentSlot = 9;
-            for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
-                if (!custChan.getPendingInvites().contains(player.getUniqueId())) continue;
-                if (currentSlot == slot) {
-                    if (clickType.isLeftClick()) {
-                        custChan.getPendingInvites().remove(player.getUniqueId());
-                        custChan.getMembers().add(player.getUniqueId());
-                        PlayerChannelManager.save();
-                        ChannelManager.setPlayerChannel(player, custChan.getId());
-
-                        ChatUtils.sendMessage(player, "<green>成功加入群組頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
-                        PlayerChannelManager.broadcastToMembers(custChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已接受邀請加入群組頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！", player.getUniqueId());
-                        ChannelSelectGUI.open(player);
-                    } else if (clickType.isRightClick()) {
-                        custChan.getPendingInvites().remove(player.getUniqueId());
-                        PlayerChannelManager.save();
-
-                        ChatUtils.sendMessage(player, "<gray>已拒絕頻道 <yellow>" + custChan.getDisplayName() + "</yellow> 的邀請。");
-                        PendingInvitesGUI.open(player);
-                    }
-                    return;
+            int[] paperSlots = GUIManager.getSlots(config, "slots.invite-papers", new int[]{9,10,11,12,13,14,15,16,17});
+            int paperIdx = -1;
+            for (int i = 0; i < paperSlots.length; i++) {
+                if (paperSlots[i] == slot) {
+                    paperIdx = i;
+                    break;
                 }
-                currentSlot++;
+            }
+
+            if (paperIdx != -1) {
+                int count = 0;
+                for (PlayerChannelManager.CustomChannel custChan : PlayerChannelManager.getCustomChannels().values()) {
+                    if (!custChan.getPendingInvites().contains(player.getUniqueId())) continue;
+                    if (count == paperIdx) {
+                        if (clickType.isLeftClick()) {
+                            custChan.getPendingInvites().remove(player.getUniqueId());
+                            custChan.getMembers().add(player.getUniqueId());
+                            PlayerChannelManager.save();
+                            ChannelManager.setPlayerChannel(player, custChan.getId());
+
+                            ChatUtils.sendMessage(player, "<green>成功加入群組頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
+                            PlayerChannelManager.broadcastToMembers(custChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已接受邀請加入群組頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！", player.getUniqueId());
+                            ChannelSelectGUI.open(player);
+                        } else if (clickType.isRightClick()) {
+                            custChan.getPendingInvites().remove(player.getUniqueId());
+                            PlayerChannelManager.save();
+
+                            ChatUtils.sendMessage(player, "<gray>已拒絕頻道 <yellow>" + custChan.getDisplayName() + "</yellow> 的邀請。");
+                            PendingInvitesGUI.open(player);
+                        }
+                        return;
+                    }
+                    count++;
+                }
             }
         }
     }
@@ -384,12 +393,14 @@ public class GUIListener implements Listener {
             return;
         }
 
-        if (slot == 45) {
+        FileConfiguration config = GUIManager.getConfig("online_players");
+
+        if (slot == GUIManager.getSlot(config, "back-button", 45)) {
             PlayerChannelManageGUI.openForChannel(player, customChan);
             return;
         }
 
-        if (slot == 53) {
+        if (slot == GUIManager.getSlot(config, "manual-invite", 53)) {
             PlayerInputManager.expectInput(player, PlayerInputManager.InputType.INVITE_PLAYER, customChan.getId());
             return;
         }
@@ -432,7 +443,9 @@ public class GUIListener implements Listener {
     }
 
     private void handleMessageSettingsClick(Player player, int slot, ItemStack clickedItem) {
-        if (slot == 11) {
+        FileConfiguration config = GUIManager.getConfig("message_settings");
+
+        if (slot == GUIManager.getSlot(config, "death-messages", 11)) {
             boolean current = ChannelManager.isDeathMessagesEnabled(player);
             ChannelManager.setDeathMessagesEnabled(player, !current);
             String stateStr = !current ? "<green>顯示 (ON)</green>" : "<red>隱藏 (OFF)</red>";
@@ -441,7 +454,7 @@ public class GUIListener implements Listener {
             return;
         }
 
-        if (slot == 15) {
+        if (slot == GUIManager.getSlot(config, "join-messages", 15)) {
             boolean current = ChannelManager.isJoinMessagesEnabled(player);
             ChannelManager.setJoinMessagesEnabled(player, !current);
             String stateStr = !current ? "<green>顯示 (ON)</green>" : "<red>隱藏 (OFF)</red>";
@@ -450,7 +463,7 @@ public class GUIListener implements Listener {
             return;
         }
 
-        if (slot == 22) {
+        if (slot == GUIManager.getSlot(config, "back-button", 22)) {
             ChannelSelectGUI.open(player);
         }
     }

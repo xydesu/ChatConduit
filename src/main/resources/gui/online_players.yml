@@ -1,0 +1,27 @@
+title: "<green><bold>選擇邀請玩家 - <channel_name></bold></green>"
+size: 54
+
+slots:
+  player-heads: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44]
+
+items:
+  filler-glass:
+    slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 46, 47, 48, 49, 50, 51, 52]
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<gray> "
+
+  back-button:
+    slot: 45
+    material: ARROW
+    name: "<yellow><bold>← 返回頻道管理</bold></yellow>"
+    lore:
+      - "<gray>回到頻道管理頁面"
+
+  manual-invite:
+    slot: 53
+    material: NAME_TAG
+    name: "<green><bold>⌨ 手動輸入玩家 ID 進行邀請</bold></green>"
+    lore:
+      - "<gray>可在對話框手動輸入目標玩家名稱進行邀請"
+      - ""
+      - "<yellow>▶ 點擊開啟手動輸入對話框</yellow>"

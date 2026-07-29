@@ -1,0 +1,55 @@
+title: "<gradient:#a8c0ff:#3f2b96><bold>群組管理 - <channel_name></bold></gradient>"
+size: 54
+
+slots:
+  member-heads: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44]
+
+items:
+  filler-glass:
+    slots: [0, 1, 2, 3, 5, 6, 7, 8, 46, 47, 48, 50, 52]
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<gray> "
+
+  channel-info:
+    slot: 4
+    name: "<gold><bold>⚙ 頻道詳細設定: <channel_name></bold></gold>"
+    lore:
+      - "<gray>隊長: <yellow><owner_name></yellow>"
+      - "<gray>存取模式: <access_mode>"
+      - "<gray>成員總數: <yellow><member_count> 人</yellow>"
+      - ""
+      - "<owner_tip>"
+
+  back-button:
+    slot: 45
+    material: ARROW
+    name: "<yellow><bold>← 返回頻道大廳</bold></yellow>"
+    lore:
+      - "<gray>回到頻道選擇選單"
+
+  invite-players:
+    slot: 49
+    material: WRITABLE_BOOK
+    name: "<green><bold>✉ 邀請線上玩家加入</bold></green>"
+    lore:
+      - "<gray>開啟線上玩家頭像選單進行邀請"
+      - ""
+      - "<yellow>▶ 點擊開啟線上邀請面板</yellow>"
+
+  leave-channel:
+    slot: 51
+    material: OAK_DOOR
+    name: "<red><bold>🚪 退出群組頻道</bold></red>"
+    lore:
+      - "<gray>退出此頻道並返回公共頻道"
+      - ""
+      - "<red>▶ 點擊確認退出</red>"
+
+  disband-channel:
+    slot: 53
+    material: TNT
+    name: "<red><bold>✖ 解散並刪除頻道</bold></red>"
+    lore:
+      - "<gray>解散此頻道並踢出所有人"
+      - ""
+      - "<red>▶ 點擊確認解散頻道</red>"

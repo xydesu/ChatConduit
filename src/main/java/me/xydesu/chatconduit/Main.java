@@ -27,6 +27,7 @@ public final class Main extends JavaPlugin {
         saveDefaultConfig();
         saveDefaultLanguageFiles();
         loadLanguageConfig();
+        me.xydesu.chatconduit.gui.GUIManager.load();
 
         // 初始化資料庫連線池與自動遷移
         me.xydesu.chatconduit.database.DatabaseManager.init();
@@ -120,6 +121,7 @@ public final class Main extends JavaPlugin {
         reloadConfig();
         saveDefaultLanguageFiles();
         loadLanguageConfig();
+        me.xydesu.chatconduit.gui.GUIManager.reload();
         ChannelManager.loadChannels();
         ChannelManager.loadPlayerData();
         PlayerChannelManager.load();
