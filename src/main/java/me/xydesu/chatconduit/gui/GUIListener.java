@@ -300,6 +300,38 @@ public class GUIListener implements Listener {
             return;
         }
 
+        // Slot 17: 測試 Webhook 連線
+        if (slot == 17) {
+            String webhookUrl = customChan.getWebhookUrl();
+            if (webhookUrl == null || webhookUrl.trim().isEmpty()) {
+                String msg = Main.getInstance().getLanguageConfig().getString("channel.webhook-not-bound", "<red>該頻道尚未綁定 Discord Webhook 網址！");
+                ChatUtils.sendMessage(player, msg);
+                return;
+            }
+
+            String testingMsg = Main.getInstance().getLanguageConfig().getString("channel.webhook-testing", "<yellow>正在連線測試 Discord Webhook URL...");
+            ChatUtils.sendMessage(player, testingMsg);
+
+            me.xydesu.chatconduit.integration.WebhookManager.testWebhook(webhookUrl, customChan.getDisplayName(), player, result -> {
+                if (!player.isOnline()) return;
+                if (result.success()) {
+                    String successMsg = Main.getInstance().getLanguageConfig().getString("channel.webhook-test-success", "<green>✅ Webhook 連線測試成功！測試訊息已送達 Discord 頻道。");
+                    ChatUtils.sendMessage(player, successMsg);
+                    try {
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.2f);
+                    } catch (Exception ignored) {}
+                } else {
+                    String failFmt = Main.getInstance().getLanguageConfig().getString("channel.webhook-test-failed", "<red>❌ Webhook 連線測試失敗！原因: <yellow><reason>");
+                    String failMsg = failFmt.replace("<reason>", result.errorMessage() != null ? result.errorMessage() : "未知錯誤");
+                    ChatUtils.sendMessage(player, failMsg);
+                    try {
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
+                    } catch (Exception ignored) {}
+                }
+            });
+            return;
+        }
+
         // Slot 22: 返回頻道管理頁面
         if (slot == 22) {
             PlayerChannelManageGUI.openForChannel(player, customChan);

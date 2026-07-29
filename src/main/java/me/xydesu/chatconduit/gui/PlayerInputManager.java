@@ -265,6 +265,27 @@ public class PlayerInputManager implements Listener {
                     PlayerChannelManager.save();
                     ChatUtils.sendMessage(player, "<green>已成功為頻道綁定外接 Discord Webhook 網址！");
                     ChannelSettingsGUI.open(player, customChan);
+
+                    String testingMsg = Main.getInstance().getLanguageConfig().getString("channel.webhook-testing", "<yellow>正在連線測試 Discord Webhook URL...");
+                    ChatUtils.sendMessage(player, testingMsg);
+
+                    me.xydesu.chatconduit.integration.WebhookManager.testWebhook(customChan.getWebhookUrl(), customChan.getDisplayName(), player, result -> {
+                        if (!player.isOnline()) return;
+                        if (result.success()) {
+                            String successMsg = Main.getInstance().getLanguageConfig().getString("channel.webhook-test-success", "<green>✅ Webhook 連線測試成功！測試訊息已送達 Discord 頻道。");
+                            ChatUtils.sendMessage(player, successMsg);
+                            try {
+                                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.2f);
+                            } catch (Exception ignored) {}
+                        } else {
+                            String failFmt = Main.getInstance().getLanguageConfig().getString("channel.webhook-test-failed", "<red>❌ Webhook 連線測試失敗！原因: <yellow><reason>");
+                            String failMsg = failFmt.replace("<reason>", result.errorMessage() != null ? result.errorMessage() : "未知錯誤");
+                            ChatUtils.sendMessage(player, failMsg);
+                            try {
+                                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
+                            } catch (Exception ignored) {}
+                        }
+                    });
                 } else if (session.type() == InputType.SET_DESCRIPTION) {
                     PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
                     if (customChan == null) {

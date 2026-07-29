@@ -28,6 +28,10 @@ channel:
   rules-invalid: "<red>Channel rules must be between 1 and <max> characters!"
   input-timeout: "<red>Chat input session expired and was cancelled automatically."
   only-members-manage: "<red>You must be a member of this channel to manage it!"
+  webhook-testing: "<yellow>Testing connection to Discord Webhook URL..."
+  webhook-test-success: "<green>✅ Webhook connection test successful! Test message sent to Discord."
+  webhook-test-failed: "<red>❌ Webhook connection test failed! Reason: <yellow><reason>"
+  webhook-not-bound: "<red>This channel does not have a Discord Webhook URL bound!"
 
 
   invite-usage: "<red>Usage: /playerchannel invite <Player>"

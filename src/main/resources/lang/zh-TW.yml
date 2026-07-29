@@ -28,6 +28,10 @@ channel:
   rules-invalid: "<red>頻道守則長度必須介於 1 至 <max> 個字元！"
   input-timeout: "<red>對話框輸入已逾時，自動取消操作。"
   only-members-manage: "<red>你必須是該頻道的成員才能進行管理！"
+  webhook-testing: "<yellow>正在連線測試 Discord Webhook URL..."
+  webhook-test-success: "<green>✅ Webhook 連線測試成功！測試訊息已送達 Discord 頻道。"
+  webhook-test-failed: "<red>❌ Webhook 連線測試失敗！原因: <yellow><reason>"
+  webhook-not-bound: "<red>該頻道尚未綁定 Discord Webhook 網址！"
 
 
   invite-usage: "<red>用法: /playerchannel invite <玩家名稱>"

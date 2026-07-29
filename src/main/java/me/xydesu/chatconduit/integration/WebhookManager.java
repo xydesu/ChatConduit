@@ -86,6 +86,71 @@ public class WebhookManager {
         }
     }
 
+    public record TestResult(boolean success, int statusCode, String errorMessage) {}
+
+    /**
+     * 非同步測試傳送 Discord Webhook 連線訊息
+     */
+    public static void testWebhook(String webhookUrl, String channelName, Player player, java.util.function.Consumer<TestResult> callback) {
+        if (webhookUrl == null || webhookUrl.trim().isEmpty() || (!webhookUrl.startsWith("http://") && !webhookUrl.startsWith("https://"))) {
+            if (callback != null) {
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> callback.accept(new TestResult(false, -1, "無效的 Webhook 網址 (必須以 http:// 或 https:// 開頭)")));
+            }
+            return;
+        }
+
+        FileConfiguration config = Main.getInstance().getConfig();
+        String usernameFmt = config.getString("discordsrv.webhook.username-format", "%player% [%channel%]");
+        String avatarUrlFmt = config.getString("discordsrv.webhook.avatar-url", "https://mc-heads.net/avatar/%player%/64");
+
+        String pName = player != null ? player.getName() : "System";
+        String pUuid = player != null ? player.getUniqueId().toString() : "";
+        String cName = channelName != null ? channelName : "TestChannel";
+
+        String username = usernameFmt.replace("%player%", pName).replace("%channel%", cName);
+        String avatarUrl = avatarUrlFmt.replace("%player%", pName).replace("%uuid%", pUuid);
+        String testMessage = "✅ **[ChatConduit] Webhook 連線測試成功！**\\n> 頻道: **" + cName + "**\\n> 測試觸發者: `" + pName + "`";
+
+        String jsonPayload = String.format(
+                "{\"username\": \"%s\", \"avatar_url\": \"%s\", \"content\": \"%s\"}",
+                escapeJson(username),
+                escapeJson(avatarUrl),
+                escapeJson(testMessage)
+        );
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(webhookUrl.trim()))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .timeout(Duration.ofSeconds(5))
+                    .build();
+
+            HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenAccept(response -> {
+                        int code = response.statusCode();
+                        boolean isSuccess = code >= 200 && code < 300;
+                        String errReason = isSuccess ? null : "HTTP " + code + (response.body() != null && !response.body().isEmpty() ? " - " + response.body() : "");
+                        TestResult result = new TestResult(isSuccess, code, errReason);
+                        if (callback != null) {
+                            Bukkit.getScheduler().runTask(Main.getInstance(), () -> callback.accept(result));
+                        }
+                    })
+                    .exceptionally(throwable -> {
+                        String causeMsg = throwable.getCause() != null ? throwable.getCause().getMessage() : throwable.getMessage();
+                        TestResult result = new TestResult(false, -1, causeMsg != null ? causeMsg : "連線逾時或網路錯誤");
+                        if (callback != null) {
+                            Bukkit.getScheduler().runTask(Main.getInstance(), () -> callback.accept(result));
+                        }
+                        return null;
+                    });
+        } catch (Exception e) {
+            if (callback != null) {
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> callback.accept(new TestResult(false, -1, e.getMessage())));
+            }
+        }
+    }
+
     /**
      * 當頻道解散/刪除時，清理冷卻時間快取，防止記憶體殘留
      */

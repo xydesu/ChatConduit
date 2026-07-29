@@ -93,6 +93,22 @@ public class ChannelSettingsGUI {
         );
         inv.setItem(16, createItem(Material.DISPENSER, hookTitle, hookLore));
 
+        // Slot 17: 測試 Webhook 連線
+        Material testMat = hasWebhook ? Material.TARGET : Material.GRAY_DYE;
+        String testTitle = "<gold><bold>7. 測試 Webhook 連線</bold>";
+        List<String> testLore = hasWebhook ? List.of(
+                "<gray>狀態: <green>已綁定，可進行測試",
+                "<gray>說明: 發送測試 Payload 驗證 Discord 接收狀態",
+                "",
+                "<yellow>▶ 點擊發送測試訊息至 Discord 頻道</yellow>"
+        ) : List.of(
+                "<gray>狀態: <red>未綁定 Webhook</red>",
+                "<gray>說明: 必須先設定 Webhook 網址後才能發送測試訊息",
+                "",
+                "<red>✕ 請點擊左側圖示輸入 URL 綁定</red>"
+        );
+        inv.setItem(17, createItem(testMat, testTitle, testLore));
+
         // Slot 22: 返回
         inv.setItem(22, createItem(Material.ARROW, "<yellow><bold>← 返回群組管理</bold>", List.of("<gray>回到頻道管理頁面")));
 
