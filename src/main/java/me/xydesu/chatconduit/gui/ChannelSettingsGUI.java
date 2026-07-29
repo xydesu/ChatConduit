@@ -91,7 +91,8 @@ public class ChannelSettingsGUI {
                 "<yellow>▶ 點擊開啟對話框輸入 Webhook URL</yellow>",
                 "<gray>(如需解除綁定請在對話框輸入 clear)</gray>"
         );
-        inv.setItem(16, createItem(Material.DISPENSER, hookTitle, hookLore));
+        String discordHeadTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2RhOTQ0OWNlYTEyMTE5YzIyY2E1YjkzYzI4Y2JlOWRmMzE1MjFjYTE1OWE1ZWE1ZmFhNWZmYjVhMTc4MGY1NyJ9fX0=";
+        inv.setItem(16, ChatUtils.createCustomHead(discordHeadTexture, hookTitle, hookLore));
 
         // Slot 17: 測試 Webhook 連線
         Material testMat = hasWebhook ? Material.TARGET : Material.GRAY_DYE;

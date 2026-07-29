@@ -9,9 +9,17 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.ProfileProperty;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -169,5 +177,35 @@ public class ChatUtils {
 
         targetPlayer.sendMessage(line1Component);
         targetPlayer.sendMessage(line2Component);
+    }
+
+    /**
+     * 建立具有自訂 Base64 紋理的玩家頭顱物品
+     *
+     * @param base64Texture Base64 格式的頭顱紋理數據
+     * @param name          物品顯示名稱
+     * @param lore          物品 Lore 說明列表
+     * @return 包含自訂紋理的 ItemStack
+     */
+    public static ItemStack createCustomHead(String base64Texture, String name, List<String> lore) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        if (meta != null) {
+            if (base64Texture != null && !base64Texture.isEmpty()) {
+                PlayerProfile profile = org.bukkit.Bukkit.createProfile(UUID.nameUUIDFromBytes(base64Texture.getBytes()), null);
+                profile.setProperty(new ProfileProperty("textures", base64Texture));
+                meta.setPlayerProfile(profile);
+            }
+            meta.displayName(parseNoItalic(name));
+            if (lore != null && !lore.isEmpty()) {
+                List<Component> parsedLore = new ArrayList<>();
+                for (String line : lore) {
+                    parsedLore.add(parseNoItalic(line));
+                }
+                meta.lore(parsedLore);
+            }
+            head.setItemMeta(meta);
+        }
+        return head;
     }
 }
