@@ -83,3 +83,18 @@ help:
   pc-kick: "<yellow>/pc manage kick <Player> <gray>- Kick member"
   pc-transfer: "<yellow>/pc manage transfer <Player> <gray>- Transfer ownership"
   pc-delete: "<yellow>/pc manage delete <gray>- Delete channel"
+
+mute:
+  chat-blocked: "<red>You are muted for <time> Reason: <reason>"
+  chat-blocked-perm: "<red>You are permanently muted. Reason: <reason>"
+  mute-usage: "<red>Usage: /mute <player> [duration (e.g. 5m, 1h)] [reason]"
+  unmute-usage: "<red>Usage: /unmute <player>"
+  mute-success: "<green>Successfully muted player <yellow><player></yellow> for <yellow><time></yellow>! Reason: <gray><reason></gray>"
+  unmute-success: "<green>Successfully unmuted player <yellow><player></yellow>!"
+  unmuted-notice: "<green>You have been unmuted. You can now chat again."
+  not-muted: "<red>Player <yellow><player></yellow> is not currently muted!"
+  default-reason: "No reason provided"
+  permanent: "Permanent"
+  list-empty: "<yellow>Currently there are no muted players."
+  list-header: "<gradient:#ff416c:#ff4b2b><bold>=== Currently Muted Players (<count>) ===</bold></gradient>"
+  list-item: "<gray>- <yellow><player></yellow> | Remaining: <aqua><time></aqua> | Reason: <white><reason></white> | By: <gray><by></gray>"

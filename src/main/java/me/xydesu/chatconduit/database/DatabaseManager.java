@@ -99,6 +99,7 @@ public class DatabaseManager {
         String createPlayerDataSql;
         String createPlayerChannelsSql;
         String createChannelMembersSql;
+        String createMutesSql;
 
         if (isMySQL) {
             createPlayerDataSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_data ("
@@ -128,6 +129,16 @@ public class DatabaseManager {
                     + "joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
                     + "PRIMARY KEY (channel_name, player_uuid)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+            createMutesSql = "CREATE TABLE IF NOT EXISTS chatconduit_mutes ("
+                    + "uuid VARCHAR(36) PRIMARY KEY, "
+                    + "player_name VARCHAR(32) NOT NULL, "
+                    + "reason TEXT, "
+                    + "muted_at BIGINT NOT NULL, "
+                    + "expire_at BIGINT NOT NULL, "
+                    + "muted_by VARCHAR(32) NOT NULL, "
+                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
         } else {
             createPlayerDataSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_data ("
                     + "uuid TEXT PRIMARY KEY, "
@@ -156,12 +167,23 @@ public class DatabaseManager {
                     + "joined_at DATETIME DEFAULT CURRENT_TIMESTAMP, "
                     + "PRIMARY KEY (channel_name, player_uuid)"
                     + ");";
+
+            createMutesSql = "CREATE TABLE IF NOT EXISTS chatconduit_mutes ("
+                    + "uuid TEXT PRIMARY KEY, "
+                    + "player_name TEXT NOT NULL, "
+                    + "reason TEXT, "
+                    + "muted_at INTEGER NOT NULL, "
+                    + "expire_at INTEGER NOT NULL, "
+                    + "muted_by TEXT NOT NULL, "
+                    + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                    + ");";
         }
 
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute(createPlayerDataSql);
             stmt.execute(createPlayerChannelsSql);
             stmt.execute(createChannelMembersSql);
+            stmt.execute(createMutesSql);
 
             // 自動遷移舊版資料表結構（加欄位時忽略已存在錯誤）
             try {

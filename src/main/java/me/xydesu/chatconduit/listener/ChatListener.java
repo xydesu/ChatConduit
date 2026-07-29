@@ -43,6 +43,28 @@ public class ChatListener implements Listener {
             return;
         }
 
+        // 檢查玩家是否在 ChatConduit 禁言清單中
+        me.xydesu.chatconduit.mute.MuteManager.MuteEntry muteEntry = me.xydesu.chatconduit.mute.MuteManager.getMute(player.getUniqueId());
+        if (muteEntry != null) {
+            event.setCancelled(true);
+            String reason = muteEntry.reason() != null && !muteEntry.reason().isEmpty() ? muteEntry.reason() : "No reason provided";
+            String noticeMsg;
+            if (muteEntry.isPermanent()) {
+                noticeMsg = Main.getInstance().getLanguageConfig().getString(
+                        "mute.chat-blocked-perm",
+                        "<red>You are permanently muted. Reason: <reason>"
+                ).replace("<reason>", reason);
+            } else {
+                String remainingStr = me.xydesu.chatconduit.command.MuteCommand.formatDuration(muteEntry.getRemainingMillis());
+                noticeMsg = Main.getInstance().getLanguageConfig().getString(
+                        "mute.chat-blocked",
+                        "<red>You are muted for <time> Reason: <reason>"
+                ).replace("<time>", remainingStr).replace("<reason>", reason);
+            }
+            ChatUtils.sendMessage(player, noticeMsg);
+            return;
+        }
+
         event.viewers().clear();
         event.setCancelled(true);
 

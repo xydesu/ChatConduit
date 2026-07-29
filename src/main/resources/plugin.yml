@@ -16,3 +16,23 @@ commands:
   playerchannel:
     description: 玩家自訂群組頻道管理指令
     aliases: [pc]
+  mute:
+    description: 禁言玩家發言
+    permission: chatconduit.admin.mute
+  unmute:
+    description: 解除玩家禁言
+    permission: chatconduit.admin.unmute
+  mutelist:
+    description: 查看受禁言玩家清單
+    permission: chatconduit.admin.mutelist
+
+permissions:
+  chatconduit.admin.mute:
+    description: 允許執行 /mute 指令
+    default: op
+  chatconduit.admin.unmute:
+    description: 允許執行 /unmute 指令
+    default: op
+  chatconduit.admin.mutelist:
+    description: 允許執行 /mutelist 指令
+    default: op

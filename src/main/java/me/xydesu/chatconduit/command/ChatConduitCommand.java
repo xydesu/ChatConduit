@@ -32,6 +32,24 @@ public class ChatConduitCommand implements CommandExecutor, TabCompleter {
                 sendHelpMessage(sender);
                 break;
 
+            case "mute":
+                String[] muteArgs = new String[args.length - 1];
+                System.arraycopy(args, 1, muteArgs, 0, muteArgs.length);
+                MuteCommand.handleMute(sender, muteArgs);
+                break;
+
+            case "unmute":
+                String[] unmuteArgs = new String[args.length - 1];
+                System.arraycopy(args, 1, unmuteArgs, 0, unmuteArgs.length);
+                MuteCommand.handleUnmute(sender, unmuteArgs);
+                break;
+
+            case "mutelist":
+                String[] mutelistArgs = new String[args.length - 1];
+                System.arraycopy(args, 1, mutelistArgs, 0, mutelistArgs.length);
+                MuteCommand.handleMuteList(sender, mutelistArgs);
+                break;
+
             default:
                 String unknownMsg = getLang("messages.unknown-command", "<red>Unknown command, please use <yellow>/chatconduit help</yellow>.");
                 ChatUtils.sendMessage(sender, unknownMsg);
@@ -58,6 +76,9 @@ public class ChatConduitCommand implements CommandExecutor, TabCompleter {
         ChatUtils.sendMessage(sender, getLang("help.header", "<green>=== ChatConduit Help ==="));
         ChatUtils.sendMessage(sender, getLang("help.help-cmd", "<yellow>/chatconduit help <gray>- Show help menu"));
         ChatUtils.sendMessage(sender, getLang("help.reload-cmd", "<yellow>/chatconduit reload <gray>- Reload configuration"));
+        ChatUtils.sendMessage(sender, getLang("help.mute-cmd", "<yellow>/chatconduit mute <player> [duration] [reason] <gray>- Mute a player"));
+        ChatUtils.sendMessage(sender, getLang("help.unmute-cmd", "<yellow>/chatconduit unmute <player> <gray>- Unmute a player"));
+        ChatUtils.sendMessage(sender, getLang("help.mutelist-cmd", "<yellow>/chatconduit mutelist <gray>- List muted players"));
     }
 
     private String getLang(String path, String def) {
@@ -69,7 +90,7 @@ public class ChatConduitCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> subCommands = List.of("help", "reload");
+            List<String> subCommands = List.of("help", "reload", "mute", "unmute", "mutelist");
             for (String sub : subCommands) {
                 if (sub.startsWith(args[0].toLowerCase())) {
                     if (sub.equals("reload") && !sender.hasPermission("chatconduit.admin")) {

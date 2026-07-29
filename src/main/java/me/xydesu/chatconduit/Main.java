@@ -32,6 +32,7 @@ public final class Main extends JavaPlugin {
         // 初始化資料庫連線池與自動遷移
         me.xydesu.chatconduit.database.DatabaseManager.init();
         me.xydesu.chatconduit.database.DataMigrationManager.runMigrationCheck();
+        me.xydesu.chatconduit.mute.MuteManager.init();
 
         // 載入頻道與玩家資料
         ChannelManager.loadChannels();
@@ -61,6 +62,20 @@ public final class Main extends JavaPlugin {
         if (getCommand("playerchannel") != null) {
             getCommand("playerchannel").setExecutor(pcCmd);
             getCommand("playerchannel").setTabCompleter(pcCmd);
+        }
+
+        me.xydesu.chatconduit.command.MuteCommand muteCmd = new me.xydesu.chatconduit.command.MuteCommand();
+        if (getCommand("mute") != null) {
+            getCommand("mute").setExecutor(muteCmd);
+            getCommand("mute").setTabCompleter(muteCmd);
+        }
+        if (getCommand("unmute") != null) {
+            getCommand("unmute").setExecutor(muteCmd);
+            getCommand("unmute").setTabCompleter(muteCmd);
+        }
+        if (getCommand("mutelist") != null) {
+            getCommand("mutelist").setExecutor(muteCmd);
+            getCommand("mutelist").setTabCompleter(muteCmd);
         }
 
         // 初始化 DiscordSRV 溝通模組
@@ -125,6 +140,7 @@ public final class Main extends JavaPlugin {
         ChannelManager.loadChannels();
         ChannelManager.loadPlayerData();
         PlayerChannelManager.load();
+        me.xydesu.chatconduit.mute.MuteManager.init();
         me.xydesu.chatconduit.redis.RedisManager.init();
     }
 }

@@ -145,6 +145,25 @@ public class RedisManager {
     }
 
     /**
+     * 發送禁言/解禁狀態封包至 Redis
+     *
+     * @param packet 禁言封包
+     */
+    public static void publishMutePacket(MutePacket packet) {
+        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
+            return;
+        }
+
+        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.publish(redisChannel, packet.toJson());
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "發送 Redis 禁言狀態廣播失敗:", e);
+            }
+        });
+    }
+
+    /**
      * 關閉 Redis 資源與連線池
      */
     public static void close() {

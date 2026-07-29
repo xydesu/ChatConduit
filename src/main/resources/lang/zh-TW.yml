@@ -83,3 +83,18 @@ help:
   pc-kick: "<yellow>/pc manage kick <玩家> <gray>- 將玩家踢出頻道"
   pc-transfer: "<yellow>/pc manage transfer <玩家> <gray>- 轉讓隊長職位"
   pc-delete: "<yellow>/pc manage delete <gray>- 解散當前頻道"
+
+mute:
+  chat-blocked: "<red>You are muted for <time> Reason: <reason>"
+  chat-blocked-perm: "<red>You are permanently muted. Reason: <reason>"
+  mute-usage: "<red>用法: /mute <玩家名稱> [時間 (例如 5m, 1h)] [原因]"
+  unmute-usage: "<red>用法: /unmute <玩家名稱>"
+  mute-success: "<green>已成功禁言玩家 <yellow><player></yellow> 時間: <yellow><time></yellow>！原因: <gray><reason></gray>"
+  unmute-success: "<green>已成功解除玩家 <yellow><player></yellow> 的禁言！"
+  unmuted-notice: "<green>您的禁言已被解除，現在可以正常發言。"
+  not-muted: "<red>玩家 <yellow><player></yellow> 目前並未處於禁言狀態！"
+  default-reason: "未提供原因"
+  permanent: "永久"
+  list-empty: "<yellow>目前沒有任何被禁言的玩家。"
+  list-header: "<gradient:#ff416c:#ff4b2b><bold>=== 當前被禁言玩家清單 (共 <count> 人) ===</bold></gradient>"
+  list-item: "<gray>- <yellow><player></yellow> | 剩餘時間: <aqua><time></aqua> | 原因: <white><reason></white> | 執行者: <gray><by></gray>"

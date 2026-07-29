@@ -29,6 +29,15 @@ public class RedisMessageListener extends JedisPubSub {
         }
 
         try {
+            // 嘗試解析為 MutePacket
+            if (message.contains("\"mutedBy\"") || (message.contains("\"expireAt\"") && message.contains("\"action\"") && !message.contains("\"targetPlayerName\""))) {
+                MutePacket mutePacket = MutePacket.fromJson(message);
+                if (mutePacket != null && mutePacket.action() != null) {
+                    me.xydesu.chatconduit.mute.MuteManager.handleRemoteMutePacket(mutePacket);
+                    return;
+                }
+            }
+
             // 嘗試解析為 ChannelInvitePacket
             if (message.contains("\"action\"") && message.contains("\"targetPlayerName\"")) {
                 ChannelInvitePacket invitePacket = ChannelInvitePacket.fromJson(message);
