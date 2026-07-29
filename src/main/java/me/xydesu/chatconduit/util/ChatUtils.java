@@ -145,4 +145,29 @@ public class ChatUtils {
         targetPlayer.sendMessage(line1Component);
         targetPlayer.sendMessage(line2Component);
     }
+
+    /**
+     * 發送來自跨服 Redis 的頻道邀請訊息 (分兩行呈現)
+     */
+    public static void sendRemoteInviteNotification(String inviterName, String originServerId, Player targetPlayer, String channelId, String channelDisplayName) {
+        String prefix = Main.getInstance().getLanguageConfig().getString("prefix", "");
+
+        String line1Text = prefix + "<yellow>" + inviterName + " <gray>(來自 " + originServerId + ")</gray> 邀請你加入頻道 [<green>" + channelDisplayName + "<yellow>]！";
+        Component line1Component = parseNoItalic(targetPlayer, line1Text);
+
+        Component acceptBtn = parseNoItalic("<green><bold>[✔ 點擊接受]</bold></green>")
+                .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/pc accept " + channelId))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(parseNoItalic("<green>點擊立即接受並加入頻道 <yellow>" + channelDisplayName)));
+
+        Component space = Component.text("   ");
+
+        Component denyBtn = parseNoItalic("<red><bold>[✖ 點擊拒絕]</bold></red>")
+                .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/pc deny " + channelId))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(parseNoItalic("<red>點擊拒絕加入頻道 <yellow>" + channelDisplayName)));
+
+        Component line2Component = parseNoItalic("  ").append(acceptBtn).append(space).append(denyBtn);
+
+        targetPlayer.sendMessage(line1Component);
+        targetPlayer.sendMessage(line2Component);
+    }
 }

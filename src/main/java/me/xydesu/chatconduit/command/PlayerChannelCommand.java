@@ -131,18 +131,34 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     ChatUtils.sendMessage(player, getLang("channel.invite-not-owner", "<red>You must be the owner of this channel!"));
                     return true;
                 }
-                Player targetInvite = Bukkit.getPlayer(args[1]);
-                if (targetInvite == null) {
+                String targetName = args[1];
+                Player targetInvite = Bukkit.getPlayer(targetName);
+
+                if (targetInvite != null && targetInvite.isOnline()) {
+                    myChan.getPendingInvites().add(targetInvite.getUniqueId());
+                    PlayerChannelManager.save();
+
+                    String sentMsg = getLang("channel.invite-sent", "<green>Invite sent to <yellow><player>.").replace("<player>", targetInvite.getName());
+                    ChatUtils.sendMessage(player, sentMsg);
+                    ChatUtils.sendInviteNotification(player, targetInvite, myChan);
+                } else if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
+                    // 若本地找不到該玩家，但啟用了 Redis，發送跨服廣播邀請
+                    me.xydesu.chatconduit.redis.ChannelInvitePacket invitePacket = new me.xydesu.chatconduit.redis.ChannelInvitePacket(
+                            me.xydesu.chatconduit.redis.ChannelInvitePacket.Action.INVITE,
+                            player.getUniqueId().toString(),
+                            player.getName(),
+                            targetName,
+                            myChan.getId(),
+                            myChan.getDisplayName(),
+                            me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                            System.currentTimeMillis()
+                    );
+                    me.xydesu.chatconduit.redis.RedisManager.publishInvitePacket(invitePacket);
+
+                    ChatUtils.sendMessage(player, "<green>已嘗試透過 Redis 跨服廣播發送頻道邀請給玩家 <yellow>" + targetName + "</yellow>！");
+                } else {
                     ChatUtils.sendMessage(player, getLang("channel.invite-player-not-found", "<red>Player not found!"));
-                    return true;
                 }
-                myChan.getPendingInvites().add(targetInvite.getUniqueId());
-                PlayerChannelManager.save();
-
-                String sentMsg = getLang("channel.invite-sent", "<green>Invite sent to <yellow><player>.").replace("<player>", targetInvite.getName());
-                ChatUtils.sendMessage(player, sentMsg);
-
-                ChatUtils.sendInviteNotification(player, targetInvite, myChan);
                 break;
 
             // /pc accept <名稱/ID>
@@ -164,6 +180,21 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 ChatUtils.sendMessage(player, acceptMsg);
                 PlayerChannelManager.broadcastToMembers(invChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入群組頻道 <yellow>" + invChan.getDisplayName() + "</yellow>！", player.getUniqueId());
                 ChannelManager.setPlayerChannel(player, invChan.getId());
+
+                // 跨服廣播成員加入狀態同步
+                if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
+                    me.xydesu.chatconduit.redis.ChannelInvitePacket acceptPacket = new me.xydesu.chatconduit.redis.ChannelInvitePacket(
+                            me.xydesu.chatconduit.redis.ChannelInvitePacket.Action.ACCEPT,
+                            player.getUniqueId().toString(),
+                            player.getName(),
+                            "",
+                            invChan.getId(),
+                            invChan.getDisplayName(),
+                            me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                            System.currentTimeMillis()
+                    );
+                    me.xydesu.chatconduit.redis.RedisManager.publishInvitePacket(acceptPacket);
+                }
                 break;
 
             // /pc deny <名稱/ID>
@@ -181,6 +212,21 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 rejectChan.getPendingInvites().remove(player.getUniqueId());
                 PlayerChannelManager.save();
                 ChatUtils.sendMessage(player, "<gray>已成功拒絕頻道 <yellow>" + rejectChan.getDisplayName() + "</yellow> 的邀請。");
+
+                // 跨服廣播拒絕通知
+                if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
+                    me.xydesu.chatconduit.redis.ChannelInvitePacket rejectPacket = new me.xydesu.chatconduit.redis.ChannelInvitePacket(
+                            me.xydesu.chatconduit.redis.ChannelInvitePacket.Action.REJECT,
+                            player.getUniqueId().toString(),
+                            player.getName(),
+                            player.getName(),
+                            rejectChan.getId(),
+                            rejectChan.getDisplayName(),
+                            me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                            System.currentTimeMillis()
+                    );
+                    me.xydesu.chatconduit.redis.RedisManager.publishInvitePacket(rejectPacket);
+                }
                 break;
 
             // /pc leave

@@ -126,6 +126,25 @@ public class RedisManager {
     }
 
     /**
+     * 發送頻道邀請/同步封包至 Redis
+     *
+     * @param packet 邀請封包
+     */
+    public static void publishInvitePacket(ChannelInvitePacket packet) {
+        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
+            return;
+        }
+
+        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.publish(redisChannel, packet.toJson());
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "發送 Redis 頻道邀請廣播失敗:", e);
+            }
+        });
+    }
+
+    /**
      * 關閉 Redis 資源與連線池
      */
     public static void close() {

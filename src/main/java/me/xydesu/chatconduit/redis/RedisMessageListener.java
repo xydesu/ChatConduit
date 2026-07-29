@@ -29,6 +29,15 @@ public class RedisMessageListener extends JedisPubSub {
         }
 
         try {
+            // 嘗試解析為 ChannelInvitePacket
+            if (message.contains("\"action\"") && message.contains("\"targetPlayerName\"")) {
+                ChannelInvitePacket invitePacket = ChannelInvitePacket.fromJson(message);
+                if (invitePacket != null) {
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> processInvitePacket(invitePacket));
+                    return;
+                }
+            }
+
             ChatMessagePacket packet = ChatMessagePacket.fromJson(message);
             if (packet == null) return;
 
@@ -154,6 +163,66 @@ public class RedisMessageListener extends JedisPubSub {
                 }
             }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
+        }
+    }
+
+    /**
+     * 處理來自 Redis 的跨服頻道邀請與成員狀態變動封包
+     */
+    private void processInvitePacket(ChannelInvitePacket packet) {
+        if (packet == null || packet.getAction() == null) return;
+
+        switch (packet.getAction()) {
+            case INVITE -> {
+                // 檢查目標玩家是否在本伺服器在線
+                Player targetPlayer = Bukkit.getPlayerExact(packet.getTargetPlayerName());
+                if (targetPlayer != null && targetPlayer.isOnline()) {
+                    PlayerChannelManager.CustomChannel channel = PlayerChannelManager.getChannel(packet.getChannelId());
+                    if (channel != null) {
+                        channel.getPendingInvites().add(targetPlayer.getUniqueId());
+                        PlayerChannelManager.save();
+                    }
+
+                    // 發送跨服互動邀請推播給目標玩家
+                    ChatUtils.sendRemoteInviteNotification(
+                            packet.getSenderName(),
+                            packet.getOriginServerId(),
+                            targetPlayer,
+                            packet.getChannelId(),
+                            packet.getChannelDisplayName()
+                    );
+                }
+            }
+            case ACCEPT -> {
+                // 有玩家在遠端接受了頻道邀請
+                PlayerChannelManager.CustomChannel channel = PlayerChannelManager.getChannel(packet.getChannelId());
+                if (channel != null) {
+                    // 同步成員清單
+                    try {
+                        UUID targetUuid = UUID.fromString(packet.getSenderUuid());
+                        channel.getPendingInvites().remove(targetUuid);
+                        if (!channel.getMembers().contains(targetUuid)) {
+                            channel.getMembers().add(targetUuid);
+                            PlayerChannelManager.save();
+                        }
+                    } catch (Exception ignored) {}
+
+                    // 向本服的頻道成員發送加入通知廣播
+                    PlayerChannelManager.broadcastToMembers(
+                            channel,
+                            "<green>▶ 玩家 <yellow>" + packet.getSenderName() + "</yellow> <gray>(來自 " + packet.getOriginServerId() + ")</gray> 已加入群組頻道 <yellow>" + channel.getDisplayName() + "</yellow>！",
+                            null
+                    );
+                }
+            }
+            case REJECT -> {
+                // 目標玩家拒絕了邀請，通知隊長
+                Player senderPlayer = Bukkit.getPlayerExact(packet.getSenderName());
+                if (senderPlayer != null && senderPlayer.isOnline()) {
+                    ChatUtils.sendMessage(senderPlayer, "<gray>玩家 <yellow>" + packet.getTargetPlayerName() + "</yellow> 拒絕了加入頻道 <yellow>" + packet.getChannelDisplayName() + "</yellow> 的邀請。");
+                }
+            }
+            default -> {}
         }
     }
 }
