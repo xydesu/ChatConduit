@@ -31,10 +31,10 @@ public class DiscordSRVListener {
         String targetChannelKey = ChannelManager.getPlayerSelectedKey(player);
         String cleanMessage = rawMessage;
 
-        // 1. 優先檢查訊息是否以系統頻道的 prefix-key (例如 $, !, +, ?, ~, @, *) 開頭
+        // 1. 優先檢查訊息是否以系統頻道的 prefix-key (例如 $, !, +, ?, ~, @, *) 開頭 (單獨輸入前綴符號時除外)
         List<ChannelManager.Channel> prefixChannels = ChannelManager.getPrefixChannelsCache();
         for (ChannelManager.Channel ch : prefixChannels) {
-            if (rawMessage.startsWith(ch.prefixKey())) {
+            if (rawMessage.startsWith(ch.prefixKey()) && !rawMessage.equals(ch.prefixKey())) {
                 if (ch.permission().isEmpty() || player.hasPermission(ch.permission())) {
                     targetChannelKey = ch.key();
                     cleanMessage = rawMessage.substring(ch.prefixKey().length()).trim();

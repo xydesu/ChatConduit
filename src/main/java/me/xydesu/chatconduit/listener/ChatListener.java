@@ -78,13 +78,13 @@ public class ChatListener implements Listener {
         String channelColor = "";
         String finalMessage = rawMessage;
 
-        // 1. 使用 ChannelManager 的 Prefix 快取清單進行匹配
+        // 1. 使用 ChannelManager 的 Prefix 快取清單進行匹配 (單獨輸入與 prefix-key 相同之符號時直接當作普通發言處理)
         List<ChannelManager.Channel> prefixChannels = ChannelManager.getPrefixChannelsCache();
 
         ChannelManager.Channel matchedSysChan = null;
         boolean matchedPrefix = false;
         for (ChannelManager.Channel ch : prefixChannels) {
-            if (rawMessage.startsWith(ch.prefixKey())) {
+            if (rawMessage.startsWith(ch.prefixKey()) && !rawMessage.equals(ch.prefixKey())) {
                 if (ch.permission().isEmpty() || player.hasPermission(ch.permission())) {
                     channelName = ch.name();
                     channelColor = ch.color();
