@@ -1,4 +1,4 @@
-# 🌐 ChatConduit
+# ChatConduit
 
 ![Java Version](https://img.shields.io/badge/Java-25-orange.svg)
 ![PaperMC](https://img.shields.io/badge/Paper-1.20%2B-blue.svg)
@@ -10,38 +10,38 @@
 
 ---
 
-## 🌟 核心特色 (Core Features)
+## 核心特色 (Core Features)
 
-### 1. 📦 全 Chest GUI 零指令頻道控制台
+### 1. 全 Chest GUI 零指令頻道控制台
 - 玩家只需輸入 `/channel` 或 `/pc` 即可開啟箱子選單介面。
 - 支援一鍵快速切換官方頻道、瀏覽群組頻道、邀請成員、管理權限與調整色彩主題。
 - 支援安全的對話框文字輸入 (`PlayerInputManager`)，適用於重命名頻道、設定簡介守則與 Webhook URL。
 
-### 2. 📢 官方頻道與前綴快捷鍵 (System Channels)
+### 2. 官方頻道與前綴快捷鍵 (System Channels)
 - 支援管理員自由配置官方系統頻道（如全域廣播、交易頻道、公會頻道、管理員頻道等）。
 - 支援前綴快速鍵（例如 `$`, `!`, `@`, `?`），玩家無須切換頻道即可快速發送對話至特定頻道。
 - 頻道支援豪華的 Hover (懸停視窗顯示頻道守則與簡介) 與 Click (點擊切換頻道) 互動功能。
 
-### 3. 👥 玩家自建群組頻道 (Player Group Channels)
+### 3. 玩家自建群組頻道 (Player Group Channels)
 - 玩家可自訂個人專屬的群組頻道，自選公共 (PUBLIC) 或私人 (PRIVATE) 模式。
 - **頻道隊長權限**：頻道隊長可管理成員、踢出玩家、轉讓隊長職位、編輯簡介規範與主題顏色。
-- **即時邀請推播**：支援點擊式 `[✔ 點擊接受]` 與 `[✖ 點擊拒絕]` 聊天欄推播邀請。
+- **即時邀請推播**：支援點擊式 `[點擊接受]` 與 `[點擊拒絕]` 聊天欄推播邀請。
 
-### 4. ⚡ Redis 多伺服器跨服廣播 (Multi-Server Network)
+### 4. Redis 多伺服器跨服廣播 (Multi-Server Network)
 - 採用 Redis PubSub 非同步網路傳輸機制，實現毫秒級跨服聊天訊息廣播與跨服頻道邀請（例如 BungeeCord / Velocity 群組伺服器）。
 
-### 5. 🤖 Discord 雙向溝通與外接 Webhook
+### 5. Discord 雙向溝通與外接 Webhook
 - **DiscordSRV 掛載**：支援 Discord 頻道與遊戲內頻道的雙向映射轉發。
 - **獨立群組 Webhook**：每個玩家群組頻道均可綁定獨立 Discord Webhook，將遊戲群組訊息實時推送至 Discord 頻道。
 - **連線測試按鈕**：提供選單與指令 `testWebhook` 測試按鈕，自動化驗證 Webhook 是否綁定成功。
 
-### 6. 🗄️ HikariCP 高效能資料庫連線池
+### 6. HikariCP 高效能資料庫連線池
 - 支援 SQLite (單機預設) 與 MySQL (跨服分散式資料庫)。
 - 完全採用非同步 SQL 讀寫作業，避免任何主伺服器執行緒 (Main Thread) 阻塞。
 
 ---
 
-## 🛠️ 開發與建置需求 (Requirements)
+## 開發與建置需求 (Requirements)
 
 - **Java Development Kit (JDK)**: 25 或以上
 - **伺服器核心**: Paper / Purpur 1.20+ 或更新版本 (支援 Adventure API)
@@ -53,7 +53,7 @@
 
 ---
 
-## 📜 指令與權限說明 (Commands & Permissions)
+## 指令與權限說明 (Commands & Permissions)
 
 | 指令 | 別名 | 說明 | 預設權限 |
 | :--- | :--- | :--- | :--- |
@@ -77,7 +77,7 @@
 
 ---
 
-## ⚙️ 設定檔說明 (Configuration)
+## 設定檔說明 (Configuration)
 
 主設定檔 `config.yml` 包含以下模組區塊：
 - `database`: 設定資料庫模式 (`sqlite` 或 `mysql`) 與 HikariCP 連線池參數。
@@ -92,7 +92,7 @@
 
 ---
 
-## 🧪 單元測試與編譯打包 (Building & Testing)
+## 單元測試與編譯打包 (Building & Testing)
 
 專案已導入 **JUnit 5** 單元測試模組，覆蓋頻道核心、Redis 封包、Webhook 淨化與 ChatUtils 工具。
 
@@ -109,7 +109,7 @@ mvn clean package
 
 ---
 
-## 👤 作者與版權資訊 (Author & License)
+## 作者與版權資訊 (Author & License)
 
 - **作者 (Author)**: xydesu
 - **基礎套件 (Base Package)**: `me.xydesu.chatconduit`
