@@ -58,6 +58,10 @@
                                       tofile="D:\paper\plugins\${project.build.finalName}.jar"
                                       overwrite="true"
                                       failonerror="false"/>
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar"
+                                      tofile="D:\paper2\plugins\${project.build.finalName}.jar"
+                                      overwrite="true"
+                                      failonerror="false"/>
                             </target>
                         </configuration>
                     </execution>
