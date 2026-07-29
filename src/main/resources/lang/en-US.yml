@@ -87,6 +87,9 @@ help:
 mute:
   chat-blocked: "<red>You are muted for <time> Reason: <reason>"
   chat-blocked-perm: "<red>You are permanently muted. Reason: <reason>"
+  broadcast: "<gradient:#ff416c:#ff4b2b>[Server]</gradient> <red>Player <yellow><player></yellow> was muted for <yellow><time></yellow> by <yellow><by></yellow>. Reason: <gray><reason></gray>"
+  broadcast-perm: "<gradient:#ff416c:#ff4b2b>[Server]</gradient> <red>Player <yellow><player></yellow> was permanently muted by <yellow><by></yellow>. Reason: <gray><reason></gray>"
+  unmute-broadcast: "<gradient:#55ffff:#00aa00>[Server]</gradient> <green>Player <yellow><player></yellow> was unmuted by <yellow><by></yellow>."
   mute-usage: "<red>Usage: /mute <player> [duration (e.g. 5m, 1h)] [reason]"
   unmute-usage: "<red>Usage: /unmute <player>"
   mute-success: "<green>Successfully muted player <yellow><player></yellow> for <yellow><time></yellow>! Reason: <gray><reason></gray>"

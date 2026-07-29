@@ -87,6 +87,9 @@ help:
 mute:
   chat-blocked: "<red>You are muted for <time> Reason: <reason>"
   chat-blocked-perm: "<red>You are permanently muted. Reason: <reason>"
+  broadcast: "<gradient:#ff416c:#ff4b2b>[系統公告]</gradient> <red>玩家 <yellow><player></yellow> 已被 <yellow><by></yellow> 禁言 <yellow><time></yellow>！原因: <gray><reason></gray>"
+  broadcast-perm: "<gradient:#ff416c:#ff4b2b>[系統公告]</gradient> <red>玩家 <yellow><player></yellow> 已被 <yellow><by></yellow> 永久禁言！原因: <gray><reason></gray>"
+  unmute-broadcast: "<gradient:#55ffff:#00aa00>[系統公告]</gradient> <green>玩家 <yellow><player></yellow> 的禁言已被 <yellow><by></yellow> 解除。"
   mute-usage: "<red>用法: /mute <玩家名稱> [時間 (例如 5m, 1h)] [原因]"
   unmute-usage: "<red>用法: /unmute <玩家名稱>"
   mute-success: "<green>已成功禁言玩家 <yellow><player></yellow> 時間: <yellow><time></yellow>！原因: <gray><reason></gray>"

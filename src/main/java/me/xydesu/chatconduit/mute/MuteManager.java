@@ -121,6 +121,9 @@ public class MuteManager {
 
         activeMutes.put(uuid, entry);
 
+        // 本地全服廣播禁言訊息
+        broadcastMuteAnnouncement(entry, false);
+
         // 寫入資料庫 (非同步)
         Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> saveMuteToDb(entry));
 
@@ -146,16 +149,20 @@ public class MuteManager {
     public static boolean unmutePlayer(UUID uuid, String unmutedBy) {
         MuteEntry entry = activeMutes.remove(uuid);
 
+        String playerName = entry != null ? entry.playerName() : "Unknown";
+        if (entry != null) {
+            broadcastUnmuteAnnouncement(playerName, unmutedBy, false);
+        }
+
         // 自資料庫刪除 (非同步)
         Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> deleteMuteFromDb(uuid));
 
         // 發送 Redis 跨服廣播
         if (RedisManager.isEnabled()) {
-            String name = entry != null ? entry.playerName() : "Unknown";
             MutePacket packet = new MutePacket(
                     MutePacket.Action.UNMUTE,
                     uuid.toString(),
-                    name,
+                    playerName,
                     "",
                     System.currentTimeMillis(),
                     0,
@@ -187,13 +194,65 @@ public class MuteManager {
                 );
                 if (!entry.isExpired()) {
                     activeMutes.put(uuid, entry);
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> broadcastMuteAnnouncement(entry, true));
                 }
             } else if (packet.action() == MutePacket.Action.UNMUTE) {
                 activeMutes.remove(uuid);
+                Bukkit.getScheduler().runTask(Main.getInstance(), () -> broadcastUnmuteAnnouncement(packet.playerName(), packet.mutedBy(), true));
             }
         } catch (IllegalArgumentException e) {
             Main.getInstance().getLogger().warning("無效的 MutePacket UUID: " + packet.uuid());
         }
+    }
+
+    /**
+     * 全服廣播禁言公告訊息
+     */
+    public static void broadcastMuteAnnouncement(MuteEntry entry, boolean isRemote) {
+        if (entry == null) return;
+
+        String reason = entry.reason() != null && !entry.reason().isEmpty() ? entry.reason() : Main.getInstance().getLanguageConfig().getString("mute.default-reason", "No reason provided");
+        String durationStr = me.xydesu.chatconduit.command.MuteCommand.formatDuration(entry.getRemainingMillis());
+        String mutedBy = entry.mutedBy() != null ? entry.mutedBy() : "Console";
+
+        String template;
+        if (entry.isPermanent()) {
+            template = Main.getInstance().getLanguageConfig().getString(
+                    "mute.broadcast-perm",
+                    "<gradient:#ff416c:#ff4b2b>[系統公告]</gradient> <red>玩家 <yellow><player></yellow> 已被 <yellow><by></yellow> 永久禁言！原因: <gray><reason></gray>"
+            );
+        } else {
+            template = Main.getInstance().getLanguageConfig().getString(
+                    "mute.broadcast",
+                    "<gradient:#ff416c:#ff4b2b>[系統公告]</gradient> <red>玩家 <yellow><player></yellow> 已被 <yellow><by></yellow> 禁言 <yellow><time></yellow>！原因: <gray><reason></gray>"
+            );
+        }
+
+        String broadcastMsg = template.replace("<player>", entry.playerName())
+                .replace("<time>", durationStr)
+                .replace("<reason>", reason)
+                .replace("<by>", mutedBy);
+
+        for (org.bukkit.entity.Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            me.xydesu.chatconduit.util.ChatUtils.sendMessage(onlinePlayer, broadcastMsg);
+        }
+        Bukkit.getConsoleSender().sendMessage(me.xydesu.chatconduit.util.ChatUtils.parseLegacy(broadcastMsg));
+    }
+
+    /**
+     * 全服廣播解禁公告訊息
+     */
+    public static void broadcastUnmuteAnnouncement(String playerName, String unmutedBy, boolean isRemote) {
+        String template = Main.getInstance().getLanguageConfig().getString(
+                "mute.unmute-broadcast",
+                "<gradient:#55ffff:#00aa00>[系統公告]</gradient> <green>玩家 <yellow><player></yellow> 的禁言已被 <yellow><by></yellow> 解除。"
+        );
+        String broadcastMsg = template.replace("<player>", playerName).replace("<by>", unmutedBy != null ? unmutedBy : "Console");
+
+        for (org.bukkit.entity.Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            me.xydesu.chatconduit.util.ChatUtils.sendMessage(onlinePlayer, broadcastMsg);
+        }
+        Bukkit.getConsoleSender().sendMessage(me.xydesu.chatconduit.util.ChatUtils.parseLegacy(broadcastMsg));
     }
 
     /**
