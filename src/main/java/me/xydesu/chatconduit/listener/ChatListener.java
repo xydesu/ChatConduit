@@ -102,10 +102,7 @@ public class ChatListener implements Listener {
         // 3. 構造具備 HoverEvent (懸停視窗: 簡介與規則) 與 ClickEvent (點擊切換頻道) 的頻道 Prefix Component
         Component channelPrefixComponent;
         if (customChannel != null) {
-            String rawPrefixText = channelColor + "[<channel_name>]</gradient>";
-            if (!channelColor.startsWith("<gradient:")) {
-                rawPrefixText = channelColor + "[<channel_name>]";
-            }
+            String rawPrefixText = formatMiniMessageTag(channelColor, "[<channel_name>]");
 
             Player onlineOwner = Bukkit.getPlayer(customChannel.getOwner());
             String ownerName = onlineOwner != null ? onlineOwner.getName() : null;
@@ -115,8 +112,8 @@ public class ChatListener implements Listener {
             }
             String modeStr = customChannel.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>PUBLIC (公共)</green>" : "<red>PRIVATE (私人)</red>";
 
-
-            String hoverStr = customChannel.getColorTheme() + "<bold>=== 群組頻道: <channel_name> ===</bold></gradient>\n" +
+            String hoverHeader = formatMiniMessageTag(customChannel.getColorTheme(), "<bold>=== 群組頻道: <channel_name> ===</bold>");
+            String hoverStr = hoverHeader + "\n" +
                     "<gray>頻道隊長: <yellow><owner_name></yellow>\n" +
                     "<gray>頻道權限: " + modeStr + "\n" +
                     "<gray>成員數量: <yellow><member_count> 人</yellow>\n" +
@@ -151,13 +148,11 @@ public class ChatListener implements Listener {
                 return;
             }
 
-            String rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]</gradient>";
-            if (!sysChannel.color().startsWith("<gradient:")) {
-                rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]";
-            }
+            String rawPrefixText = formatMiniMessageTag(sysChannel.color(), "[" + sysChannel.name() + "]");
 
             String prefixKeyStr = sysChannel.prefixKey().isEmpty() ? "無 (選單切換)" : sysChannel.prefixKey();
-            String hoverStr = sysChannel.color() + "<bold>=== 官方頻道: <sys_name> ===</bold></gradient>\n" +
+            String hoverHeader = formatMiniMessageTag(sysChannel.color(), "<bold>=== 官方頻道: <sys_name> ===</bold>");
+            String hoverStr = hoverHeader + "\n" +
                     "<gray>頻道類型: <green>● 官方系統頻道</green>\n" +
                     "<gray>快捷鍵前綴: <yellow><prefix_key></yellow>\n" +
                     "<gray>頻道簡介: <white><description></white>\n" +
@@ -239,5 +234,15 @@ public class ChatListener implements Listener {
             );
             me.xydesu.chatconduit.redis.RedisManager.publishChatMessage(packet);
         }
+    }
+
+    private static String formatMiniMessageTag(String colorTheme, String content) {
+        if (colorTheme == null || colorTheme.isEmpty()) {
+            return content;
+        }
+        if (colorTheme.startsWith("<gradient:") && !colorTheme.endsWith("</gradient>")) {
+            return colorTheme + content + "</gradient>";
+        }
+        return colorTheme + content;
     }
 }
