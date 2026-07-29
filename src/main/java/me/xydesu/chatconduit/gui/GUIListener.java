@@ -148,6 +148,7 @@ public class GUIListener implements Listener {
                 if (!isMember && isPublic) {
                     custChan.getMembers().add(player.getUniqueId());
                     PlayerChannelManager.save();
+                    PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.MEMBER_JOIN, custChan, player.getUniqueId().toString(), player.getName());
                     ChatUtils.sendMessage(player, "<green>已成功加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！");
                     PlayerChannelManager.broadcastToMembers(custChan, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入公開頻道 <yellow>" + custChan.getDisplayName() + "</yellow>！", player.getUniqueId());
                 }
@@ -192,6 +193,7 @@ public class GUIListener implements Listener {
         if (slot == GUIManager.getSlot(config, "leave-channel", 51) && !isOwner) {
             customChan.getMembers().remove(player.getUniqueId());
             PlayerChannelManager.save();
+            PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.MEMBER_LEAVE, customChan, player.getUniqueId().toString(), player.getName());
             ChannelManager.setPlayerChannel(player, "global");
             ChatUtils.sendMessage(player, "<green>你已成功退出頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。");
             PlayerChannelManager.broadcastToMembers(customChan, "<red>🚪 玩家 <yellow>" + player.getName() + "</yellow> 已退出群組頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。</red>", player.getUniqueId());
@@ -220,6 +222,7 @@ public class GUIListener implements Listener {
                     customChan.getMembers().remove(targetUuid);
                     PlayerChannelManager.save();
                     String pName = targetP.getName() != null ? targetP.getName() : targetUuid.toString();
+                    PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.MEMBER_KICK, customChan, targetUuid.toString(), pName);
                     ChatUtils.sendMessage(player, "<green>已將 <yellow>" + pName + "</yellow> 踢出群組頻道。");
                     PlayerChannelManager.broadcastToMembers(customChan, "<red>🚪 玩家 <yellow>" + pName + "</yellow> 已被踢出群組頻道 <yellow>" + customChan.getDisplayName() + "</yellow>。</red>", player.getUniqueId());
 
@@ -235,6 +238,7 @@ public class GUIListener implements Listener {
                         customChan.setOwner(targetUuid);
                         PlayerChannelManager.save();
                         String pName = targetP.getName();
+                        PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.TRANSFER_OWNER, customChan, targetUuid.toString(), pName);
                         ChatUtils.sendMessage(player, "<green>已成功將頻道隊長轉讓給 <yellow>" + pName + "</yellow>。");
                         ChatUtils.sendMessage(targetP.getPlayer(), "<green>你現在是頻道 <yellow>" + customChan.getDisplayName() + "</yellow> 的新隊長！");
                         PlayerChannelManageGUI.openForChannel(player, customChan);
@@ -265,6 +269,7 @@ public class GUIListener implements Listener {
             PlayerChannelManager.Mode newMode = customChan.getMode() == PlayerChannelManager.Mode.PUBLIC ? PlayerChannelManager.Mode.PRIVATE : PlayerChannelManager.Mode.PUBLIC;
             customChan.setMode(newMode);
             PlayerChannelManager.save();
+            PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
             ChatUtils.sendMessage(player, "<green>頻道模式已切換為：<yellow>" + (newMode == PlayerChannelManager.Mode.PUBLIC ? "公共 (PUBLIC)" : "私人 (PRIVATE)") + "</yellow>");
             ChannelSettingsGUI.open(player, customChan);
             return;
@@ -293,6 +298,7 @@ public class GUIListener implements Listener {
 
             customChan.setColorTheme(nextTheme);
             PlayerChannelManager.save();
+            PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
             ChatUtils.sendMessage(player, "<green>已為頻道套用新的色彩主題樣式！");
             ChannelSettingsGUI.open(player, customChan);
             return;

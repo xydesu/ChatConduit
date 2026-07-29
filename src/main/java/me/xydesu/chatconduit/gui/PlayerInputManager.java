@@ -206,6 +206,7 @@ public class PlayerInputManager implements Listener {
 
                     customChan.setDisplayName(cleanInput);
                     PlayerChannelManager.save();
+                    PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
                     ChatUtils.sendMessage(player, "<green>已成功將頻道顯示名稱修改為：<yellow>" + cleanInput + "</yellow>！");
                     ChannelSettingsGUI.open(player, customChan);
                 } else if (session.type() == InputType.INVITE_PLAYER) {
@@ -273,6 +274,7 @@ public class PlayerInputManager implements Listener {
                     if (input.equalsIgnoreCase("clear")) {
                         customChan.setWebhookUrl(null);
                         PlayerChannelManager.save();
+                        PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
                         ChatUtils.sendMessage(player, "<green>已成功解除該頻道的 Discord Webhook 綁定！");
                         ChannelSettingsGUI.open(player, customChan);
                         return;
@@ -286,6 +288,7 @@ public class PlayerInputManager implements Listener {
 
                     customChan.setWebhookUrl(input.trim());
                     PlayerChannelManager.save();
+                    PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
                     ChatUtils.sendMessage(player, "<green>已成功為頻道綁定外接 Discord Webhook 網址！");
                     ChannelSettingsGUI.open(player, customChan);
 
@@ -327,6 +330,7 @@ public class PlayerInputManager implements Listener {
 
                     customChan.setDescription(cleanInput);
                     PlayerChannelManager.save();
+                    PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
                     ChatUtils.sendMessage(player, "<green>已成功修改頻道簡介說明！");
                     ChannelSettingsGUI.open(player, customChan);
                 } else if (session.type() == InputType.SET_RULES) {
@@ -347,6 +351,7 @@ public class PlayerInputManager implements Listener {
 
                     customChan.setRules(cleanInput);
                     PlayerChannelManager.save();
+                    PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
                     ChatUtils.sendMessage(player, "<green>已成功修改頻道守則！");
                     ChannelSettingsGUI.open(player, customChan);
                 }

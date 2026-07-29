@@ -70,6 +70,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                         if (isPublic) {
                             custTarget.getMembers().add(player.getUniqueId());
                             PlayerChannelManager.save();
+                            PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.MEMBER_JOIN, custTarget, player.getUniqueId().toString(), player.getName());
                             ChatUtils.sendMessage(player, "<green>已成功加入公開頻道 <yellow>" + custTarget.getDisplayName() + "</yellow>！");
                             PlayerChannelManager.broadcastToMembers(custTarget, "<green>▶ 玩家 <yellow>" + player.getName() + "</yellow> 已加入公開頻道 <yellow>" + custTarget.getDisplayName() + "</yellow>！", player.getUniqueId());
                         } else {
@@ -137,6 +138,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 if (targetInvite != null && targetInvite.isOnline()) {
                     myChan.getPendingInvites().add(targetInvite.getUniqueId());
                     PlayerChannelManager.saveChannel(myChan);
+                    PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, myChan, null, null);
 
                     String sentMsg = getLang("channel.invite-sent", "<green>Invite sent to <yellow><player>.").replace("<player>", targetInvite.getName());
                     ChatUtils.sendMessage(player, sentMsg);
@@ -147,6 +149,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                     if (offPlayer != null && offPlayer.getUniqueId() != null) {
                         myChan.getPendingInvites().add(offPlayer.getUniqueId());
                         PlayerChannelManager.saveChannel(myChan);
+                        PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, myChan, null, null);
                     }
 
                     // 若本地找不到線上玩家，透過 Redis 發送跨服廣播邀請
@@ -182,6 +185,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 invChan.getPendingInvites().remove(player.getUniqueId());
                 invChan.getMembers().add(player.getUniqueId());
                 PlayerChannelManager.saveChannel(invChan);
+                PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.MEMBER_JOIN, invChan, player.getUniqueId().toString(), player.getName());
 
                 String acceptMsg = getLang("channel.accept-success", "<green>Joined <yellow><name>!").replace("<name>", invChan.getDisplayName());
                 ChatUtils.sendMessage(player, acceptMsg);
@@ -218,6 +222,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 }
                 rejectChan.getPendingInvites().remove(player.getUniqueId());
                 PlayerChannelManager.saveChannel(rejectChan);
+                PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, rejectChan, null, null);
                 ChatUtils.sendMessage(player, "<gray>已成功拒絕頻道 <yellow>" + rejectChan.getDisplayName() + "</yellow> 的邀請。");
 
                 // 跨服廣播拒絕通知
@@ -248,6 +253,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 }
                 myChan.getMembers().remove(player.getUniqueId());
                 PlayerChannelManager.save();
+                PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.MEMBER_LEAVE, myChan, player.getUniqueId().toString(), player.getName());
                 ChannelManager.setPlayerChannel(player, "global");
                 ChatUtils.sendMessage(player, "<green>You left channel <yellow>" + myChan.getDisplayName() + "<green>.");
                 PlayerChannelManager.broadcastToMembers(myChan, "<red>🚪 玩家 <yellow>" + player.getName() + "</yellow> 已退出群組頻道 <yellow>" + myChan.getDisplayName() + "</yellow>。</red>", player.getUniqueId());
@@ -323,6 +329,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
 
                 myChan.getMembers().remove(targetUuid);
                 PlayerChannelManager.save();
+                PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.MEMBER_KICK, myChan, targetUuid.toString(), targetName);
                 ChatUtils.sendMessage(player, "<green>Kicked <yellow>" + targetName + " <green>from channel.");
 
                 if (onlineKickTarget != null && onlineKickTarget.isOnline()) {
@@ -350,6 +357,7 @@ public class PlayerChannelCommand implements CommandExecutor, TabCompleter {
                 }
                 myChan.setOwner(targetTransfer.getUniqueId());
                 PlayerChannelManager.save();
+                PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.TRANSFER_OWNER, myChan, targetTransfer.getUniqueId().toString(), targetTransfer.getName());
                 ChatUtils.sendMessage(player, "<green>Transferred channel ownership to <yellow>" + targetTransfer.getName() + "<green>.");
                 ChatUtils.sendMessage(targetTransfer, "<green>You are now the owner of channel <yellow>" + myChan.getDisplayName() + "<green>!");
                 break;

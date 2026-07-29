@@ -38,6 +38,15 @@ public class RedisMessageListener extends JedisPubSub {
                 }
             }
 
+            // 嘗試解析為 PlayerChannelSyncPacket
+            if (message.contains("\"channelId\"") && message.contains("\"action\"") && (message.contains("\"ownerUuid\"") || message.contains("\"colorTheme\"") || message.contains("\"members\"") || message.contains("\"originServerId\""))) {
+                PlayerChannelSyncPacket syncPacket = PlayerChannelSyncPacket.fromJson(message);
+                if (syncPacket != null && syncPacket.getAction() != null) {
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> PlayerChannelManager.syncFromRemote(syncPacket));
+                    return;
+                }
+            }
+
             // 嘗試解析為 ChannelInvitePacket
             if (message.contains("\"action\"") && message.contains("\"targetPlayerName\"")) {
                 ChannelInvitePacket invitePacket = ChannelInvitePacket.fromJson(message);
