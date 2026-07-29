@@ -1,0 +1,159 @@
+package me.xydesu.chatconduit.redis;
+
+import me.xydesu.chatconduit.Main;
+import me.xydesu.chatconduit.channel.ChannelManager;
+import me.xydesu.chatconduit.channel.PlayerChannelManager;
+import me.xydesu.chatconduit.util.ChatUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import redis.clients.jedis.JedisPubSub;
+
+import java.util.UUID;
+import java.util.logging.Level;
+
+/**
+ * 處理從 Redis 訂閱收到的跨伺服器聊天廣播
+ *
+ * @author xydesu
+ */
+public class RedisMessageListener extends JedisPubSub {
+
+    @Override
+    public void onMessage(String channel, String message) {
+        if (message == null || message.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            ChatMessagePacket packet = ChatMessagePacket.fromJson(message);
+            if (packet == null) return;
+
+            // 忽略來自本伺服器的訊息 (本服訊息已在 local 即時廣播過)
+            if (packet.getServerId() != null && packet.getServerId().equalsIgnoreCase(RedisManager.getServerId())) {
+                return;
+            }
+
+            // 切換至 Paper/Spigot 主執行緒進行廣播與 Component 渲染
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> processRemoteMessage(packet));
+        } catch (Exception e) {
+            Main.getInstance().getLogger().log(Level.WARNING, "解析來自 Redis 的跨服訊息封包時失敗:", e);
+        }
+    }
+
+    /**
+     * 處理並渲染來自遠端伺服器的訊息
+     */
+    private void processRemoteMessage(ChatMessagePacket packet) {
+        String channelKeyOrName = packet.getChannelName();
+        String rawMessage = packet.getRawMessage();
+        String senderName = packet.getSenderName();
+        String remoteServerId = packet.getServerId() != null ? packet.getServerId() : "Remote";
+
+        PlayerChannelManager.CustomChannel customChannel = PlayerChannelManager.getChannel(channelKeyOrName);
+        ChannelManager.Channel sysChannel = ChannelManager.getChannel(channelKeyOrName);
+
+        // 如果既不是 key 匹配的系統頻道也不是自訂頻道，嘗試比對系統頻道名稱
+        if (sysChannel == null && customChannel == null) {
+            for (ChannelManager.Channel ch : ChannelManager.getChannels().values()) {
+                if (ch.name().equalsIgnoreCase(channelKeyOrName)) {
+                    sysChannel = ch;
+                    break;
+                }
+            }
+        }
+
+        Component channelPrefixComponent;
+
+        if (customChannel != null) {
+            String channelColor = customChannel.getColorTheme();
+            String rawPrefixText = channelColor + "[" + customChannel.getDisplayName() + "]</gradient>";
+            if (!channelColor.startsWith("<gradient:")) {
+                rawPrefixText = channelColor + "[" + customChannel.getDisplayName() + "]";
+            }
+
+            String hoverStr = customChannel.getColorTheme() + "<bold>=== 跨服群組頻道: <channel_name> ===</bold></gradient>\n" +
+                    "<gray>來源伺服器: <aqua><server_id></aqua>\n" +
+                    "<gray>發言玩家: <yellow><sender></yellow>\n" +
+                    "<gray>頻道簡介: <white><description></white>\n\n" +
+                    "<yellow>▶ 點擊切換發言頻道</yellow>";
+
+            Component hoverComponent = ChatUtils.parseNoItalic(null, hoverStr,
+                    Placeholder.unparsed("channel_name", customChannel.getDisplayName()),
+                    Placeholder.unparsed("server_id", remoteServerId),
+                    Placeholder.unparsed("sender", senderName),
+                    Placeholder.unparsed("description", customChannel.getDescription())
+            );
+
+            channelPrefixComponent = ChatUtils.parseNoItalic(null, rawPrefixText)
+                    .hoverEvent(HoverEvent.showText(hoverComponent))
+            .clickEvent(ClickEvent.runCommand("/playerchannel switch " + customChannel.getId()));
+        } else if (sysChannel != null) {
+            String rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]</gradient>";
+            if (!sysChannel.color().startsWith("<gradient:")) {
+                rawPrefixText = sysChannel.color() + "[" + sysChannel.name() + "]";
+            }
+
+            String hoverStr = sysChannel.color() + "<bold>=== 跨服官方頻道: <sys_name> ===</bold></gradient>\n" +
+                    "<gray>來源伺服器: <aqua><server_id></aqua>\n" +
+                    "<gray>發言玩家: <yellow><sender></yellow>\n" +
+                    "<gray>頻道簡介: <white><description></white>\n\n" +
+                    "<yellow>▶ 點擊切換發言至此頻道</yellow>";
+
+            Component hoverComponent = ChatUtils.parseNoItalic(null, hoverStr,
+                    Placeholder.unparsed("sys_name", sysChannel.name()),
+                    Placeholder.unparsed("server_id", remoteServerId),
+                    Placeholder.unparsed("sender", senderName),
+                    Placeholder.unparsed("description", sysChannel.description())
+            );
+
+            channelPrefixComponent = ChatUtils.parseNoItalic(null, rawPrefixText)
+                    .hoverEvent(HoverEvent.showText(hoverComponent))
+                    .clickEvent(ClickEvent.runCommand("/channel " + sysChannel.key()));
+        } else {
+            // 備用無樣式頻道標籤
+            channelPrefixComponent = ChatUtils.parseNoItalic(null, "<gray>[" + channelKeyOrName + "]");
+        }
+
+        // 訊息文字元件
+        Component playerMessageComponent = ChatUtils.parseLegacy(rawMessage);
+
+        String rawChatFormat = Main.getInstance().getConfig().getString(
+                "chat-format",
+                "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
+        );
+
+        // 如果模板含有 {server}，將其替換為 remoteServerId；否則若無伺服器則消除
+        String formattedTemplate = rawChatFormat.replace("{server}", remoteServerId);
+
+        Component fullChatMessage = ChatUtils.parse(
+                null,
+                formattedTemplate,
+                Placeholder.component("channel_prefix", channelPrefixComponent),
+                Placeholder.unparsed("player", senderName),
+                Placeholder.component("message", playerMessageComponent)
+        );
+
+        // 發送給本服對應成員或全服玩家
+        if (customChannel != null) {
+            for (UUID memberUuid : customChannel.getMembers()) {
+                Player member = Bukkit.getPlayer(memberUuid);
+                if (member != null && member.isOnline()) {
+                    member.sendMessage(fullChatMessage);
+                }
+            }
+            Bukkit.getConsoleSender().sendMessage(fullChatMessage);
+        } else {
+            String sysPerm = sysChannel != null ? sysChannel.permission() : "";
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if (sysPerm.isEmpty() || onlinePlayer.hasPermission(sysPerm)) {
+                    onlinePlayer.sendMessage(fullChatMessage);
+                }
+            }
+            Bukkit.getConsoleSender().sendMessage(fullChatMessage);
+        }
+    }
+}

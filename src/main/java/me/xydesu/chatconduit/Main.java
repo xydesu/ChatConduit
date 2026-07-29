@@ -65,11 +65,17 @@ public final class Main extends JavaPlugin {
         // 初始化 DiscordSRV 溝通模組
         me.xydesu.chatconduit.integration.DiscordSRVHook.init();
 
-        getLogger().info("ChatConduit (含全 Chest GUI 零指令系統與 HikariCP 資料庫) 已成功啟動！");
+        // 初始化 Redis 跨服通訊模組
+        me.xydesu.chatconduit.redis.RedisManager.init();
+
+        getLogger().info("ChatConduit (含全 Chest GUI 零指令系統、HikariCP 資料庫與 Redis 多伺服器支持) 已成功啟動！");
     }
 
     @Override
     public void onDisable() {
+        // 關閉 Redis 通訊連線池
+        me.xydesu.chatconduit.redis.RedisManager.close();
+
         me.xydesu.chatconduit.integration.DiscordSRVHook.shutdown();
         // 關服時自動儲存所有資料 (同步寫入)
         ChannelManager.saveAllPlayerData();
@@ -110,11 +116,13 @@ public final class Main extends JavaPlugin {
     }
 
     public void reloadPluginConfigs() {
+        me.xydesu.chatconduit.redis.RedisManager.close();
         reloadConfig();
         saveDefaultLanguageFiles();
         loadLanguageConfig();
         ChannelManager.loadChannels();
         ChannelManager.loadPlayerData();
         PlayerChannelManager.load();
+        me.xydesu.chatconduit.redis.RedisManager.init();
     }
 }

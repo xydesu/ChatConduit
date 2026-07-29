@@ -186,19 +186,24 @@ public class ChatListener implements Listener {
 
         String rawChatFormat = Main.getInstance().getConfig().getString(
                 "chat-format",
-                "<white><channel_prefix> <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
+                "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
         );
+
+        String currentServerId = me.xydesu.chatconduit.redis.RedisManager.getServerId();
+        String formattedTemplate = rawChatFormat.replace("{server}", currentServerId != null ? currentServerId : "");
 
         Component fullChatMessage = ChatUtils.parse(
                 player,
-                rawChatFormat,
+                formattedTemplate,
                 Placeholder.component("channel_prefix", channelPrefixComponent),
                 Placeholder.component("player", player.displayName()),
                 Placeholder.component("message", playerMessage)
         );
 
         // 4. 發送對象判斷 (若頻道有權限限定，過濾接收玩家)
+        String channelIdentifier;
         if (customChannel != null) {
+            channelIdentifier = customChannel.getId();
             for (UUID memberUuid : customChannel.getMembers()) {
                 Player member = Bukkit.getPlayer(memberUuid);
                 if (member != null && member.isOnline()) {
@@ -211,6 +216,7 @@ public class ChatListener implements Listener {
             me.xydesu.chatconduit.integration.WebhookManager.sendWebhook(customChannel, player, finalMessage);
         } else {
             ChannelManager.Channel targetSysChan = matchedSysChan != null ? matchedSysChan : ChannelManager.getPlayerChannel(player);
+            channelIdentifier = targetSysChan.key();
             String sysPerm = targetSysChan.permission();
 
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
@@ -219,6 +225,19 @@ public class ChatListener implements Listener {
                 }
             }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
+        }
+
+        // 5. 跨伺服器 Redis 訊息廣播 (異步)
+        if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
+            me.xydesu.chatconduit.redis.ChatMessagePacket packet = new me.xydesu.chatconduit.redis.ChatMessagePacket(
+                    player.getUniqueId().toString(),
+                    player.getName(),
+                    channelIdentifier,
+                    finalMessage,
+                    currentServerId,
+                    System.currentTimeMillis()
+            );
+            me.xydesu.chatconduit.redis.RedisManager.publishChatMessage(packet);
         }
     }
 }

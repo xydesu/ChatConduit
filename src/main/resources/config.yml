@@ -1,13 +1,9 @@
-# ChatConduit 主要設定檔
+# 伺服器識別名稱 (多伺服器跨服模式使用，如 "survival-1", "lobby")
+server-id: "survival-1"
 
-# 選擇語言檔 (無須副檔名，對應 lang/ 內部的檔案名稱)
-# 可用選項: "zh-TW", "en-US" 等
-language: "zh-TW"
-# 預設發言頻道
-default-channel: "global"
-
-# 聊天格式統一模板 (可用 <channel_prefix>, <player>, <message>, %papi%)
-chat-format: "<white><channel_prefix> <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
+# 聊天格式統一模板 (可用 <channel_prefix>, {server}, <player>, <message>, %papi%)
+# 提示: 若非跨服訊息或 server-id 為空，{server} 將自動不顯示
+chat-format: "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"
 
 # 玩家自訂群組頻道相關安全與數量限制設定
 player-channels:
@@ -34,6 +30,22 @@ database:
     pool-size: 10
     max-lifetime: 1800000 # 毫秒 (30分鐘)
     connection-timeout: 10000 # 毫秒 (10秒)
+
+# Redis 跨伺服器通訊 Pub/Sub 設定
+redis:
+  # 是否啟用 Redis 跨伺服器聊天訊息廣播與頻道同步
+  enabled: false
+  host: "localhost"
+  port: 6379
+  password: ""
+  ssl: false
+  # Redis 訂閱與廣播頻道名稱
+  channel: "chatconduit:global_chat"
+  # Jedis 連線池最大連線數
+  max-connections: 8
+  # 連線超時時間 (毫秒)
+  timeout: 2000
+
 
 
 # DiscordSRV 雙向轉發與 Webhook 設定

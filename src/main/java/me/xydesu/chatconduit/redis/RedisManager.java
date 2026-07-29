@@ -1,0 +1,166 @@
+package me.xydesu.chatconduit.redis;
+
+import me.xydesu.chatconduit.Main;
+import org.bukkit.configuration.file.FileConfiguration;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisPubSub;
+
+import java.util.logging.Level;
+
+/**
+ * Redis 管理器，負責 JedisPool 管理、PubSub 訊息發遞與監聽線程
+ *
+ * @author xydesu
+ */
+public class RedisManager {
+
+    private static JedisPool jedisPool;
+    private static JedisPubSub pubSubListener;
+    private static Thread pubSubThread;
+
+    private static boolean enabled = false;
+    private static String serverId = "";
+    private static String redisChannel = "chatconduit:global_chat";
+
+    /**
+     * 初始化 Redis 連線與 Pub/Sub 監聽器
+     */
+    public static void init() {
+        FileConfiguration config = Main.getInstance().getConfig();
+
+        enabled = config.getBoolean("redis.enabled", false);
+        serverId = config.getString("server-id", "survival-1");
+
+        if (!enabled) {
+            Main.getInstance().getLogger().info("Redis 跨服同步功能未啟用。");
+            return;
+        }
+
+        String host = config.getString("redis.host", "localhost");
+        int port = config.getInt("redis.port", 6379);
+        String password = config.getString("redis.password", "");
+        boolean ssl = config.getBoolean("redis.ssl", false);
+        redisChannel = config.getString("redis.channel", "chatconduit:global_chat");
+        int maxConnections = config.getInt("redis.max-connections", 8);
+        int timeout = config.getInt("redis.timeout", 2000);
+
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(maxConnections);
+        poolConfig.setMaxIdle(maxConnections);
+        poolConfig.setMinIdle(1);
+        poolConfig.setTestOnBorrow(true);
+        poolConfig.setTestWhileIdle(true);
+
+        try {
+            if (password == null || password.trim().isEmpty()) {
+                jedisPool = new JedisPool(poolConfig, host, port, timeout, ssl);
+            } else {
+                jedisPool = new JedisPool(poolConfig, host, port, timeout, password, ssl);
+            }
+
+            // 測試連線
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.ping();
+            }
+
+            Main.getInstance().getLogger().info("Redis 連線池成功初始化！伺服器識別名稱: [" + serverId + "]");
+
+            // 啟動 Pub/Sub 監聽線程
+            startSubscriberThread();
+        } catch (Exception e) {
+            Main.getInstance().getLogger().log(Level.SEVERE, "無法連接至 Redis 伺服器，跨服聊天功能將暫時停用:", e);
+            enabled = false;
+            closePool();
+        }
+    }
+
+    /**
+     * 啟動 Redis 訂閱非同步執行緒
+     */
+    private static void startSubscriberThread() {
+        pubSubListener = new RedisMessageListener();
+
+        pubSubThread = new Thread(() -> {
+            while (enabled && !Thread.currentThread().isInterrupted()) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    Main.getInstance().getLogger().info("Redis 訂閱線程已成功啟動，正在監聽頻道: " + redisChannel);
+                    jedis.subscribe(pubSubListener, redisChannel);
+                } catch (Exception e) {
+                    if (enabled) {
+                        Main.getInstance().getLogger().warning("Redis 訂閱中斷，將於 5 秒後重新連線... (原因: " + e.getMessage() + ")");
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException interruptedException) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                }
+            }
+        }, "ChatConduit-RedisSubscriberThread");
+
+        pubSubThread.setDaemon(true);
+        pubSubThread.start();
+    }
+
+    /**
+     * 發送聊天訊息封包至 Redis
+     *
+     * @param packet 訊息封包
+     */
+    public static void publishChatMessage(ChatMessagePacket packet) {
+        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
+            return;
+        }
+
+        // 非同步發送 Redis 廣播
+        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.publish(redisChannel, packet.toJson());
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "發送 Redis 廣播訊息失敗:", e);
+            }
+        });
+    }
+
+    /**
+     * 關閉 Redis 資源與連線池
+     */
+    public static void close() {
+        enabled = false;
+
+        if (pubSubListener != null && pubSubListener.isSubscribed()) {
+            try {
+                pubSubListener.unsubscribe();
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (pubSubThread != null && pubSubThread.isAlive()) {
+            pubSubThread.interrupt();
+        }
+
+        closePool();
+    }
+
+    private static void closePool() {
+        if (jedisPool != null && !jedisPool.isClosed()) {
+            try {
+                jedisPool.close();
+                Main.getInstance().getLogger().info("Redis 連線池已成功關閉。");
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "關閉 Redis 連線池時發生異常:", e);
+            }
+        }
+    }
+
+    public static boolean isEnabled() {
+        return enabled;
+    }
+
+    public static String getServerId() {
+        return serverId;
+    }
+}
