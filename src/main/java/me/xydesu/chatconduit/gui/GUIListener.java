@@ -401,11 +401,30 @@ public class GUIListener implements Listener {
                 if (targetP.isOnline() && targetP.getPlayer() != null) {
                     Player targetPlayer = targetP.getPlayer();
                     customChan.getPendingInvites().add(targetPlayer.getUniqueId());
-                    PlayerChannelManager.save();
+                    PlayerChannelManager.saveChannel(customChan);
 
                     ChatUtils.sendMessage(player, "<green>已成功邀請 <yellow>" + targetPlayer.getName() + "</yellow> 加入群組頻道。");
                     ChatUtils.sendInviteNotification(player, targetPlayer, customChan);
 
+                    OnlinePlayersGUI.open(player, customChan);
+                } else if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
+                    String pName = targetP.getName() != null ? targetP.getName() : targetP.getUniqueId().toString();
+                    customChan.getPendingInvites().add(targetP.getUniqueId());
+                    PlayerChannelManager.saveChannel(customChan);
+
+                    me.xydesu.chatconduit.redis.ChannelInvitePacket invitePacket = new me.xydesu.chatconduit.redis.ChannelInvitePacket(
+                            me.xydesu.chatconduit.redis.ChannelInvitePacket.Action.INVITE,
+                            player.getUniqueId().toString(),
+                            player.getName(),
+                            pName,
+                            customChan.getId(),
+                            customChan.getDisplayName(),
+                            me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                            System.currentTimeMillis()
+                    );
+                    me.xydesu.chatconduit.redis.RedisManager.publishInvitePacket(invitePacket);
+
+                    ChatUtils.sendMessage(player, "<green>已嘗試透過 Redis 跨服廣播發送頻道邀請給玩家 <yellow>" + pName + "</yellow>！");
                     OnlinePlayersGUI.open(player, customChan);
                 }
             }

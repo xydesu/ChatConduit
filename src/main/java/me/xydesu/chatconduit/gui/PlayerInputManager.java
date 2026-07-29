@@ -209,7 +209,7 @@ public class PlayerInputManager implements Listener {
                     ChatUtils.sendMessage(player, "<green>已成功將頻道顯示名稱修改為：<yellow>" + cleanInput + "</yellow>！");
                     ChannelSettingsGUI.open(player, customChan);
                 } else if (session.type() == InputType.INVITE_PLAYER) {
-                    PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getChannel(session.extraData());
+                    PlayerChannelManager.CustomChannel customChan = PlayerChannelManager.getOrLoadChannel(session.extraData());
                     if (customChan == null) {
                         ChannelSelectGUI.open(player);
                         return;
@@ -221,23 +221,46 @@ public class PlayerInputManager implements Listener {
                         targetPlayer = Bukkit.getPlayer(targetName);
                     }
 
-                    if (targetPlayer == null || !targetPlayer.isOnline()) {
-                        ChatUtils.sendMessage(player, "<red>找不到玩家 <yellow>" + input + "</yellow> 或該玩家未在線！");
-                        OnlinePlayersGUI.open(player, customChan);
-                        return;
+                    if (targetPlayer != null && targetPlayer.isOnline()) {
+                        if (customChan.getMembers().contains(targetPlayer.getUniqueId())) {
+                            ChatUtils.sendMessage(player, "<red>玩家 <yellow>" + targetPlayer.getName() + "</yellow> 已經是此頻道的成員！");
+                            OnlinePlayersGUI.open(player, customChan);
+                            return;
+                        }
+
+                        customChan.getPendingInvites().add(targetPlayer.getUniqueId());
+                        PlayerChannelManager.saveChannel(customChan);
+
+                        ChatUtils.sendMessage(player, "<green>已成功邀請 <yellow>" + targetPlayer.getName() + "</yellow> 加入群組頻道。");
+                        ChatUtils.sendInviteNotification(player, targetPlayer, customChan);
+                    } else if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
+                        org.bukkit.OfflinePlayer offPlayer = Bukkit.getOfflinePlayer(targetName);
+                        if (offPlayer != null && offPlayer.getUniqueId() != null) {
+                            if (customChan.getMembers().contains(offPlayer.getUniqueId())) {
+                                ChatUtils.sendMessage(player, "<red>玩家 <yellow>" + targetName + "</yellow> 已經是此頻道的成員！");
+                                OnlinePlayersGUI.open(player, customChan);
+                                return;
+                            }
+                            customChan.getPendingInvites().add(offPlayer.getUniqueId());
+                            PlayerChannelManager.saveChannel(customChan);
+                        }
+
+                        me.xydesu.chatconduit.redis.ChannelInvitePacket invitePacket = new me.xydesu.chatconduit.redis.ChannelInvitePacket(
+                                me.xydesu.chatconduit.redis.ChannelInvitePacket.Action.INVITE,
+                                player.getUniqueId().toString(),
+                                player.getName(),
+                                targetName,
+                                customChan.getId(),
+                                customChan.getDisplayName(),
+                                me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                                System.currentTimeMillis()
+                        );
+                        me.xydesu.chatconduit.redis.RedisManager.publishInvitePacket(invitePacket);
+
+                        ChatUtils.sendMessage(player, "<green>已嘗試透過 Redis 跨服廣播發送頻道邀請給玩家 <yellow>" + targetName + "</yellow>！");
+                    } else {
+                        ChatUtils.sendMessage(player, "<red>找不到玩家 <yellow>" + targetName + "</yellow> 或該玩家未在線！");
                     }
-
-                    if (customChan.getMembers().contains(targetPlayer.getUniqueId())) {
-                        ChatUtils.sendMessage(player, "<red>玩家 <yellow>" + targetPlayer.getName() + "</yellow> 已經是此頻道的成員！");
-                        OnlinePlayersGUI.open(player, customChan);
-                        return;
-                    }
-
-                    customChan.getPendingInvites().add(targetPlayer.getUniqueId());
-                    PlayerChannelManager.save();
-
-                    ChatUtils.sendMessage(player, "<green>已成功邀請 <yellow>" + targetPlayer.getName() + "</yellow> 加入群組頻道。");
-                    ChatUtils.sendInviteNotification(player, targetPlayer, customChan);
 
                     OnlinePlayersGUI.open(player, customChan);
                 } else if (session.type() == InputType.SET_WEBHOOK) {
