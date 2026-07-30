@@ -67,8 +67,9 @@ public class RedisManager {
 
             Main.getInstance().getLogger().info("Redis 連線池成功初始化！伺服器識別名稱: [" + serverId + "]");
 
-            // 啟動 Pub/Sub 監聽線程
+            // 啟動 Pub/Sub 監聽線程與快取刷新
             startSubscriberThread();
+            RedisPlayerRegistry.refreshCacheAsync();
         } catch (Exception e) {
             Main.getInstance().getLogger().log(Level.SEVERE, "無法連接至 Redis 伺服器，跨服聊天功能將暫時停用:", e);
             enabled = false;
@@ -230,6 +231,7 @@ public class RedisManager {
      */
     public static void close() {
         enabled = false;
+        RedisPlayerRegistry.clearCache();
 
         if (pubSubListener != null && pubSubListener.isSubscribed()) {
             try {
@@ -240,6 +242,11 @@ public class RedisManager {
 
         if (pubSubThread != null && pubSubThread.isAlive()) {
             pubSubThread.interrupt();
+            try {
+                pubSubThread.join(1000);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
         }
 
         closePool();
