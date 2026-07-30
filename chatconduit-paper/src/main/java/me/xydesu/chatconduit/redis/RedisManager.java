@@ -105,6 +105,14 @@ public class RedisManager {
         pubSubThread.start();
     }
 
+    private static void executePublish(Runnable task) {
+        if (org.bukkit.Bukkit.isPrimaryThread()) {
+            Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), task);
+        } else {
+            task.run();
+        }
+    }
+
     /**
      * 發送聊天訊息封包至 Redis
      *
@@ -115,8 +123,7 @@ public class RedisManager {
             return;
         }
 
-        // 非同步發送 Redis 廣播
-        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+        executePublish(() -> {
             try (Jedis jedis = jedisPool.getResource()) {
                 jedis.publish(redisChannel, packet.toJson());
             } catch (Exception e) {
@@ -135,7 +142,7 @@ public class RedisManager {
             return;
         }
 
-        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+        executePublish(() -> {
             try (Jedis jedis = jedisPool.getResource()) {
                 jedis.publish(redisChannel, packet.toJson());
             } catch (Exception e) {
@@ -154,7 +161,7 @@ public class RedisManager {
             return;
         }
 
-        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+        executePublish(() -> {
             try (Jedis jedis = jedisPool.getResource()) {
                 jedis.publish(redisChannel, packet.toJson());
             } catch (Exception e) {
@@ -173,7 +180,7 @@ public class RedisManager {
             return;
         }
 
-        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+        executePublish(() -> {
             try (Jedis jedis = jedisPool.getResource()) {
                 jedis.publish(redisChannel, packet.toJson());
             } catch (Exception e) {
@@ -192,7 +199,7 @@ public class RedisManager {
             return;
         }
 
-        Main.getInstance().getServer().getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+        executePublish(() -> {
             try (Jedis jedis = jedisPool.getResource()) {
                 jedis.publish(redisChannel, packet.toJson());
             } catch (Exception e) {
