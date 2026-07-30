@@ -32,6 +32,9 @@ public class ChatUtils {
     // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <ic=UUID:[ping]:>)
     private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<(?:chat|ic|interactivechat)=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
 
+    private static final Pattern HEX_X_PATTERN = Pattern.compile("(?i)[&§]x[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])");
+    private static final Pattern HEX_HASH_PATTERN = Pattern.compile("(?i)[&§]#([0-9a-fA-F]{6})");
+
     /**
      * 解析 MiniMessage 格式字串，自動處理 PlaceholderAPI 佔位符與 Legacy 顏色碼
      *
@@ -101,10 +104,10 @@ public class ChatUtils {
         }
 
         // 1. 處理 Hex 顏色碼 &x&r&r&g&g&b&b 或 §x§r§r§g§g§b§b
-        text = text.replaceAll("(?i)[&§]x[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])", "<#$1$2$3$4$5$6>");
+        text = HEX_X_PATTERN.matcher(text).replaceAll("<#$1$2$3$4$5$6>");
 
         // 2. 處理 Hex 顏色碼 &#RRGGBB 或 §#RRGGBB
-        text = text.replaceAll("(?i)[&§]#([0-9a-fA-F]{6})", "<#$1>");
+        text = HEX_HASH_PATTERN.matcher(text).replaceAll("<#$1>");
 
         // 3. 處理傳統單一字元顏色與樣式碼 (&0~&f, &k~&r, §0~§f, §k~§r)
         StringBuilder sb = new StringBuilder(text.length());
