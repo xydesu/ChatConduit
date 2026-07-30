@@ -65,8 +65,7 @@ public class ChatListener implements Listener {
             return;
         }
 
-        event.viewers().clear();
-        event.setCancelled(true);
+
 
         String rawMessage = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
         if (rawMessage.isEmpty()) return;
@@ -226,16 +225,13 @@ public class ChatListener implements Listener {
                 Placeholder.component("message", playerMessage)
         );
 
-        // 4. 發送對象判斷 (若頻道有權限限定，過濾接收玩家)
+        final Component finalFullMessage = fullChatMessage;
+        event.renderer((source, sourceDisplayName, message, viewer) -> finalFullMessage);
+
+        // 4. 發送對象判斷與 Console / Webhook 紀錄
         String channelIdentifier;
         if (customChannel != null) {
             channelIdentifier = customChannel.getId();
-            for (UUID memberUuid : customChannel.getMembers()) {
-                Player member = Bukkit.getPlayer(memberUuid);
-                if (member != null && member.isOnline()) {
-                    member.sendMessage(fullChatMessage);
-                }
-            }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
 
             // 派發非同步外接 Webhook 訊息 (若有設定)
@@ -243,13 +239,6 @@ public class ChatListener implements Listener {
         } else {
             ChannelManager.Channel targetSysChan = matchedSysChan != null ? matchedSysChan : ChannelManager.getPlayerChannel(player);
             channelIdentifier = targetSysChan.key();
-            String sysPerm = targetSysChan.permission();
-
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (sysPerm.isEmpty() || onlinePlayer.hasPermission(sysPerm)) {
-                    onlinePlayer.sendMessage(fullChatMessage);
-                }
-            }
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
         }
 
