@@ -162,9 +162,15 @@ public class PlayerChannelDAO {
     }
 
     /**
-     * 寫入頻道成員
+     * 寫入頻道成員 (先清空舊成員資料再批量寫入最新成員名單)
      */
     private static void saveChannelMembers(Connection conn, CustomChannel channel) throws SQLException {
+        String deleteOldSql = "DELETE FROM chatconduit_channel_members WHERE channel_name = ?;";
+        try (PreparedStatement psDel = conn.prepareStatement(deleteOldSql)) {
+            psDel.setString(1, channel.getId().toLowerCase());
+            psDel.executeUpdate();
+        }
+
         boolean isMySQL = "mysql".equals(DatabaseManager.getDbType());
 
         String sqlMember;

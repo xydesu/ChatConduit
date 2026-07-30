@@ -18,6 +18,7 @@ public class ChannelManager {
     private static final Map<UUID, String> playerSelectedChannel = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> playerDeathMessageToggle = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> playerJoinMessageToggle = new ConcurrentHashMap<>();
+    private static final Map<UUID, Set<String>> playerListeningChannels = new ConcurrentHashMap<>();
     private static volatile List<Channel> prefixChannelsCache = List.of();
     private static String defaultChannelKey = "global";
 
@@ -57,6 +58,7 @@ public class ChannelManager {
         playerSelectedChannel.clear();
         playerDeathMessageToggle.clear();
         playerJoinMessageToggle.clear();
+        playerListeningChannels.clear();
     }
 
     /**
@@ -82,8 +84,9 @@ public class ChannelManager {
         String key = playerSelectedChannel.getOrDefault(uuid, defaultChannelKey);
         boolean deathEnabled = isDeathMessagesEnabled(uuid);
         boolean joinEnabled = isJoinMessagesEnabled(uuid);
+        Set<String> listening = playerListeningChannels.getOrDefault(uuid, Collections.emptySet());
         Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> {
-            PlayerDAO.savePlayerData(uuid, playerName, key, Collections.emptySet(), deathEnabled, joinEnabled);
+            PlayerDAO.savePlayerData(uuid, playerName, key, listening, deathEnabled, joinEnabled);
         });
     }
 
@@ -96,7 +99,8 @@ public class ChannelManager {
             String key = playerSelectedChannel.getOrDefault(uuid, defaultChannelKey);
             boolean deathEnabled = isDeathMessagesEnabled(uuid);
             boolean joinEnabled = isJoinMessagesEnabled(uuid);
-            PlayerDAO.savePlayerData(uuid, player.getName(), key, Collections.emptySet(), deathEnabled, joinEnabled);
+            Set<String> listening = playerListeningChannels.getOrDefault(uuid, Collections.emptySet());
+            PlayerDAO.savePlayerData(uuid, player.getName(), key, listening, deathEnabled, joinEnabled);
         }
     }
 
@@ -163,6 +167,7 @@ public class ChannelManager {
             String channelKey = defaultChannelKey;
             boolean deathEnabled = Main.getInstance().getConfig().getBoolean("default-settings.death-messages-enabled", true);
             boolean joinEnabled = Main.getInstance().getConfig().getBoolean("default-settings.join-messages-enabled", true);
+            Set<String> listening = Collections.emptySet();
 
             if (data != null) {
                 if (data.currentChannel() != null && !data.currentChannel().isEmpty()) {
@@ -170,10 +175,14 @@ public class ChannelManager {
                 }
                 deathEnabled = data.deathMessagesEnabled();
                 joinEnabled = data.joinMessagesEnabled();
+                if (data.listeningChannels() != null) {
+                    listening = data.listeningChannels();
+                }
             }
             playerSelectedChannel.put(uuid, channelKey);
             playerDeathMessageToggle.put(uuid, deathEnabled);
             playerJoinMessageToggle.put(uuid, joinEnabled);
+            playerListeningChannels.put(uuid, listening);
 
             String finalKey = channelKey;
             Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
@@ -226,6 +235,7 @@ public class ChannelManager {
             playerSelectedChannel.remove(uuid);
             playerDeathMessageToggle.remove(uuid);
             playerJoinMessageToggle.remove(uuid);
+            playerListeningChannels.remove(uuid);
         }
     }
 }

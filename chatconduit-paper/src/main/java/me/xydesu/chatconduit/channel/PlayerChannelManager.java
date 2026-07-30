@@ -317,12 +317,18 @@ public class PlayerChannelManager {
                         } catch (Exception ignored) {}
                     }
                 }
+                saveChannel(chan);
                 break;
             }
             case DELETE: {
                 CustomChannel removed = customChannels.remove(targetId);
                 String display = (removed != null) ? removed.getDisplayName() : (packet.getDisplayName() != null ? packet.getDisplayName() : targetId);
                 me.xydesu.chatconduit.integration.WebhookManager.removeCooldown(targetId);
+
+                // 異步自資料庫刪除
+                Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> {
+                    PlayerChannelDAO.deleteCustomChannel(targetId);
+                });
 
                 String resetMsg = Main.getInstance().getLanguageConfig().getString(
                         "channel.disbanded-reverted",
@@ -345,6 +351,7 @@ public class PlayerChannelManager {
                         UUID joinedUuid = UUID.fromString(packet.getTargetUuid());
                         chan.getMembers().add(joinedUuid);
                         chan.getPendingInvites().remove(joinedUuid);
+                        saveChannel(chan);
                     } catch (Exception ignored) {}
                 }
                 break;
@@ -355,6 +362,7 @@ public class PlayerChannelManager {
                     try {
                         UUID leftUuid = UUID.fromString(packet.getTargetUuid());
                         chan.getMembers().remove(leftUuid);
+                        saveChannel(chan);
                     } catch (Exception ignored) {}
                 }
                 break;
@@ -366,6 +374,7 @@ public class PlayerChannelManager {
                         UUID kickedUuid = UUID.fromString(packet.getTargetUuid());
                         if (chan != null) {
                             chan.getMembers().remove(kickedUuid);
+                            saveChannel(chan);
                         }
                         Player kickedPlayer = Bukkit.getPlayer(kickedUuid);
                         if (kickedPlayer != null && kickedPlayer.isOnline()) {
@@ -386,6 +395,7 @@ public class PlayerChannelManager {
                     try {
                         UUID newOwnerUuid = UUID.fromString(packet.getTargetUuid());
                         chan.setOwner(newOwnerUuid);
+                        saveChannel(chan);
                     } catch (Exception ignored) {}
                 }
                 break;
