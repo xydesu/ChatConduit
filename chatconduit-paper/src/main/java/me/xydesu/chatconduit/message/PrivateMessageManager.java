@@ -172,15 +172,9 @@ public class PrivateMessageManager {
             String senderName = packet.getSenderName();
             String senderServerId = packet.getSenderServerId() != null ? packet.getSenderServerId() : "Remote";
 
-            Component customComp = null;
-            if (packet.getMessageJson() != null && !packet.getMessageJson().isEmpty()) {
-                try {
-                    String cleanedJson = ChatUtils.cleanInteractiveChatPlaceholders(packet.getMessageJson());
-                    customComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(cleanedJson);
-                } catch (Exception ignored) {}
-            }
-
-            renderAndSendReceiverMessage(localTarget, senderName, senderServerId, packet.getRawMessage(), customComp);
+            String cleanedMsg = ChatUtils.cleanInteractiveChatPlaceholders(packet.getRawMessage());
+            Component customComp = ChatUtils.parseLegacy(cleanedMsg);
+            renderAndSendReceiverMessage(localTarget, senderName, senderServerId, cleanedMsg, customComp);
 
             // 更新接收者的回覆對象為遠端發送者
             setReplyTarget(localTarget.getUniqueId(), senderName);
