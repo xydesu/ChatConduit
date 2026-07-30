@@ -34,11 +34,20 @@ class PlayerChannelSyncPacketTest {
         );
         customChannel.getMembers().add(member1);
 
-        PlayerChannelSyncPacket packet = PlayerChannelSyncPacket.fromChannel(
+        PlayerChannelSyncPacket packet = new PlayerChannelSyncPacket(
                 PlayerChannelSyncPacket.Action.CREATE,
-                customChannel,
+                customChannel.getId(),
                 "survival-1"
         );
+        packet.setDisplayName(customChannel.getDisplayName());
+        packet.setOwnerUuid(customChannel.getOwner().toString());
+        packet.setMode(customChannel.getMode().name());
+        packet.setColorTheme(customChannel.getColorTheme());
+        packet.setWebhookUrl(customChannel.getWebhookUrl());
+        packet.setDescription(customChannel.getDescription());
+        packet.setRules(customChannel.getRules());
+        packet.populateMembersFromUuids(customChannel.getMembers());
+        packet.populatePendingInvitesFromUuids(customChannel.getPendingInvites());
 
         String json = packet.toJson();
         assertNotNull(json);

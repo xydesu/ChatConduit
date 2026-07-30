@@ -1,5 +1,6 @@
 package me.xydesu.chatconduit.database.dao;
 
+import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.database.DatabaseManager;
 
 import java.sql.Connection;
@@ -7,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * 玩家個人頻道設定 DAO (Data Access Object)
@@ -43,7 +45,7 @@ public class PlayerDAO {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger().log(Level.SEVERE, "從資料庫查詢玩家資料時失敗: " + uuid, e);
         }
         return null;
     }
@@ -73,7 +75,7 @@ public class PlayerDAO {
             ps.setInt(6, joinMessagesEnabled ? 1 : 0);
             ps.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger().log(Level.SEVERE, "儲存玩家資料至資料庫時失敗: " + uuid, e);
         }
     }
 
@@ -105,7 +107,7 @@ public class PlayerDAO {
                 } catch (Exception ignored) {}
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger().log(Level.SEVERE, "從資料庫獲取所有已知玩家清單時失敗:", e);
         }
         return list;
     }

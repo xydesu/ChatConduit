@@ -239,9 +239,19 @@ public class PlayerChannelManager {
      */
     public static void publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action action, CustomChannel channel, String targetUuid, String targetName) {
         if (!me.xydesu.chatconduit.redis.RedisManager.isEnabled() || channel == null) return;
-        me.xydesu.chatconduit.redis.PlayerChannelSyncPacket packet = me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.fromChannel(
-                action, channel, me.xydesu.chatconduit.redis.RedisManager.getServerId()
+        me.xydesu.chatconduit.redis.PlayerChannelSyncPacket packet = new me.xydesu.chatconduit.redis.PlayerChannelSyncPacket(
+                action, channel.getId(), me.xydesu.chatconduit.redis.RedisManager.getServerId()
         );
+        packet.setDisplayName(channel.getDisplayName());
+        packet.setOwnerUuid(channel.getOwner() != null ? channel.getOwner().toString() : null);
+        packet.setMode(channel.getMode() != null ? channel.getMode().name() : "PRIVATE");
+        packet.setColorTheme(channel.getColorTheme());
+        packet.setWebhookUrl(channel.getWebhookUrl());
+        packet.setDescription(channel.getDescription());
+        packet.setRules(channel.getRules());
+        packet.populateMembersFromUuids(channel.getMembers());
+        packet.populatePendingInvitesFromUuids(channel.getPendingInvites());
+
         if (targetUuid != null) packet.setTargetUuid(targetUuid);
         if (targetName != null) packet.setTargetName(targetName);
         me.xydesu.chatconduit.redis.RedisManager.publishPlayerChannelSyncPacket(packet);

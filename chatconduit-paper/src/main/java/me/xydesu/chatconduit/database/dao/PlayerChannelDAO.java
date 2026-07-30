@@ -1,5 +1,6 @@
 package me.xydesu.chatconduit.database.dao;
 
+import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.channel.PlayerChannelManager.CustomChannel;
 import me.xydesu.chatconduit.channel.PlayerChannelManager.Mode;
 import me.xydesu.chatconduit.database.DatabaseManager;
@@ -9,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * 玩家自建群組頻道 DAO
@@ -56,7 +58,7 @@ public class PlayerChannelDAO {
                 channels.put(id.toLowerCase(), channel);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger().log(Level.SEVERE, "從資料庫載入所有群組頻道時失敗:", e);
         }
 
         return channels;
@@ -105,7 +107,7 @@ public class PlayerChannelDAO {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger().log(Level.SEVERE, "從資料庫載入群組頻道時失敗: " + channelId, e);
         }
         return null;
     }
@@ -136,7 +138,7 @@ public class PlayerChannelDAO {
             // 更新成員表
             saveChannelMembers(conn, channel);
         } catch (SQLException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger().log(Level.SEVERE, "儲存群組頻道資料時失敗: " + (channel != null ? channel.getId() : "null"), e);
         }
     }
 
@@ -157,7 +159,7 @@ public class PlayerChannelDAO {
             psChan.setString(1, channelId.toLowerCase());
             psChan.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            Main.getInstance().getLogger().log(Level.SEVERE, "從資料庫刪除群組頻道時失敗: " + channelId, e);
         }
     }
 

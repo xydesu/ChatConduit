@@ -1,8 +1,8 @@
 package me.xydesu.chatconduit.redis;
 
 import com.google.gson.Gson;
-import me.xydesu.chatconduit.channel.PlayerChannelManager;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -50,32 +50,6 @@ public class PlayerChannelSyncPacket {
         this.channelId = channelId;
         this.originServerId = originServerId;
         this.timestamp = System.currentTimeMillis();
-    }
-
-    /**
-     * 從 CustomChannel 複製完整數據進行封包構建
-     */
-    public static PlayerChannelSyncPacket fromChannel(Action action, PlayerChannelManager.CustomChannel channel, String originServerId) {
-        PlayerChannelSyncPacket packet = new PlayerChannelSyncPacket(action, channel.getId(), originServerId);
-        packet.setDisplayName(channel.getDisplayName());
-        packet.setOwnerUuid(channel.getOwner() != null ? channel.getOwner().toString() : null);
-        packet.setMode(channel.getMode() != null ? channel.getMode().name() : "PRIVATE");
-        packet.setColorTheme(channel.getColorTheme());
-        packet.setWebhookUrl(channel.getWebhookUrl());
-        packet.setDescription(channel.getDescription());
-        packet.setRules(channel.getRules());
-
-        if (channel.getMembers() != null) {
-            for (UUID uuid : channel.getMembers()) {
-                packet.getMembers().add(uuid.toString());
-            }
-        }
-        if (channel.getPendingInvites() != null) {
-            for (UUID uuid : channel.getPendingInvites()) {
-                packet.getPendingInvites().add(uuid.toString());
-            }
-        }
-        return packet;
     }
 
     public Action getAction() {
@@ -196,6 +170,22 @@ public class PlayerChannelSyncPacket {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public void populateMembersFromUuids(Collection<UUID> memberUuids) {
+        if (memberUuids != null) {
+            for (UUID uuid : memberUuids) {
+                this.members.add(uuid.toString());
+            }
+        }
+    }
+
+    public void populatePendingInvitesFromUuids(Collection<UUID> inviteUuids) {
+        if (inviteUuids != null) {
+            for (UUID uuid : inviteUuids) {
+                this.pendingInvites.add(uuid.toString());
+            }
+        }
     }
 
     public String toJson() {
