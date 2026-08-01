@@ -64,6 +64,18 @@ redis:
   # 連線超時時間 (毫秒)
   timeout: 2000
 
+# InteractiveChat 佔位符樣式自訂區塊 (可自由自訂 [ping], [inv], [ender], [money] 等格式與顏色)
+interactivechat:
+  enabled: true
+  placeholders:
+    ping: "&f%player_colored_ping% &bms"
+    inv: "&b[&f%player_name%'s Inventory&b]"
+    inventory: "&b[&f%player_name%'s Inventory&b]"
+    ender: "&d[&f%player_name%'s Ender Chest&d]"
+    ec: "&d[&f%player_name%'s Ender Chest&d]"
+    money: "&e[&f%player_name%'s Balance&e]"
+    balance: "&e[&f%player_name%'s Balance&e]"
+
 
 
 # DiscordSRV 雙向轉發與 Webhook 設定

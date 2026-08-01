@@ -31,13 +31,11 @@ public class InteractiveChatIntegration {
     private static Method bungeeMethod = null;
     private static Object apiInstance = null;
 
-    private static final Pattern ITEM_SPECIFIC_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[(?:item|i|hand)\\]|[^\\]:]*item[^\\]:]*)?:?>");
-    private static final Pattern OFFHAND_SPECIFIC_PATTERN = Pattern.compile("(?i)\\[(offhand|off)\\]|<(?:chat|ic|interactivechat)=[^:]+:?(\\[(?:offhand|off)\\])?:?>");
+    private static final Pattern ALL_PLACEHOLDERS_PATTERN = Pattern.compile("(?i)\\[(item|i|hand|inv|inventory|ender|ec|money|balance|ping)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^\\]:]+)?:?>");
 
     private static Component processItemPlaceholders(Player player, String message) {
         try {
             ItemStack mainHand = player.getInventory().getItemInMainHand();
-            ItemStack offHand = player.getInventory().getItemInOffHand();
 
             Component mainItemComp = null;
             if (mainHand != null && mainHand.getType() != Material.AIR && createItemDisplayComponentM != null) {
@@ -49,54 +47,67 @@ public class InteractiveChatIntegration {
                 }
             }
 
-            Component offItemComp = null;
-            if (offHand != null && offHand.getType() != Material.AIR && createItemDisplayComponentM != null) {
-                try {
-                    Object rawRes = createItemDisplayComponentM.invoke(null, player, offHand);
-                    offItemComp = convertRelocatedAdventureComponent(rawRes);
-                } catch (Throwable t) {
-                    Main.getInstance().getLogger().log(Level.FINE, "[InteractiveChat-Debug] 呼叫 createItemDisplayComponent 失敗:", t);
-                }
-            }
-
-            String current = message;
+            Matcher matcher = ALL_PLACEHOLDERS_PATTERN.matcher(message);
             Component builder = Component.empty();
-
-            // 1. 處理主手物品 [item] 標籤
-            Matcher itemMatcher = ITEM_SPECIFIC_PATTERN.matcher(current);
             int lastEnd = 0;
             boolean foundAny = false;
-            while (itemMatcher.find()) {
+
+            while (matcher.find()) {
                 foundAny = true;
-                String lead = current.substring(lastEnd, itemMatcher.start());
+                String lead = message.substring(lastEnd, matcher.start());
                 if (!lead.isEmpty()) {
-                    builder = builder.append(ChatUtils.parseLegacy(ChatUtils.cleanInteractiveChatPlaceholders(lead)));
+                    String cleanedPart = ChatUtils.cleanInteractiveChatPlaceholders(lead);
+                    builder = builder.append(ChatUtils.parse(player, cleanedPart));
                 }
 
-                if (mainItemComp != null) {
-                    builder = builder.append(mainItemComp);
-                } else {
-                    // 空手 (AIR) 或無展示 Component 時，安全降級為乾淨文字 [item]，絕不出錯！
-                    builder = builder.append(Component.text("[\u200Bitem]"));
+                String tag = matcher.group(1);
+                if (tag == null) {
+                    tag = matcher.group(2);
                 }
-                lastEnd = itemMatcher.end();
+                if (tag == null) {
+                    tag = matcher.group(0);
+                }
+                tag = tag.replaceAll("[\\[\\]]", "").trim().toLowerCase();
+
+                if (tag.equals("item") || tag.equals("i") || tag.equals("hand") || tag.contains("item")) {
+                    if (mainItemComp != null) {
+                        builder = builder.append(mainItemComp);
+                    } else {
+                        builder = builder.append(Component.text("[\u200Bitem]"));
+                    }
+                } else {
+                    String customFormat = Main.getInstance().getConfig().getString("interactivechat.placeholders." + tag);
+                    if (customFormat == null || customFormat.isEmpty()) {
+                        if (tag.equals("ping")) customFormat = "&f%player_colored_ping% &bms";
+                        else if (tag.equals("inv") || tag.equals("inventory")) customFormat = "&b[&f%player_name%'s Inventory&b]";
+                        else if (tag.equals("ender") || tag.equals("ec")) customFormat = "&d[&f%player_name%'s Ender Chest&d]";
+                        else if (tag.equals("money") || tag.equals("balance")) customFormat = "&e[&f%player_name%'s Balance&e]";
+                    }
+
+                    if (customFormat != null && !customFormat.isEmpty()) {
+                        builder = builder.append(ChatUtils.parse(player, customFormat));
+                    } else {
+                        builder = builder.append(ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(matcher.group(0))));
+                    }
+                }
+
+                lastEnd = matcher.end();
             }
 
             if (foundAny) {
-                String tail = current.substring(lastEnd);
+                String tail = message.substring(lastEnd);
                 if (!tail.isEmpty()) {
-                    builder = builder.append(ChatUtils.parseLegacy(ChatUtils.cleanInteractiveChatPlaceholders(tail)));
+                    String cleanedPart = ChatUtils.cleanInteractiveChatPlaceholders(tail);
+                    builder = builder.append(ChatUtils.parse(player, cleanedPart));
                 }
                 return builder;
             }
 
-            // 2. 若不是 [item]，但包含 <chat=...> 或 [inv] / [ping] 等其他標籤：
-            // 將所有 <chat=UUID:[inv]> 等淨化為安全 [inv], [ping], [ender]，保留各自獨立標籤！
             String cleanedAll = ChatUtils.cleanInteractiveChatPlaceholders(message);
-            return ChatUtils.parseLegacy(cleanedAll);
+            return ChatUtils.parse(player, cleanedAll);
         } catch (Throwable t) {
             Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 解析標籤 Component 時例外:", t);
-            return ChatUtils.parseLegacy(ChatUtils.cleanInteractiveChatPlaceholders(message));
+            return ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(message));
         }
     }
 
@@ -211,19 +222,14 @@ public class InteractiveChatIntegration {
                 findApiMethods();
             }
 
-            // 1. 優先嘗試 InteractiveChatAPI.createItemDisplayComponent 處理 [item] / [offhand] 標籤
-            if (createItemDisplayComponentM != null) {
-                boolean hasItemTag = ITEM_SPECIFIC_PATTERN.matcher(message).find();
-                boolean hasOffhandTag = OFFHAND_SPECIFIC_PATTERN.matcher(message).find();
-
-                if (hasItemTag || hasOffhandTag) {
-                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] 偵測到物品標籤，準備呼叫 InteractiveChatAPI.createItemDisplayComponent 生成展示 Component...");
-                    Component resultComp = processItemPlaceholders(player, message);
-                    if (resultComp != null) {
-                        String json = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(resultComp);
-                        Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功建構包含 [item] 展示之 Component! GsonJSON=" + json);
-                        return resultComp;
-                    }
+            // 1. 優先嘗試 InteractiveChat API 處理 [item] / [ping] / [inv] / [ender] / [money] 等全套標籤
+            if (ALL_PLACEHOLDERS_PATTERN.matcher(message).find()) {
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 偵測到動態標籤，準備進行全套佔位符格式化與 Component 生成...");
+                Component resultComp = processItemPlaceholders(player, message);
+                if (resultComp != null) {
+                    String json = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(resultComp);
+                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功建構包含動態標籤之 Component! GsonJSON=" + json);
+                    return resultComp;
                 }
             }
 
