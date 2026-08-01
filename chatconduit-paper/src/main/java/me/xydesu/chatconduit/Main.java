@@ -97,6 +97,9 @@ public final class Main extends JavaPlugin {
         // 初始化 DiscordSRV 溝通模組
         me.xydesu.chatconduit.integration.DiscordSRVHook.init();
 
+        // 初始化 CMI AFK 狀態監測模組
+        me.xydesu.chatconduit.integration.CMIHook.init();
+
         // 初始化 Redis 跨服通訊模組
         me.xydesu.chatconduit.redis.RedisManager.init();
 
@@ -136,6 +139,10 @@ public final class Main extends JavaPlugin {
                 ? "<green>Hooked</green>"
                 : "<yellow>Not Found</yellow>";
 
+        String cmiStatus = me.xydesu.chatconduit.integration.CMIHook.isEnabled()
+                ? "<green>Hooked (AFK Track)</green>"
+                : "<yellow>Not Found</yellow>";
+
         String icStatus = getServer().getPluginManager().isPluginEnabled("InteractiveChat")
                 ? "<green>Hooked</green>"
                 : "<yellow>Not Found</yellow>";
@@ -161,6 +168,7 @@ public final class Main extends JavaPlugin {
             "<dark_gray>│</dark_gray>  <gray>• Database Driver :</gray> <green>HikariCP (" + dbStatus + ")</green>",
             "<dark_gray>│</dark_gray>  <gray>• Redis Sync      :</gray> " + redisStatus,
             "<dark_gray>│</dark_gray>  <gray>• DiscordSRV      :</gray> " + discordSrvStatus,
+            "<dark_gray>│</dark_gray>  <gray>• CMI Hook        :</gray> " + cmiStatus,
             "<dark_gray>│</dark_gray>  <gray>• InteractiveChat :</gray> " + icStatus,
             "<dark_gray>│</dark_gray>  <gray>• PlaceholderAPI  :</gray> " + papiStatus,
             "<dark_gray>│</dark_gray>  <gray>• Channels Loaded :</gray> <aqua>" + sysChanCount + " System</aqua> <dark_gray>/</dark_gray> <aqua>" + playerChanCount + " Player</aqua>",

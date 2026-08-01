@@ -127,6 +127,18 @@ public class GUIListener implements Listener {
                     ChatUtils.sendMessage(player, Main.getInstance().getLanguageConfig().getString("channel.no-permission", "<red>你沒有權限進入此頻道！"));
                     return;
                 }
+                if (clickType.isRightClick()) {
+                    boolean newStatus = ChannelManager.toggleChannelListening(player, sysChan.key());
+                    if (newStatus) {
+                        String subMsg = Main.getInstance().getLanguageConfig().getString("channel.subscribed", "<green>已開啟並訂閱頻道: <yellow><channel_name>").replace("<channel_name>", sysChan.name());
+                        ChatUtils.sendMessage(player, subMsg);
+                    } else {
+                        String unsubMsg = Main.getInstance().getLanguageConfig().getString("channel.unsubscribed", "<red>已取消訂閱頻道: <yellow><channel_name> <gray>(將不再接收此頻道訊息)").replace("<channel_name>", sysChan.name());
+                        ChatUtils.sendMessage(player, unsubMsg);
+                    }
+                    ChannelSelectGUI.open(player, page);
+                    return;
+                }
                 ChannelManager.setPlayerChannel(player, sysChan.key());
                 String switchMsg = Main.getInstance().getLanguageConfig().getString("channel.switched", "<green>已切換預設發言頻道至：<yellow><channel_name>").replace("<channel_name>", sysChan.name());
                 ChatUtils.sendMessage(player, switchMsg);

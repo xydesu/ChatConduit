@@ -74,8 +74,13 @@ public class ChannelManager {
      */
     public static void savePlayerData(UUID uuid) {
         if (uuid == null) return;
-        Player player = Bukkit.getPlayer(uuid);
-        String name = player != null ? player.getName() : "Unknown";
+        String name = "Unknown";
+        try {
+            if (Bukkit.getServer() != null) {
+                Player player = Bukkit.getPlayer(uuid);
+                if (player != null) name = player.getName();
+            }
+        } catch (Exception ignored) {}
         savePlayerData(uuid, name);
     }
 
@@ -85,9 +90,13 @@ public class ChannelManager {
         boolean deathEnabled = isDeathMessagesEnabled(uuid);
         boolean joinEnabled = isJoinMessagesEnabled(uuid);
         Set<String> listening = playerListeningChannels.getOrDefault(uuid, Collections.emptySet());
-        Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> {
-            PlayerDAO.savePlayerData(uuid, playerName, key, listening, deathEnabled, joinEnabled);
-        });
+        if (Main.getInstance() != null && Bukkit.getServer() != null) {
+            try {
+                Bukkit.getAsyncScheduler().runNow(Main.getInstance(), task -> {
+                    PlayerDAO.savePlayerData(uuid, playerName, key, listening, deathEnabled, joinEnabled);
+                });
+            } catch (Exception ignored) {}
+        }
     }
 
     /**
@@ -129,7 +138,10 @@ public class ChannelManager {
 
     public static boolean isDeathMessagesEnabled(UUID uuid) {
         if (uuid == null) return true;
-        boolean defaultVal = Main.getInstance().getConfig().getBoolean("default-settings.death-messages-enabled", true);
+        boolean defaultVal = true;
+        if (Main.getInstance() != null && Main.getInstance().getConfig() != null) {
+            defaultVal = Main.getInstance().getConfig().getBoolean("default-settings.death-messages-enabled", true);
+        }
         return playerDeathMessageToggle.getOrDefault(uuid, defaultVal);
     }
 
@@ -146,7 +158,10 @@ public class ChannelManager {
 
     public static boolean isJoinMessagesEnabled(UUID uuid) {
         if (uuid == null) return true;
-        boolean defaultVal = Main.getInstance().getConfig().getBoolean("default-settings.join-messages-enabled", true);
+        boolean defaultVal = true;
+        if (Main.getInstance() != null && Main.getInstance().getConfig() != null) {
+            defaultVal = Main.getInstance().getConfig().getBoolean("default-settings.join-messages-enabled", true);
+        }
         return playerJoinMessageToggle.getOrDefault(uuid, defaultVal);
     }
 
@@ -167,7 +182,7 @@ public class ChannelManager {
             String channelKey = defaultChannelKey;
             boolean deathEnabled = Main.getInstance().getConfig().getBoolean("default-settings.death-messages-enabled", true);
             boolean joinEnabled = Main.getInstance().getConfig().getBoolean("default-settings.join-messages-enabled", true);
-            Set<String> listening = Collections.emptySet();
+            Set<String> listening = new HashSet<>();
 
             if (data != null) {
                 if (data.currentChannel() != null && !data.currentChannel().isEmpty()) {
@@ -175,9 +190,13 @@ public class ChannelManager {
                 }
                 deathEnabled = data.deathMessagesEnabled();
                 joinEnabled = data.joinMessagesEnabled();
-                if (data.listeningChannels() != null) {
-                    listening = data.listeningChannels();
+                if (data.listeningChannels() != null && !data.listeningChannels().isEmpty()) {
+                    listening.addAll(data.listeningChannels());
+                } else {
+                    listening.addAll(systemChannels.keySet());
                 }
+            } else {
+                listening.addAll(systemChannels.keySet());
             }
 
             if (!player.isOnline()) return;
@@ -228,6 +247,48 @@ public class ChannelManager {
         if (player == null) return;
         playerSelectedChannel.put(player.getUniqueId(), channelKey.toLowerCase());
         savePlayerData(player);
+    }
+
+    /**
+     * 檢查玩家是否訂閱特定官方系統頻道
+     */
+    public static boolean isChannelListening(UUID uuid, String channelKey) {
+        if (uuid == null || channelKey == null) return true;
+        Set<String> listening = playerListeningChannels.get(uuid);
+        if (listening == null) return true;
+        return listening.contains(channelKey.toLowerCase());
+    }
+
+    /**
+     * 設定玩家對特定官方系統頻道的訂閱狀態
+     */
+    public static void setChannelListening(UUID uuid, String channelKey, boolean listening) {
+        if (uuid == null || channelKey == null) return;
+        String key = channelKey.toLowerCase();
+        Set<String> set = playerListeningChannels.computeIfAbsent(uuid, k -> {
+            Set<String> initial = new HashSet<>(systemChannels.keySet());
+            initial.add(key);
+            return initial;
+        });
+        if (listening) {
+            set.add(key);
+        } else {
+            set.remove(key);
+        }
+        savePlayerData(uuid);
+    }
+
+    /**
+     * 切換玩家對特定官方系統頻道的訂閱狀態
+     * @return 切換後最新的訂閱狀態 (true 表示已訂閱, false 表示取消訂閱)
+     */
+    public static boolean toggleChannelListening(Player player, String channelKey) {
+        if (player == null || channelKey == null) return true;
+        UUID uuid = player.getUniqueId();
+        boolean current = isChannelListening(uuid, channelKey);
+        boolean newStatus = !current;
+        setChannelListening(uuid, channelKey, newStatus);
+        return newStatus;
     }
 
     /**

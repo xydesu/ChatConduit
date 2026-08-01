@@ -163,13 +163,19 @@
 
 ### 2.1 CMI 插件整合
 
-* [ ] **AFK 自動掛機狀態監測**
-    * [ ] 監聽 CMI 的 `CMIPlayerAfkStatusChangeEvent`
-    * [ ] 判斷目標玩家是否處於 AFK（離開）狀態
+* [x] **AFK 自動掛機狀態監測**
+    * [x] 監聽 CMI 的 `CMIPlayerAfkStatusChangeEvent`
+    * [x] 判斷目標玩家是否處於 AFK（離開）狀態
 
 ---
 
 ## 3. 頻道系統加強
-* [ ] **官方頻道**
-    * [ ] 可取消訂閱頻道
+* [x] **官方頻道**
+    * [x] 可取消訂閱頻道
+
+---
+
+## 4. Plugins platform
+* [ ] Remove Velocity Platform
+* [ ] Merge both paper and common
 

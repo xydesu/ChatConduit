@@ -63,6 +63,7 @@ public class ChannelSelectGUI {
 
             boolean isSelected = currentChannelKey.equalsIgnoreCase(sysChan.key());
             boolean hasPermission = sysChan.permission().isEmpty() || player.hasPermission(sysChan.permission());
+            boolean isListening = ChannelManager.isChannelListening(player.getUniqueId(), sysChan.key());
 
             Material material = getMaterialForSystemChannel(sysChan.key());
             String displayName = sysChan.color() + "<bold>" + sysChan.name() + " 頻道</bold>";
@@ -71,14 +72,16 @@ public class ChannelSelectGUI {
             lore.add("<gray>頻道 Key: <yellow>" + sysChan.key());
             lore.add("<gray>快速對話字首: <gold>" + (sysChan.prefixKey().isEmpty() ? "無" : sysChan.prefixKey()));
             lore.add("<gray>進入權限: " + (hasPermission ? "<green>✓ 擁有" : "<red>✗ 無權限"));
+            lore.add("<gray>頻道訂閱: " + (isListening ? "<green>● 已訂閱 (接收訊息)" : "<red>○ 已取消訂閱 (不接收)"));
             lore.add("");
             if (isSelected) {
                 lore.add("<green><bold>✓ 目前選取的發言頻道</bold>");
             } else if (hasPermission) {
-                lore.add("<yellow>▶ 點擊切換至此頻道</yellow>");
+                lore.add("<yellow>▶ 左鍵點擊: 切換發言至此頻道</yellow>");
             } else {
                 lore.add("<red>❌ 無權限切換至此頻道</red>");
             }
+            lore.add("<gold>▶ 右鍵點擊: " + (isListening ? "取消訂閱此頻道" : "重新訂閱此頻道") + "</gold>");
 
             ItemStack item = createItem(material, displayName, lore, isSelected);
             int targetSlot = sysSlots[sysSlotIdx++];

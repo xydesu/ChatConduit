@@ -31,7 +31,46 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String targetId = args[0].toLowerCase();
+        String sub = args[0].toLowerCase();
+
+        // 處理訂閱 / 取消訂閱相關子指令
+        if (sub.equalsIgnoreCase("toggle") || sub.equalsIgnoreCase("subscribe") || sub.equalsIgnoreCase("unsubscribe")) {
+            if (args.length < 2) {
+                ChatUtils.sendMessage(player, "<yellow>用法: /" + label + " " + sub + " <頻道KEY>");
+                return true;
+            }
+            String targetId = args[1].toLowerCase();
+            ChannelManager.Channel sysChan = ChannelManager.getChannel(targetId);
+            if (sysChan == null) {
+                ChatUtils.sendMessage(player, getLang("channel.not-found", "<red>找不到指定的系統頻道！"));
+                return true;
+            }
+
+            boolean isSubscribing;
+            if (sub.equalsIgnoreCase("toggle")) {
+                isSubscribing = ChannelManager.toggleChannelListening(player, targetId);
+            } else if (sub.equalsIgnoreCase("subscribe")) {
+                ChannelManager.setChannelListening(player.getUniqueId(), targetId, true);
+                isSubscribing = true;
+            } else {
+                ChannelManager.setChannelListening(player.getUniqueId(), targetId, false);
+                isSubscribing = false;
+            }
+
+            if (isSubscribing) {
+                String subMsg = getLang("channel.subscribed", "<green>已開啟並訂閱頻道: <yellow><channel_name>")
+                        .replace("<channel_name>", sysChan.name());
+                ChatUtils.sendMessage(player, subMsg);
+            } else {
+                String unsubMsg = getLang("channel.unsubscribed", "<red>已取消訂閱頻道: <yellow><channel_name> <gray>(將不再接收此頻道訊息)")
+                        .replace("<channel_name>", sysChan.name());
+                ChatUtils.sendMessage(player, unsubMsg);
+            }
+
+            return true;
+        }
+
+        String targetId = sub;
 
         // 1. 檢查系統頻道
         ChannelManager.Channel sysChan = ChannelManager.getChannel(targetId);
@@ -71,6 +110,12 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1 && sender instanceof Player player) {
+            List<String> options = List.of("toggle", "subscribe", "unsubscribe");
+            for (String opt : options) {
+                if (opt.startsWith(args[0].toLowerCase())) {
+                    completions.add(opt);
+                }
+            }
             for (ChannelManager.Channel sys : ChannelManager.getChannels().values()) {
                 if (sys.permission().isEmpty() || player.hasPermission(sys.permission())) {
                     if (sys.key().startsWith(args[0].toLowerCase())) {
@@ -81,6 +126,17 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
             for (PlayerChannelManager.CustomChannel c : PlayerChannelManager.getCustomChannels().values()) {
                 if (c.getMembers().contains(player.getUniqueId()) && c.getId().startsWith(args[0].toLowerCase())) {
                     completions.add(c.getId());
+                }
+            }
+        } else if (args.length == 2 && sender instanceof Player player) {
+            String sub = args[0].toLowerCase();
+            if (sub.equals("toggle") || sub.equals("subscribe") || sub.equals("unsubscribe")) {
+                for (ChannelManager.Channel sys : ChannelManager.getChannels().values()) {
+                    if (sys.permission().isEmpty() || player.hasPermission(sys.permission())) {
+                        if (sys.key().startsWith(args[1].toLowerCase())) {
+                            completions.add(sys.key());
+                        }
+                    }
                 }
             }
         }

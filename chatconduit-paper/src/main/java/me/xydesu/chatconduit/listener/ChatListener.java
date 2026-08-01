@@ -248,7 +248,8 @@ public class ChatListener implements Listener {
             String sysPerm = targetSysChan.permission();
 
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (sysPerm.isEmpty() || onlinePlayer.hasPermission(sysPerm)) {
+                if ((sysPerm.isEmpty() || onlinePlayer.hasPermission(sysPerm))
+                        && ChannelManager.isChannelListening(onlinePlayer.getUniqueId(), channelIdentifier)) {
                     onlinePlayer.sendMessage(fullChatMessage);
                 }
             }

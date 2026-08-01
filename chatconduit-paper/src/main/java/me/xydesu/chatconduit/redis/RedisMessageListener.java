@@ -210,8 +210,10 @@ public class RedisMessageListener extends JedisPubSub {
             Bukkit.getConsoleSender().sendMessage(fullChatMessage);
         } else {
             String sysPerm = sysChannel != null ? sysChannel.permission() : "";
+            String sysKey = sysChannel != null ? sysChannel.key() : channelKeyOrName;
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (sysPerm.isEmpty() || onlinePlayer.hasPermission(sysPerm)) {
+                if ((sysPerm.isEmpty() || onlinePlayer.hasPermission(sysPerm))
+                        && ChannelManager.isChannelListening(onlinePlayer.getUniqueId(), sysKey)) {
                     onlinePlayer.sendMessage(fullChatMessage);
                 }
             }
