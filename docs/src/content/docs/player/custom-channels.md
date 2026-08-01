@@ -3,8 +3,6 @@ title: 🎮 自建玩家群組頻道 (/playerchannel)
 description: 如何建立專屬的玩家私人頻道、設置加入密碼與邀請好友加入
 ---
 
-# 🎮 自建玩家群組頻道 (/playerchannel)
-
 想和您的公會夥伴或幾位好友建立私密討論群？ChatConduit 允許玩家自建專屬群組頻道！
 
 ---

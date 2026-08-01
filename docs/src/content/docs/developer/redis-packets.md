@@ -3,8 +3,6 @@ title: 🔌 Redis Pub/Sub 封包協定規格
 description: ChatConduit 跨服 JSON 封包結構說明與 Pub/Sub 廣播通道對接
 ---
 
-# 🔌 Redis Pub/Sub 封包協定規格
-
 ChatConduit 使用 Jedis 5.x 透過 Redis Channel 廣播 JSON 封包進行跨服資料通訊。
 
 ---

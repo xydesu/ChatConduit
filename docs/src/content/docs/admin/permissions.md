@@ -3,8 +3,6 @@ title: 👑 權限節點與 LuckPerms 授權
 description: ChatConduit 完整的 LuckPerms 權限節點、VIP 限制與管理員專屬權限說明表
 ---
 
-# 👑 權限節點與 LuckPerms 授權
-
 ChatConduit 完全支援 **LuckPerms** 權限管理系統，管理員可為不同玩家群組 (Default, VIP, Admin) 授予細粒度的控制權限。
 
 ---

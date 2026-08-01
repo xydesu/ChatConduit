@@ -3,8 +3,6 @@ title: 🔌 PlaceholderAPI 變數大全
 description: ChatConduit 原生 PlaceholderAPI 變數清單與傳回型態範例
 ---
 
-# 🔌 PlaceholderAPI 變數大全
-
 只要伺服器安裝了 **PlaceholderAPI** 插件，ChatConduit 將自動註冊 `chatconduit` 擴充。
 
 ---

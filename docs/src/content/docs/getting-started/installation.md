@@ -3,8 +3,6 @@ title: 📦 快速安裝指南 (Installation)
 description: ChatConduit 系統需求、安裝步驟與 initial 設置說明
 ---
 
-# 📦 快速安裝指南 (Installation)
-
 ---
 
 ## ⚙️ 系統與執行環境需求

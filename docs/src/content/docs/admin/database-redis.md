@@ -3,8 +3,6 @@ title: 👑 資料庫與 Redis 跨服同步
 description: MySQL (HikariCP 連線池)、SQLite 與 Redis Pub/Sub 跨服架構詳細配置說明
 ---
 
-# 👑 資料庫與 Redis 跨服同步
-
 ChatConduit 專為高併發跨服與大型伺服器設計，支援 **MySQL / SQLite** 非同步持久化存取與 **Redis Pub/Sub** 即時跨服訊息廣播。
 
 ---

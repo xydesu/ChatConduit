@@ -17,14 +17,14 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: '🚀 快速入門 (Getting Started)',
+          label: '快速入門 (Getting Started)',
           items: [
-            { label: '專案概述 (Overview)', link: '/getting-started/overview/' },
-            { label: '快速安裝指南 (Installation)', link: '/getting-started/installation/' },
+            { label: '專案概述', link: '/getting-started/overview/' },
+            { label: '快速安裝指南', link: '/getting-started/installation/' },
           ],
         },
         {
-          label: '👑 管理員指南 (For Admin)',
+          label: '管理員指南 (For Admin)',
           items: [
             { label: '系統頻道與前綴配置', link: '/admin/channels/' },
             { label: 'Chest GUI Symbol Map 佈局', link: '/admin/gui-layout/' },
@@ -34,17 +34,17 @@ export default defineConfig({
           ],
         },
         {
-          label: '🎮 玩家指南 (For Player)',
+          label: '玩家指南 (For Player)',
           items: [
             { label: '零指令頻道發言與切換', link: '/player/channels/' },
-            { label: '自建玩家群組頻道 (/playerchannel)', link: '/player/custom-channels/' },
-            { label: '跨服私訊與快速回覆 (/msg)', link: '/player/private-messages/' },
-            { label: '好友系統與 GUI 社交選單 (/friend)', link: '/player/friends/' },
+            { label: '自建玩家群組頻道', link: '/player/custom-channels/' },
+            { label: '跨服私訊與快速回覆', link: '/player/private-messages/' },
+            { label: '好友系統與 GUI 社交選單', link: '/player/friends/' },
             { label: '黑名單與隱私保護', link: '/player/blacklist/' },
           ],
         },
         {
-          label: '🔌 開發者 API (Developer & API)',
+          label: '開發者 API (Developer)',
           items: [
             { label: 'PlaceholderAPI 變數大全', link: '/developer/placeholders/' },
             { label: 'Redis Pub/Sub 封包協定規格', link: '/developer/redis-packets/' },

@@ -3,8 +3,6 @@ title: 👑 Chest GUI Symbol Map 佈局指南
 description: 解耦的箱子 GUI 符號佈局設計機制、按鈕綁定與動態分頁動態解析說明
 ---
 
-# 👑 Chest GUI Symbol Map 佈局指南
-
 ChatConduit 引進了獨創的 **Symbol Map 符號地圖解耦** 機制。管理員無需修改任何 Java 原始碼或計算 Slot 索引，即可在 YAML 配置檔中自由設計選單。
 
 ---

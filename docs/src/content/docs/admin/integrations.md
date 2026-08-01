@@ -3,8 +3,6 @@ title: 👑 DiscordSRV 與 CMI AFK 整合
 description: 雙向 Discord 聊天機器人 Webhook 連動與 CMI 掛機狀態自動過濾設置指南
 ---
 
-# 👑 DiscordSRV 與 CMI AFK 整合
-
 ---
 
 ## 🤖 1. DiscordSRV 雙向連動與 Webhook

@@ -3,8 +3,6 @@ title: 🎮 好友系統與 GUI 社交選單 (/friend)
 description: 完整好友社交指令清單、箱子 GUI 選單使用與即時連線廣播說明
 ---
 
-# 🎮 好友系統與 GUI 社交選單 (/friend)
-
 ChatConduit 提供強大的社交好友系統與零指令 GUI 箱子控制台。
 
 ---

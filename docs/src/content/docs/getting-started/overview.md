@@ -3,8 +3,6 @@ title: 🚀 專案概述 (Overview)
 description: ChatConduit 插件核心架構、設計哲學與功能模組介紹
 ---
 
-# 🚀 ChatConduit 專案概述
-
 **ChatConduit** 是一款專為大型跨服群服 (BungeeCord / Velocity) 與單服深度的 Minecraft 伺服器設計的新一代社交與聊天頻道管理插件。
 
 ---

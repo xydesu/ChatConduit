@@ -3,8 +3,6 @@ title: 👑 系統頻道與前綴配置
 description: 管理員如何設定 config.yml 官方系統頻道、MiniMessage 漸變色彩與零指令發言前綴
 ---
 
-# 👑 系統頻道與前綴配置
-
 管理員可以在 `plugins/ChatConduit/config.yml` 中定義任意數量的官方系統頻道。
 
 ---
