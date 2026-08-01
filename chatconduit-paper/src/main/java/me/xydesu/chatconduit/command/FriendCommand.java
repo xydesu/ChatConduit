@@ -25,7 +25,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
 
     private static final int ITEMS_PER_PAGE = 10;
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "add", "accept", "deny", "revoke", "remove", "list", "block", "unblock", "tp", "tpaccept", "tpdeny", "gui", "help"
+            "add", "accept", "deny", "revoke", "remove", "list", "block", "unblock", "gui", "help"
     );
 
     @Override
@@ -55,9 +55,6 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             case "list" -> handleList(player, args);
             case "block" -> handleBlock(player, args);
             case "unblock" -> handleUnblock(player, args);
-            case "tp" -> handleTp(player, args);
-            case "tpaccept" -> handleTpAccept(player, args);
-            case "tpdeny" -> handleTpDeny(player, args);
             case "gui" -> handleGUI(player);
             case "help" -> sendHelp(player);
             default -> ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.usage"));
@@ -274,99 +271,6 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
                                 .replace("<target>", targetName));
                     }
                 }));
-    }
-
-    private void handleTp(Player player, String[] args) {
-        if (args.length < 2) {
-            ChatUtils.sendMessage(player, "<yellow>用法: /friend tp <好友名稱></yellow>");
-            return;
-        }
-
-        String targetName = args[1];
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target == null || target.getUniqueId() == null) {
-            ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.player-not-found")
-                    .replace("<target>", targetName));
-            return;
-        }
-
-        if (!FriendManager.getInstance().isFriend(player.getUniqueId(), target.getUniqueId())) {
-            ChatUtils.sendMessage(player, "<red>玩家 " + targetName + " 不是您的好友，無法傳送！</red>");
-            return;
-        }
-
-        RedisManager.publishFriendTpPacket(new me.xydesu.chatconduit.redis.FriendTpPacket(
-                player.getUniqueId().toString(),
-                player.getName(),
-                target.getUniqueId().toString(),
-                targetName,
-                RedisManager.getServerId(),
-                me.xydesu.chatconduit.redis.FriendTpPacket.Action.REQUEST,
-                System.currentTimeMillis()
-        ));
-
-        ChatUtils.sendMessage(player, "<gray>已向好友 <yellow>" + targetName + "</yellow> 發送跨服傳送請求！</gray>");
-    }
-
-    private void handleTpAccept(Player player, String[] args) {
-        if (args.length < 2) {
-            ChatUtils.sendMessage(player, "<yellow>用法: /friend tpaccept <好友名稱></yellow>");
-            return;
-        }
-
-        String targetName = args[1];
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target == null || target.getUniqueId() == null) {
-            ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.player-not-found")
-                    .replace("<target>", targetName));
-            return;
-        }
-
-        RedisManager.publishFriendTpPacket(new me.xydesu.chatconduit.redis.FriendTpPacket(
-                player.getUniqueId().toString(),
-                player.getName(),
-                target.getUniqueId().toString(),
-                targetName,
-                RedisManager.getServerId(),
-                me.xydesu.chatconduit.redis.FriendTpPacket.Action.ACCEPT,
-                System.currentTimeMillis()
-        ));
-
-        Player localSender = Bukkit.getPlayerExact(targetName);
-        if (localSender != null && localSender.isOnline()) {
-            localSender.teleport(player.getLocation());
-            ChatUtils.sendMessage(localSender, "<green>已成功傳送至好友 <yellow>" + player.getName() + "</yellow> 的位置！</green>");
-            ChatUtils.sendMessage(player, "<green>已接受 <yellow>" + targetName + "</yellow> 的傳送請求！</green>");
-        } else {
-            ChatUtils.sendMessage(player, "<green>已接受傳送請求！等待傳送對接...</green>");
-        }
-    }
-
-    private void handleTpDeny(Player player, String[] args) {
-        if (args.length < 2) {
-            ChatUtils.sendMessage(player, "<yellow>用法: /friend tpdeny <好友名稱></yellow>");
-            return;
-        }
-
-        String targetName = args[1];
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target == null || target.getUniqueId() == null) {
-            ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.player-not-found")
-                    .replace("<target>", targetName));
-            return;
-        }
-
-        RedisManager.publishFriendTpPacket(new me.xydesu.chatconduit.redis.FriendTpPacket(
-                player.getUniqueId().toString(),
-                player.getName(),
-                target.getUniqueId().toString(),
-                targetName,
-                RedisManager.getServerId(),
-                me.xydesu.chatconduit.redis.FriendTpPacket.Action.DENY,
-                System.currentTimeMillis()
-        ));
-
-        ChatUtils.sendMessage(player, "<gray>已拒絕 <yellow>" + targetName + "</yellow> 的傳送請求。</gray>");
     }
 
     private void handleList(Player player, String[] args) {

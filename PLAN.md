@@ -80,9 +80,7 @@
     * [x] `%chatconduit_pending_requests%` (待處理申請數)
     * [x] `%chatconduit_channel%` (當前說話頻道)
     * [x] `%chatconduit_muted%` (是否處於禁言狀態)
-* [ ] **好友私密群組語音/聊天房**
-    * [ ] 支援一鍵建立好友專屬通道，跨服聊天下自動過濾非好友成員
-
+    
 ---
 
 ## 3. 📚 官方維基與開發者文件 (Wiki Roadmap)

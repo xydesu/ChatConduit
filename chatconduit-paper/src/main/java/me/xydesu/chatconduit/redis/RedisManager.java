@@ -247,25 +247,6 @@ public class RedisManager {
     }
 
     /**
-     * 發送跨服好友傳送對接封包至 Redis
-     *
-     * @param packet 好友傳送封包
-     */
-    public static void publishFriendTpPacket(FriendTpPacket packet) {
-        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
-            return;
-        }
-
-        executePublish(() -> {
-            try (Jedis jedis = jedisPool.getResource()) {
-                jedis.publish(redisChannel, packet.toJson());
-            } catch (Exception e) {
-                Main.getInstance().getLogger().log(Level.WARNING, "發送 Redis 好友傳送對接廣播失敗:", e);
-            }
-        });
-    }
-
-    /**
      * 獲取 Jedis 連線資源，供組件內部進行同步或非同步 Redis 操作
      * 調用者有責任調用 jedis.close() 來歸還連線池資源
      */

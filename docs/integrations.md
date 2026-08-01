@@ -16,7 +16,6 @@ ChatConduit 提供強大的跨服 Pub/Sub 通訊架構，並與主流外掛程�
 | `PrivateMessagePacket` | 跨服私訊傳遞 | `/msg` 發送私訊至異服線上玩家 |
 | `FriendStatusPacket` | 跨服好友連線/離線狀態廣播 | 玩家 Join / Quit 伺服器 |
 | `FriendRequestNotifyPacket` | 跨服好友申請與動作通知 | 發送/接受/拒絕申請與封鎖 |
-| `FriendTpPacket` | 跨服好友傳送對接與請求 | 執行 `/friend tp` 或點擊接受 |
 | `PlayerChannelSyncPacket` | 跨服自訂群組頻道變動同步 | 建立、解散或修改群組頻道 |
 
 ---

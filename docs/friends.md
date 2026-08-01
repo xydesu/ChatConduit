@@ -16,9 +16,6 @@ ChatConduit 擁有完善的好友社交管理系統，包含箱子 GUI 控制台
 | `/friend list [頁碼]` | 檢視好友清單（在線優先與伺服器識別展示） |
 | `/friend block <玩家>` | 將目標加入黑名單（自動解綁好友並刪除申請） |
 | `/friend unblock <玩家>` | 解除黑名單封鎖 |
-| `/friend tp <玩家>` | 發起跨服/本地好友傳送請求 |
-| `/friend tpaccept <玩家>` | 接受好友的傳送請求 |
-| `/friend tpdeny <玩家>` | 拒絕好友的傳送請求 |
 | `/friend gui` (或 `/f`) | 開啟 Chest GUI 好友控制台 |
 
 ---
