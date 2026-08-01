@@ -37,9 +37,21 @@ commands:
     permission: chatconduit.chatcolor
 
 permissions:
+  chatconduit.use:
+    description: 允許使用基礎聊天與頻道選單功能
+    default: op
+  chatconduit.create:
+    description: 允許建立自訂玩家群組頻道
+    default: op
   chatconduit.chatcolor:
     description: 允許使用 /chatcolor 選擇發言文字顏色
-    default: true
+    default: op
+  chatconduit.chat.color:
+    description: 允許在聊天對話中使用 Legacy 顏色碼
+    default: op
+  chatconduit.admin:
+    description: 允許執行 /chatconduit 管理指令
+    default: op
   chatconduit.admin.mute:
     description: 允許執行 /mute 指令
     default: op
@@ -48,4 +60,7 @@ permissions:
     default: op
   chatconduit.admin.mutelist:
     description: 允許執行 /mutelist 指令
+    default: op
+  chatconduit.admin.bypasslimit:
+    description: 允許繞過玩家自訂群組頻道建立數量上限
     default: op
