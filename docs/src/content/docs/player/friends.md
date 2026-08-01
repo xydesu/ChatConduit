@@ -1,5 +1,5 @@
 ---
-title: 🎮 好友系統與 GUI 社交選單 (/friend)
+title: 好友系統與 GUI 社交選單 (/friend)
 description: 完整好友社交指令清單、箱子 GUI 選單使用與即時連線廣播說明
 ---
 
@@ -7,7 +7,7 @@ ChatConduit 提供強大的社交好友系統與零指令 GUI 箱子控制台。
 
 ---
 
-## 📜 好友指令一覽 (Command Overview)
+## 好友指令一覽 (Command Overview)
 
 | 指令 | 說明 |
 | :--- | :--- |
@@ -23,7 +23,7 @@ ChatConduit 提供強大的社交好友系統與零指令 GUI 箱子控制台。
 
 ---
 
-## 🧰 箱子 GUI 選單操作說明
+## 箱子 GUI 選單操作說明
 
 輸入 `/friend gui` 或短指令 `/f` 即可開啟 UI 選單：
 - **個人頭顱**: 展示個人頭像、總好友數與當前頻道。

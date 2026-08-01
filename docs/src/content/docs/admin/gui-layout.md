@@ -1,5 +1,5 @@
 ---
-title: 👑 Chest GUI Symbol Map 佈局指南
+title: Chest GUI Symbol Map 佈局指南
 description: 解耦的箱子 GUI 符號佈局設計機制、按鈕綁定與動態分頁動態解析說明
 ---
 
@@ -7,7 +7,7 @@ ChatConduit 引進了獨創的 **Symbol Map 符號地圖解耦** 機制。管理
 
 ---
 
-## 🧰 佈局範例 (`gui/friend_list.yml`)
+## 佈局範例 (`gui/friend_list.yml`)
 
 ```yaml
 title: "<green><bold>好友列表 - 第 <page> / <total_pages> 頁</bold></green>"
@@ -55,7 +55,7 @@ symbols:
 
 ---
 
-## ⚡ Slot 槽位計算與 Symbol 解析原理
+## Slot 槽位計算與 Symbol 解析原理
 
 `GUIManager` 讀取 `layout` 陣列時，自動依循 `slot = row * 9 + col` 將符號對映至箱子槽位：
 - 第一行 `layout[0]`（字元 0~8）對應 Slot 0~8。

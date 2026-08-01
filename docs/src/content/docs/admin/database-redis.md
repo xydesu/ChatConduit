@@ -3,7 +3,7 @@ title: 資料庫與 Redis 跨服同步
 description: MySQL (HikariCP 連線池)、SQLite 與 Redis Pub/Sub 跨服架構詳細配置說明
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+
 
 ChatConduit 支援 **SQLite**（預設）與 **MySQL** 兩種資料庫，以及可選的 **Redis Pub/Sub** 跨服即時廣播。
 
@@ -48,9 +48,9 @@ database:
 | `max-lifetime` | `1800000` | 連線最長存活時間（毫秒，= 30 分鐘） |
 | `connection-timeout` | `10000` | 連線超時時間（毫秒，= 10 秒） |
 
-<Aside type="note">
-  所有 SQL 存取均透過 **HikariCP** 連線池以非同步方式執行，確保 0 阻塞主執行緒。
-</Aside>
+:::note
+所有 SQL 存取均透過 **HikariCP** 連線池以非同步方式執行，確保 0 阻塞主執行緒。
+:::
 
 ### 自動建表
 
@@ -76,9 +76,9 @@ redis:
   timeout: 2000
 ```
 
-<Aside type="caution">
-  **多伺服器必讀**：啟用 Redis 後，每台子伺服器的 `config.yml` 必須設定**相同的 `redis.channel` 名稱**，否則跨服廣播將失效。
-</Aside>
+:::caution
+**多伺服器必讀**：啟用 Redis 後，每台子伺服器的 `config.yml` 必須設定**相同的 `redis.channel` 名稱**，否則跨服廣播將失效。
+:::
 
 | 鍵 | 預設值 | 說明 |
 | :--- | :--- | :--- |

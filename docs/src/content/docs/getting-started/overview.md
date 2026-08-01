@@ -1,5 +1,5 @@
 ---
-title: 🚀 專案概述 (Overview)
+title: 專案概述 (Overview)
 description: ChatConduit 插件核心架構、設計哲學與功能模組介紹
 ---
 
@@ -7,7 +7,7 @@ description: ChatConduit 插件核心架構、設計哲學與功能模組介紹
 
 ---
 
-## 🌟 核心設計哲學
+## 核心設計哲學
 
 1. **零指令發言 (Zero-Command Messaging)**:
    傳統插件需要玩家記住 `/g`, `/l`, `/trade` 等複雜指令。ChatConduit 引進**前綴符號自動過濾路由**，玩家只需輸入 `!大家好` 即可發言至全服頻道，極大降低玩家學習成本。
@@ -20,7 +20,7 @@ description: ChatConduit 插件核心架構、設計哲學與功能模組介紹
 
 ---
 
-## 📦 模組架構圖 (System Architecture)
+## 模組架構圖 (System Architecture)
 
 ```mermaid
 graph TD

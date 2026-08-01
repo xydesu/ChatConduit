@@ -1,5 +1,5 @@
 ---
-title: 👑 權限節點與 LuckPerms 授權
+title: 權限節點與 LuckPerms 授權
 description: ChatConduit 完整的 LuckPerms 權限節點、VIP 限制與管理員專屬權限說明表
 ---
 
@@ -7,7 +7,7 @@ ChatConduit 完全支援 **LuckPerms** 權限管理系統，管理員可為不�
 
 ---
 
-## 📜 完整權限對照表 (Permissions Node Table)
+## 完整權限對照表 (Permissions Node Table)
 
 | 權限節點 (Permission Node) | 說明 (Description) | 預設擁有者 |
 | :--- | :--- | :--- |

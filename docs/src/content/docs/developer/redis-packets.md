@@ -1,5 +1,5 @@
 ---
-title: 🔌 Redis Pub/Sub 封包協定規格
+title: Redis Pub/Sub 封包協定規格
 description: ChatConduit 跨服 JSON 封包結構說明與 Pub/Sub 廣播通道對接
 ---
 
@@ -7,7 +7,7 @@ ChatConduit 使用 Jedis 5.x 透過 Redis Channel 廣播 JSON 封包進行跨服
 
 ---
 
-## 📡 封包結構 (Packet Schemas)
+## 封包結構 (Packet Schemas)
 
 ### 1. `FriendStatusPacket` (好友連線/離線狀態)
 ```json

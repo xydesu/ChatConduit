@@ -3,13 +3,13 @@ title: GUI 佈局設定參考
 description: ChatConduit 所有 gui/*.yml 箱子介面的佈局槽位與按鈕功能說明
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+
 
 `plugins/ChatConduit/gui/` 目錄下的每個 YAML 檔案控制一個箱子 GUI 的外觀與功能。
 
-<Aside type="tip">
+:::tip
   修改任何 GUI 設定後，在遊戲內執行 `/chatconduit reload` 即可即時套用，**無需重啟伺服器**。
-</Aside>
+:::
 
 ---
 

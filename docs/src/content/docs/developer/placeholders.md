@@ -1,5 +1,5 @@
 ---
-title: 🔌 PlaceholderAPI 變數大全
+title: PlaceholderAPI 變數大全
 description: ChatConduit 原生 PlaceholderAPI 變數清單與傳回型態範例
 ---
 
@@ -7,7 +7,7 @@ description: ChatConduit 原生 PlaceholderAPI 變數清單與傳回型態範例
 
 ---
 
-## 📊 變數對照表 (%chatconduit_*%)
+## 變數對照表 (%chatconduit_*%)
 
 | Placeholder 變數 | 資料型態 | 範例傳回值 | 說明 |
 | :--- | :--- | :--- | :--- |
@@ -19,6 +19,6 @@ description: ChatConduit 原生 PlaceholderAPI 變數清單與傳回型態範例
 
 ---
 
-## 💡 使用場景範例
+## 使用場景範例
 - **Scoreboard / TAB 記分板**: 顯示在線好友數量 `%chatconduit_online_friends%`
 - **Chat Format 聊天格式**: 顯示玩家發言頻道名稱 `%chatconduit_channel%`

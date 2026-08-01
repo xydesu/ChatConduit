@@ -3,7 +3,7 @@ title: config.yml 完整參數參考
 description: ChatConduit 主設定檔所有選項的詳細說明與預設值對照
 ---
 
-import { Aside, Code } from '@astrojs/starlight/components';
+
 
 本頁列出 `plugins/ChatConduit/config.yml` 的所有可用設定項目、預設值與說明。
 
@@ -39,9 +39,9 @@ chat-format: "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gr
 | `<player>` | 發言玩家名稱 |
 | `<message>` | 發言內容 |
 
-<Aside type="tip">
-  若非跨服訊息或 `server-id` 為空，`{server}` 欄位會自動隱藏，不會顯示空括號。
-</Aside>
+:::tip
+若非跨服訊息或 `server-id` 為空，`{server}` 欄位會自動隱藏，不會顯示空括號。
+:::
 
 ---
 
@@ -136,9 +136,9 @@ database:
 | `mysql.max-lifetime` | Integer | `1800000` | 連線最長存活時間（毫秒，預設 30 分鐘） |
 | `mysql.connection-timeout` | Integer | `10000` | 連線超時時間（毫秒，預設 10 秒） |
 
-<Aside type="note">
-  單服環境建議使用 `sqlite`，無需額外配置。多子服跨服環境才需要切換至 `mysql` 共用資料庫。
-</Aside>
+:::note
+單服環境建議使用 `sqlite`，無需額外配置。多子服跨服環境才需要切換至 `mysql` 共用資料庫。
+:::
 
 ---
 
@@ -167,9 +167,9 @@ redis:
 | `max-connections` | Integer | `8` | Jedis 連線池最大連線數 |
 | `timeout` | Integer | `2000` | 連線超時時間（毫秒） |
 
-<Aside type="caution">
-  啟用 Redis 後，**所有子伺服器的 `config.yml` 必須設定相同的 `redis.channel` 名稱**，才能正確廣播跨服訊息。
-</Aside>
+:::caution
+啟用 Redis 後，**所有子伺服器的 `config.yml` 必須設定相同的 `redis.channel` 名稱**，才能正確廣播跨服訊息。
+:::
 
 ---
 

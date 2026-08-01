@@ -3,7 +3,7 @@ title: DiscordSRV 與 CMI AFK 整合
 description: 雙向 Discord Webhook 連動、自訂頻道轉發與 CMI 掛機狀態過濾設置指南
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+
 
 ---
 
@@ -37,9 +37,9 @@ channel-mapping:
   trade: "trade"       # 遊戲「交易」頻道 -> Discord #trade 頻道
 ```
 
-<Aside type="tip">
-  建議使用 Discord 頻道 **ID**（純數字）而非名稱，可避免頻道改名後失效。
-</Aside>
+:::tip
+建議使用 Discord 頻道 **ID**（純數字）而非名稱，可避免頻道改名後失效。
+:::
 
 ### Webhook 設定
 
@@ -59,6 +59,6 @@ ChatConduit 監聽 CMI 插件的 `CMIPlayerAfkStatusChangeEvent`：
 - 玩家進入 AFK 掛機時，自動更新好友選單的玩家狀態圖示
 - 管理員可在 `config.yml` 的 `default-settings` 區塊，控制掛機玩家是否暫停接收系統廣播訊息
 
-<Aside type="note">
-  若伺服器未安裝 CMI，此功能將自動停用，不影響插件正常運作。
-</Aside>
+:::note
+若伺服器未安裝 CMI，此功能將自動停用，不影響插件正常運作。
+:::
