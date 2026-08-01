@@ -64,7 +64,7 @@ public class InteractiveChatIntegration {
                             try { ref.keywordPattern = Pattern.compile(s); } catch (Throwable ignored) {}
                         }
                     } else if (mName.equals("getreplacetext") || mName.equals("replacetext") || mName.equals("getreplace")) {
-                        ref.replaceText = String.valueOf(val);
+                        ref.replaceText = extractStringFromObject(val);
                     } else if (mName.contains("hover")) {
                         extractHover(val, ref);
                     } else if (mName.contains("click")) {
@@ -75,13 +75,53 @@ public class InteractiveChatIntegration {
                 Main.getInstance().getLogger().log(Level.FINE, "[InteractiveChat-Debug] 讀取 ICPlaceholder 物件失敗:", t);
             }
 
-            return (ref.keywordPattern != null || ref.replaceText != null) ? ref : null;
+            return (ref.keywordPattern != null || (ref.replaceText != null && !ref.replaceText.isEmpty())) ? ref : null;
+        }
+
+        private static String extractStringFromObject(Object obj) {
+            if (obj == null) return null;
+            if (obj instanceof String s) return s;
+
+            try {
+                Class<?> c = obj.getClass();
+                for (Method m : c.getMethods()) {
+                    if (m.getParameterCount() == 0 && m.getReturnType() == String.class) {
+                        String name = m.getName().toLowerCase();
+                        if (name.contains("text") || name.contains("string") || name.contains("value") || name.contains("raw") || name.contains("get")) {
+                            m.setAccessible(true);
+                            String res = (String) m.invoke(obj);
+                            if (res != null && !res.isEmpty() && !res.contains("@")) {
+                                return res;
+                            }
+                        }
+                    }
+                }
+
+                for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                    if (f.getType() == String.class) {
+                        f.setAccessible(true);
+                        String res = (String) f.get(obj);
+                        if (res != null && !res.isEmpty() && !res.contains("@")) {
+                            return res;
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+
+            String str = obj.toString();
+            if (str.contains("@")) {
+                return null;
+            }
+            return str;
         }
 
         private static void extractHover(Object hoverObj, ICPlaceholderReflect ref) {
             if (hoverObj instanceof List<?> list) {
                 ref.hoverLines = new ArrayList<>();
-                for (Object item : list) ref.hoverLines.add(String.valueOf(item));
+                for (Object item : list) {
+                    String extracted = extractStringFromObject(item);
+                    if (extracted != null) ref.hoverLines.add(extracted);
+                }
             } else if (hoverObj instanceof String s) {
                 ref.hoverLines = List.of(s);
             } else {
@@ -94,9 +134,13 @@ public class InteractiveChatIntegration {
                     Object tVal = getTextM.invoke(hoverObj);
                     if (tVal instanceof List<?> list) {
                         ref.hoverLines = new ArrayList<>();
-                        for (Object item : list) ref.hoverLines.add(String.valueOf(item));
-                    } else if (tVal instanceof String s) {
-                        ref.hoverLines = List.of(s);
+                        for (Object item : list) {
+                            String extracted = extractStringFromObject(item);
+                            if (extracted != null) ref.hoverLines.add(extracted);
+                        }
+                    } else if (tVal != null) {
+                        String extracted = extractStringFromObject(tVal);
+                        if (extracted != null) ref.hoverLines = List.of(extracted);
                     }
                 } catch (Throwable ignored) {}
             }
