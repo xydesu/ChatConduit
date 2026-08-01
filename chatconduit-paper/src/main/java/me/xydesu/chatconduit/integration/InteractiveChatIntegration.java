@@ -30,7 +30,7 @@ public class InteractiveChatIntegration {
     private static Method bungeeMethod = null;
     private static Object apiInstance = null;
 
-    private static final Pattern ITEM_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]");
+    private static final Pattern ITEM_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]|§f\\[[^\\]]+\\]§r");
     private static final Pattern OFFHAND_PATTERN = Pattern.compile("(?i)\\[(offhand|off)\\]");
 
     /**
@@ -268,6 +268,7 @@ public class InteractiveChatIntegration {
 
                 if (icGsonClass != null) {
                     Method gsonM = icGsonClass.getMethod("gson");
+                    gsonM.setAccessible(true);
                     Object gsonInst = gsonM.invoke(null);
                     Method serializeM = null;
                     for (Method m : gsonInst.getClass().getMethods()) {
@@ -277,6 +278,7 @@ public class InteractiveChatIntegration {
                         }
                     }
                     if (serializeM != null) {
+                        serializeM.setAccessible(true);
                         String json = (String) serializeM.invoke(gsonInst, rawObj);
                         Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功跨 ClassLoader 轉檔 Relocated Component JSON: " + json);
                         return net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(json);
