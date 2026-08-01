@@ -57,8 +57,7 @@ public class WebhookManager {
         String avatarUrl = avatarUrlFmt.replace("%player%", player.getName())
                 .replace("%uuid%", player.getUniqueId().toString());
 
-        // 清理 InteractiveChat 插件產生的內部未解析標籤 <chat=UUID:[item]:> 轉為乾淨的 [item]
-        String cleanMsg = InteractiveChatIntegration.cleanOrFormatPlaceholders(message);
+        String cleanMsg = message;
 
         // 轉義 JSON 特殊字元
         String jsonPayload = String.format(
@@ -160,11 +159,8 @@ public class WebhookManager {
         }
     }
 
-    /**
-     * 清理 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為乾淨的 [item])
-     */
     public static String cleanInteractiveChatPlaceholders(String text) {
-        return me.xydesu.chatconduit.util.ChatUtils.cleanInteractiveChatPlaceholders(text);
+        return text != null ? text : "";
     }
 
     private static String escapeJson(String text) {

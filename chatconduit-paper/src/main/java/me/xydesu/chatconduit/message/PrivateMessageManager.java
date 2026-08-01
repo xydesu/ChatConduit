@@ -111,11 +111,10 @@ public class PrivateMessageManager {
 
                 String messageJson = null;
                 Component icComp = null;
-                if (me.xydesu.chatconduit.integration.InteractiveChatIntegration.isAvailable()) {
-                    icComp = me.xydesu.chatconduit.integration.InteractiveChatIntegration.processMessageToComponent(sender, rawMessage);
-                }
-                if (icComp == null && sender.hasPermission("chatconduit.chat.color")) {
+                if (sender.hasPermission("chatconduit.chat.color")) {
                     icComp = ChatUtils.parseLegacy(rawMessage);
+                } else {
+                    icComp = Component.text(rawMessage);
                 }
                 if (icComp != null) {
                     try {
@@ -182,13 +181,11 @@ public class PrivateMessageManager {
             Component customComp = null;
             if (packet.getMessageJson() != null && !packet.getMessageJson().isEmpty()) {
                 try {
-                    Component deserialized = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
-                    customComp = ChatUtils.cleanComponentInteractiveChatTags(deserialized);
+                    customComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
                 } catch (Exception ignored) {}
             }
             if (customComp == null) {
-                String cleanedMsg = ChatUtils.cleanInteractiveChatPlaceholders(packet.getRawMessage());
-                customComp = ChatUtils.parseLegacy(cleanedMsg);
+                customComp = ChatUtils.parseLegacy(packet.getRawMessage());
             }
             renderAndSendReceiverMessage(localTarget, senderName, senderServerId, packet.getRawMessage(), customComp);
 
@@ -232,8 +229,7 @@ public class PrivateMessageManager {
 
         Component messageComponent = customMessageComponent;
         if (messageComponent == null) {
-            String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(rawMessage);
-            messageComponent = ChatUtils.parseLegacy(cleanedMessage);
+            messageComponent = ChatUtils.parseLegacy(rawMessage);
         }
         final Component finalMsgComp = messageComponent;
 

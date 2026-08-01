@@ -193,26 +193,11 @@ public class ChatListener implements Listener {
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/channel " + sysChannel.key()));
         }
 
-        // 優先透過 InteractiveChat API 處理玩家發言包含的 [item] / [inv] 動態組件
         Component playerMessage = null;
-        if (me.xydesu.chatconduit.integration.InteractiveChatIntegration.isAvailable()) {
-            playerMessage = me.xydesu.chatconduit.integration.InteractiveChatIntegration.processMessageToComponent(player, finalMessage);
-        }
-
-        if (playerMessage == null) {
-            playerMessage = event.message();
-        }
-
-        if (playerMessage == null || (playerMessage.children().isEmpty() && playerMessage.hoverEvent() == null && playerMessage.clickEvent() == null)) {
-            if (player.hasPermission("chatconduit.chat.color")) {
-                playerMessage = ChatUtils.parseLegacy(finalMessage);
-            } else {
-                playerMessage = Component.text(finalMessage);
-            }
-        }
-
-        if (playerMessage != null) {
-            playerMessage = ChatUtils.cleanComponentInteractiveChatTags(playerMessage);
+        if (player.hasPermission("chatconduit.chat.color")) {
+            playerMessage = ChatUtils.parseLegacy(finalMessage);
+        } else {
+            playerMessage = Component.text(finalMessage);
         }
 
         String rawChatFormat = Main.getInstance().getConfig().getString(

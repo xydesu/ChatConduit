@@ -161,21 +161,16 @@ public class RedisMessageListener extends JedisPubSub {
             channelPrefixComponent = ChatUtils.parseNoItalic(null, "<gray>[" + channelKeyOrName + "]");
         }
 
-        // 訊息文字元件 (優先解析跨服組件 messageJson 以保留 Hover/Click 事物，並對內部標籤進行淨化防錯)
         Component playerMessageComponent = null;
         if (packet.getMessageJson() != null && !packet.getMessageJson().isEmpty()) {
             try {
-                Component deserializedComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
-                playerMessageComponent = ChatUtils.cleanComponentInteractiveChatTags(deserializedComp);
-                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功反序列化跨服 Component JSON 並完成標籤淨化 (保留 ClickEvent 與 HoverEvent)。");
+                playerMessageComponent = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
             } catch (Exception e) {
-                Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 反序列化來自跨服的 messageJson 失敗，退回預設文字解析:", e);
+                Main.getInstance().getLogger().log(Level.WARNING, "反序列化來自跨服的 messageJson 失敗，退回預設文字解析:", e);
             }
         }
         if (playerMessageComponent == null) {
-            String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(rawMessage);
-            playerMessageComponent = ChatUtils.parseLegacy(cleanedMessage);
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已將跨服純文字訊息淨化為安全標籤: " + cleanedMessage);
+            playerMessageComponent = ChatUtils.parseLegacy(rawMessage);
         }
 
         String rawChatFormat = packet.getChatFormat();
