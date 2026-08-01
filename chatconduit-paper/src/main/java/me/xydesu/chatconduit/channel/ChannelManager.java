@@ -178,6 +178,8 @@ public class ChannelManager {
                 if (data.listeningChannels() != null) {
                     listening = data.listeningChannels();
                 }
+            }
+
             if (!player.isOnline()) return;
 
             playerSelectedChannel.putIfAbsent(uuid, channelKey);

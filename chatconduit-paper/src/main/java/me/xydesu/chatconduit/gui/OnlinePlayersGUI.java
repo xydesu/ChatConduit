@@ -1,25 +1,5 @@
 package me.xydesu.chatconduit.gui;
 
-import me.xydesu.chatconduit.channel.ChannelManager;
-import me.xydesu.chatconduit.channel.PlayerChannelManager;
-import me.xydesu.chatconduit.util.ChatUtils;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.SkullMeta;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-public class OnlinePlayersGUI {
-
 import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.channel.ChannelManager;
 import me.xydesu.chatconduit.channel.PlayerChannelManager;
@@ -162,5 +142,4 @@ public class OnlinePlayersGUI {
             });
         });
     }
-}
 }
