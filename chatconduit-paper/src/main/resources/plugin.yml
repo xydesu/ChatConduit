@@ -44,7 +44,19 @@ permissions:
     description: 允許建立自訂玩家群組頻道
     default: op
   chatconduit.chatcolor:
-    description: 允許使用 /chatcolor 選擇發言文字顏色
+    description: 允許使用 /chatcolor 選擇基礎發言文字顏色
+    default: op
+  chatconduit.chatcolor.gradient:
+    description: 允許解鎖與使用漸變限定聊天顏色 (Sunset, Cyberpunk, Ocean, Emerald)
+    default: op
+  chatconduit.chatcolor.vip:
+    description: 允許解鎖與使用 VIP 尊爵限定聊天顏色 (Sakura, Royal Gold)
+    default: op
+  chatconduit.chatcolor.rainbow:
+    description: 允許解鎖與使用七彩幻光彩虹聊天顏色 (Rainbow)
+    default: op
+  chatconduit.chatcolor.hex:
+    description: 允許使用自訂 RGB Hex 顏色碼 (#RRGGBB)
     default: op
   chatconduit.chat.color:
     description: 允許在聊天對話中使用 Legacy 顏色碼

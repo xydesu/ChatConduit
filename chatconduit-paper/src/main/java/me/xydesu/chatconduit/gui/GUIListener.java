@@ -60,17 +60,25 @@ public class GUIListener implements Listener {
     }
 
     private void handleChatColorClick(Player player, int slot) {
-        if (slot == 22) {
+        if (slot == 40) {
             me.xydesu.chatconduit.chatcolor.ChatColorManager.removeChatColor(player.getUniqueId());
-            player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已成功重置聊天顏色！"));
+            player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已成功重置聊天發言顏色！"));
             ChatColorGUI.openGUI(player);
             return;
         }
 
         for (ChatColorGUI.ColorOption opt : ChatColorGUI.COLOR_OPTIONS) {
             if (opt.slot() == slot) {
+                if (opt.requiredPermission() != null && !player.hasPermission(opt.requiredPermission())) {
+                    try {
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.8f);
+                    } catch (Exception ignored) {}
+                    player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<red>您需要權限 <yellow>" + opt.requiredPermission() + "<red> 才能解鎖此限定聊天顏色！"));
+                    return;
+                }
+
                 me.xydesu.chatconduit.chatcolor.ChatColorManager.setChatColor(player.getUniqueId(), opt.code());
-                player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已成功將聊天顏色設定為 " + opt.code() + opt.name() + "<green>！"));
+                player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已成功將發言聊天顏色設定為 " + opt.code() + opt.name() + "<green>！"));
                 ChatColorGUI.openGUI(player);
                 return;
             }

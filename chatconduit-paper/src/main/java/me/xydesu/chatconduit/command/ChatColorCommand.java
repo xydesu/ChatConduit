@@ -52,8 +52,26 @@ public class ChatColorCommand implements CommandExecutor, TabCompleter {
             colorCode = "&" + colorCode;
         }
 
+        String lower = colorCode.toLowerCase();
+        if (lower.startsWith("<gradient:")) {
+            if (!player.hasPermission("chatconduit.chatcolor.gradient") && !player.hasPermission("chatconduit.chatcolor.vip")) {
+                player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<red>您需要權限 <yellow>chatconduit.chatcolor.gradient<red> 才能使用漸變色！"));
+                return true;
+            }
+        } else if (lower.contains("<rainbow>") || lower.contains("rainbow")) {
+            if (!player.hasPermission("chatconduit.chatcolor.rainbow")) {
+                player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<red>您需要權限 <yellow>chatconduit.chatcolor.rainbow<red> 才能使用彩虹色！"));
+                return true;
+            }
+        } else if (lower.startsWith("#") || lower.startsWith("<#")) {
+            if (!player.hasPermission("chatconduit.chatcolor.hex")) {
+                player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<red>您需要權限 <yellow>chatconduit.chatcolor.hex<red> 才能使用自訂 Hex 色碼！"));
+                return true;
+            }
+        }
+
         ChatColorManager.setChatColor(player.getUniqueId(), colorCode);
-        player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已將您的發言聊天顏色設定為 " + colorCode + colorCode + "預設對話展示<green>！"));
+        player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已將您的發言聊天顏色設定為 " + colorCode + "預設對話展示<green>！"));
         return true;
     }
 
@@ -61,6 +79,16 @@ public class ChatColorCommand implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
             List<String> list = new ArrayList<>(List.of("reset", "clear", "&a", "&c", "&e", "&b", "&d", "&6", "&7", "&8", "&9", "&5", "&f", "&2", "&4"));
+            if (sender.hasPermission("chatconduit.chatcolor.gradient")) {
+                list.add("<gradient:#ff7e5f:#feb47b>");
+                list.add("<gradient:#8a2387:#e94057:#f27121>");
+            }
+            if (sender.hasPermission("chatconduit.chatcolor.rainbow")) {
+                list.add("<rainbow>");
+            }
+            if (sender.hasPermission("chatconduit.chatcolor.hex")) {
+                list.add("#FF5555");
+            }
             String input = args[0].toLowerCase();
             return list.stream().filter(s -> s.toLowerCase().startsWith(input)).toList();
         }
