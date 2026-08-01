@@ -67,16 +67,16 @@
 
 ### 1.4 資料庫存儲 (Database Storage)
 
-* [ ] **資料表架構設計 (Schema Design)**
-    * [ ] `friends` 表：紀錄好友關係（`player_uuid`, `friend_uuid`, `created_at`）
-    * [ ] `friend_requests` 表：紀錄未處理申請（`sender_uuid`, `receiver_uuid`, `timestamp`）
-    * [ ] `friend_blocks` 表：紀錄黑名單（`player_uuid`, `blocked_uuid`）
-    * [ ] `player_settings` 表：紀錄玩家個人偏好與限制
+* [x] **資料表架構設計 (Schema Design)**
+    * [x] `friends` 表：紀錄好友關係（`player_uuid`, `friend_uuid`, `created_at`）
+    * [x] `friend_requests` 表：紀錄未處理申請（`sender_uuid`, `receiver_uuid`, `timestamp`）
+    * [x] `friend_blocks` 表：紀錄黑名單（`player_uuid`, `blocked_uuid`）
+    * [x] `player_settings` 表：紀錄玩家個人偏好與限制
 
 
-* [ ] **資料庫選型支援**
-    * [ ] SQLite（單機簡易部署）
-    * [ ] MySQL / MariaDB（跨服多機連接）
+* [x] **資料庫選型支援**
+    * [x] SQLite（單機簡易部署）
+    * [x] MySQL / MariaDB（跨服多機連接）
 
 
 
@@ -147,13 +147,13 @@
 
 ### 1.9 異步資料庫 I/O (Asynchronous DB I/O)
 
-* [ ] **線程池管理**
-    * [ ] 使用 Bukkit Scheduler 異步任務或 CompletableFuture 處理所有 SQL 操作
-    * [ ] 避免在主執行緒（Server Thread）執行任何 Blocking DB 操作
+* [x] **線程池管理**
+    * [x] 使用 Bukkit Scheduler 異步任務或 CompletableFuture 處理所有 SQL 操作
+    * [x] 避免在主執行緒（Server Thread）執行任何 Blocking DB 操作
 
 
-* [ ] **連線池優化 (HikariCP)**
-    * [ ] 整合 HikariCP 管理 MySQL 資料庫連線，提高查詢效能與併發穩定度
+* [x] **連線池優化 (HikariCP)**
+    * [x] 整合 HikariCP 管理 MySQL 資料庫連線，提高查詢效能與併發穩定度
 
 
 
@@ -186,11 +186,39 @@
 ---
 
 ## 6. 建議後續開發順序 (Suggested Next Tasks)
-* [ ] **第一階段：好友系統基礎資料層 (Friend Database & Core Model)**
-    * [ ] 設計與實作 `FriendDAO`, `FriendRequestDAO`, `FriendBlockDAO` (支援 SQLite 與 MySQL)
-    * [ ] 實作 `FriendManager` 處理記憶體快取與異步 SQL 讀寫
+* [x] **第一階段：好友系統基礎資料層 (Friend Database & Core Model)**
+    * [x] 設計與實作 `FriendDAO`, `FriendRequestDAO`, `FriendBlockDAO`, `PlayerSettingsDAO` (支援 SQLite 與 MySQL)
+    * [x] 實作 `FriendManager` 處理記憶體快取與異步 SQL 讀寫
 * [ ] **第二階段：好友指令與基礎驗證 (Friend Commands & Validation)**
     * [ ] 實作 `/friend add`, `/friend accept`, `/friend deny`, `/friend remove`, `/friend list`
     * [ ] 整合冷卻時間 (CD) 防止刷申請
 * [ ] **第三階段：好友箱子 GUI 控制台 (Friend Chest GUI Console)**
     * [ ] 實作 `FriendGUIListener`, `FriendMainGUI`, `FriendListGUI`, `FriendRequestsGUI`
+
+
+
+## 7. WIKI Page (Mark As Not Important, agent, you can edit here)
+
+### ChatConduit 官方維基文件架構 (Wiki Roadmap & Documentation Outline)
+
+* [ ] **概述與快速入門 (Overview & Quick Start)**
+    * [ ] 插件簡介與核心特色（零指令聊天頻道、箱子 GUI 控制台、跨服同步）
+    * [ ] 系統需求（Paper 1.20+, Java 25, HikariCP, Jedis 5.x）
+    * [ ] 安裝步驟與權限點（LuckPerms 節點說明）
+
+* [ ] **頻道與聊天系統 (Channels & Private Messaging)**
+    * [ ] 系統頻道配置 (`config.yml` 頻道前綴與格式)
+    * [ ] 玩家自建頻道與密碼機制 (`/playerchannel`)
+    * [ ] 跨服私訊與回覆 (`/msg`, `/reply`)
+
+* [ ] **好友與社交系統 (Friend & Social System)**
+    * [ ] 好友關係管理與指令清單 (`/friend`)
+    * [ ] 好友箱子 GUI 互動說明
+    * [ ] 跨服好友狀態通知與傳送機制
+    * [ ] 屏蔽與黑名單保護機制
+
+* [ ] **第三方整合與跨服架構 (Integrations & Cross-Server Sync)**
+    * [ ] Redis Pub/Sub 廣播機制說明
+    * [ ] DiscordSRV 雙向連動與 Webhook 設置
+    * [ ] CMI AFK 掛機狀態自動偵測
+    * [ ] PlaceholderAPI 變數清單

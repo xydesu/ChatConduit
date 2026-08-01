@@ -102,6 +102,10 @@ public class DatabaseManager {
         String createMutesSql;
 
         String createPlayerColorsSql;
+        String createFriendsSql;
+        String createFriendRequestsSql;
+        String createFriendBlocksSql;
+        String createPlayerSettingsSql;
 
         if (isMySQL) {
             createPlayerDataSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_data ("
@@ -146,6 +150,35 @@ public class DatabaseManager {
                     + "uuid VARCHAR(36) PRIMARY KEY, "
                     + "color VARCHAR(64) NOT NULL"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+            createFriendsSql = "CREATE TABLE IF NOT EXISTS chatconduit_friends ("
+                    + "player_uuid VARCHAR(36) NOT NULL, "
+                    + "friend_uuid VARCHAR(36) NOT NULL, "
+                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                    + "PRIMARY KEY (player_uuid, friend_uuid)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+            createFriendRequestsSql = "CREATE TABLE IF NOT EXISTS chatconduit_friend_requests ("
+                    + "sender_uuid VARCHAR(36) NOT NULL, "
+                    + "receiver_uuid VARCHAR(36) NOT NULL, "
+                    + "created_at BIGINT NOT NULL, "
+                    + "PRIMARY KEY (sender_uuid, receiver_uuid)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+            createFriendBlocksSql = "CREATE TABLE IF NOT EXISTS chatconduit_friend_blocks ("
+                    + "player_uuid VARCHAR(36) NOT NULL, "
+                    + "blocked_uuid VARCHAR(36) NOT NULL, "
+                    + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+                    + "PRIMARY KEY (player_uuid, blocked_uuid)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+            createPlayerSettingsSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_settings ("
+                    + "uuid VARCHAR(36) PRIMARY KEY, "
+                    + "allow_friend_requests TINYINT(1) NOT NULL DEFAULT 1, "
+                    + "allow_teleport TINYINT(1) NOT NULL DEFAULT 1, "
+                    + "allow_private_messages TINYINT(1) NOT NULL DEFAULT 1, "
+                    + "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
         } else {
             createPlayerDataSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_data ("
                     + "uuid TEXT PRIMARY KEY, "
@@ -189,6 +222,35 @@ public class DatabaseManager {
                     + "uuid TEXT PRIMARY KEY, "
                     + "color TEXT NOT NULL"
                     + ");";
+
+            createFriendsSql = "CREATE TABLE IF NOT EXISTS chatconduit_friends ("
+                    + "player_uuid TEXT NOT NULL, "
+                    + "friend_uuid TEXT NOT NULL, "
+                    + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP, "
+                    + "PRIMARY KEY (player_uuid, friend_uuid)"
+                    + ");";
+
+            createFriendRequestsSql = "CREATE TABLE IF NOT EXISTS chatconduit_friend_requests ("
+                    + "sender_uuid TEXT NOT NULL, "
+                    + "receiver_uuid TEXT NOT NULL, "
+                    + "created_at INTEGER NOT NULL, "
+                    + "PRIMARY KEY (sender_uuid, receiver_uuid)"
+                    + ");";
+
+            createFriendBlocksSql = "CREATE TABLE IF NOT EXISTS chatconduit_friend_blocks ("
+                    + "player_uuid TEXT NOT NULL, "
+                    + "blocked_uuid TEXT NOT NULL, "
+                    + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP, "
+                    + "PRIMARY KEY (player_uuid, blocked_uuid)"
+                    + ");";
+
+            createPlayerSettingsSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_settings ("
+                    + "uuid TEXT PRIMARY KEY, "
+                    + "allow_friend_requests INTEGER NOT NULL DEFAULT 1, "
+                    + "allow_teleport INTEGER NOT NULL DEFAULT 1, "
+                    + "allow_private_messages INTEGER NOT NULL DEFAULT 1, "
+                    + "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+                    + ");";
         }
 
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
@@ -197,6 +259,10 @@ public class DatabaseManager {
             stmt.execute(createChannelMembersSql);
             stmt.execute(createMutesSql);
             stmt.execute(createPlayerColorsSql);
+            stmt.execute(createFriendsSql);
+            stmt.execute(createFriendRequestsSql);
+            stmt.execute(createFriendBlocksSql);
+            stmt.execute(createPlayerSettingsSql);
 
             // 自動遷移舊版資料表結構（加欄位時忽略已存在錯誤）
             try {

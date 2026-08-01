@@ -35,6 +35,7 @@ public final class Main extends JavaPlugin {
         me.xydesu.chatconduit.chatcolor.ChatColorManager.init();
 
         // 載入頻道與玩家資料
+        new me.xydesu.chatconduit.friend.FriendManager();
         ChannelManager.loadChannels();
         ChannelManager.loadPlayerData(); // 載入玩家當前發言頻道紀錄
         PlayerChannelManager.load();     // 載入玩家自建群組頻道
