@@ -20,18 +20,18 @@
 
 ### 1.2 指令系統 (Command)
 
-* [ ] **指令架構**
-    * [ ] `/friend help` - 顯示指令說明清單
-    * [ ] `/friend add <玩家名>` - 發送好友申請
-    * [ ] `/friend accept <玩家名>` - 接受好友申請
-    * [ ] `/friend deny <玩家名>` - 拒絕好友申請
-    * [ ] `/friend remove <玩家名>` - 刪除好友
-    * [ ] `/friend list [頁碼]` - 顯示好友清單（文字版）
-    * [ ] `/friend gui` - 打開箱子 GUI 主介面
-    * [ ] `/friend block <玩家名>` - 加入黑名單
-    * [ ] `/friend unblock <玩家名>` - 移出黑名單
-* [ ] **指令補全與Tab優化**
-    * [ ] 整合 TabCompleter，自動補全在線玩家與好友名單
+* [x] **指令架構**
+    * [x] `/friend help` - 顯示指令說明清單
+    * [x] `/friend add <玩家名>` - 發送好友申請
+    * [x] `/friend accept <玩家名>` - 接受好友申請
+    * [x] `/friend deny <玩家名>` - 拒絕好友申請
+    * [x] `/friend remove <玩家名>` - 刪除好友
+    * [x] `/friend list [頁碼]` - 顯示好友清單（文字版）
+    * [x] `/friend gui` - 打開箱子 GUI 主介面
+    * [x] `/friend block <玩家名>` - 加入黑名單
+    * [x] `/friend unblock <玩家名>` - 移出黑名單
+* [x] **指令補全與Tab優化**
+    * [x] 整合 TabCompleter，自動補全在線玩家與好友名單
 
 
 
@@ -189,9 +189,9 @@
 * [x] **第一階段：好友系統基礎資料層 (Friend Database & Core Model)**
     * [x] 設計與實作 `FriendDAO`, `FriendRequestDAO`, `FriendBlockDAO`, `PlayerSettingsDAO` (支援 SQLite 與 MySQL)
     * [x] 實作 `FriendManager` 處理記憶體快取與異步 SQL 讀寫
-* [ ] **第二階段：好友指令與基礎驗證 (Friend Commands & Validation)**
-    * [ ] 實作 `/friend add`, `/friend accept`, `/friend deny`, `/friend remove`, `/friend list`
-    * [ ] 整合冷卻時間 (CD) 防止刷申請
+* [x] **第二階段：好友指令與基礎驗證 (Friend Commands & Validation)**
+    * [x] 實作 `/friend add`, `/friend accept`, `/friend deny`, `/friend remove`, `/friend list`
+    * [x] 整合冷卻時間 (CD) 防止刷申請
 * [ ] **第三階段：好友箱子 GUI 控制台 (Friend Chest GUI Console)**
     * [ ] 實作 `FriendGUIListener`, `FriendMainGUI`, `FriendListGUI`, `FriendRequestsGUI`
 
@@ -222,3 +222,8 @@
     * [ ] DiscordSRV 雙向連動與 Webhook 設置
     * [ ] CMI AFK 掛機狀態自動偵測
     * [ ] PlaceholderAPI 變數清單
+
+
+## 8. Cleanup unused code/folder/files, and make structure more good
+* [x] **清理廢棄模組**：移除 `chatconduit-velocity` 平台殘留目錄（因已將 Paper 與 Common 模組合併）。
+* [x] **專案檔結構優化**：清理與整合 Maven 父元件與模組連動，確保 Java 25 / HikariCP 編譯正確。

@@ -35,8 +35,15 @@ commands:
     description: 開啟玩家發言文字顏色選擇 GUI 選單或自訂發言顏色
     aliases: [ccolor, color]
     permission: chatconduit.chatcolor
+  friend:
+    description: 開啟好友系統主選單或執行好友社交指令
+    aliases: [f, friends]
+    permission: chatconduit.friend
 
 permissions:
+  chatconduit.friend:
+    description: 允許使用好友系統與相關社交指令
+    default: true
   chatconduit.use:
     description: 允許使用基礎聊天與頻道選單功能
     default: op

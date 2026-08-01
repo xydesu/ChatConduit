@@ -95,6 +95,12 @@ public final class Main extends JavaPlugin {
             getCommand("chatcolor").setTabCompleter(chatColorCmd);
         }
 
+        me.xydesu.chatconduit.command.FriendCommand friendCmd = new me.xydesu.chatconduit.command.FriendCommand();
+        if (getCommand("friend") != null) {
+            getCommand("friend").setExecutor(friendCmd);
+            getCommand("friend").setTabCompleter(friendCmd);
+        }
+
         // 初始化 DiscordSRV 溝通模組
         me.xydesu.chatconduit.integration.DiscordSRVHook.init();
 
