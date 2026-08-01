@@ -208,12 +208,14 @@ public class InteractiveChatIntegration {
 
             Component mainItemComp = null;
             if (mainHand != null && mainHand.getType() != Material.AIR) {
-                mainItemComp = (Component) createItemDisplayComponentM.invoke(null, player, mainHand);
+                Object rawRes = createItemDisplayComponentM.invoke(null, player, mainHand);
+                mainItemComp = convertRelocatedAdventureComponent(rawRes);
             }
 
             Component offItemComp = null;
             if (offHand != null && offHand.getType() != Material.AIR) {
-                offItemComp = (Component) createItemDisplayComponentM.invoke(null, player, offHand);
+                Object rawRes = createItemDisplayComponentM.invoke(null, player, offHand);
+                offItemComp = convertRelocatedAdventureComponent(rawRes);
             }
 
             String current = message;
@@ -240,28 +242,78 @@ public class InteractiveChatIntegration {
         }
     }
 
+    private static Component convertRelocatedAdventureComponent(Object rawObj) {
+        if (rawObj == null) return null;
+        if (rawObj instanceof Component paperComp) {
+            return paperComp;
+        }
+
+        String className = rawObj.getClass().getName();
+        // 處理被 InteractiveChat 內部 Shaded/Relocated 的 Adventure Component
+        if (className.contains("adventure") || className.contains("Component")) {
+            try {
+                Class<?> icGsonClass = null;
+                try {
+                    icGsonClass = Class.forName("com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.gson.GsonComponentSerializer");
+                } catch (ClassNotFoundException e) {
+                    // 若找不到預設包名，動態尋找物件介面包名組合
+                    for (Class<?> c : rawObj.getClass().getInterfaces()) {
+                        if (c.getName().contains("Component")) {
+                            String pkg = c.getPackageName();
+                            icGsonClass = Class.forName(pkg + ".serializer.gson.GsonComponentSerializer");
+                            break;
+                        }
+                    }
+                }
+
+                if (icGsonClass != null) {
+                    Method gsonM = icGsonClass.getMethod("gson");
+                    Object gsonInst = gsonM.invoke(null);
+                    Method serializeM = null;
+                    for (Method m : gsonInst.getClass().getMethods()) {
+                        if (m.getName().equals("serialize") && m.getParameterCount() == 1) {
+                            serializeM = m;
+                            break;
+                        }
+                    }
+                    if (serializeM != null) {
+                        String json = (String) serializeM.invoke(gsonInst, rawObj);
+                        Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功跨 ClassLoader 轉檔 Relocated Component JSON: " + json);
+                        return net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(json);
+                    }
+                }
+            } catch (Throwable t) {
+                Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 跨 ClassLoader 轉檔 Relocated Component 失敗:", t);
+            }
+        }
+
+        if (rawObj instanceof net.md_5.bungee.api.chat.BaseComponent[] bungeeComponents) {
+            String json = net.md_5.bungee.chat.ComponentSerializer.toString(bungeeComponents);
+            return net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(json);
+        }
+
+        if (rawObj instanceof String stringResult) {
+            return ChatUtils.parseLegacy(stringResult);
+        }
+
+        return null;
+    }
+
     private static Component handleResult(Object result) {
         if (result == null) {
             Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 方法回傳 null");
             return null;
         }
-        if (result instanceof Component componentResult) {
-            String plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(componentResult);
-            String json = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(componentResult);
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Adventure Component) PlainText=[" + plain + "] GsonJSON=[" + json + "]");
-            return componentResult;
-        } else if (result instanceof net.md_5.bungee.api.chat.BaseComponent[] bungeeComponents) {
-            String json = net.md_5.bungee.chat.ComponentSerializer.toString(bungeeComponents);
-            Component adventureComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(json);
-            String plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(adventureComp);
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Bungee BaseComponent[]) PlainText=[" + plain + "] GsonJSON=[" + json + "]");
-            return adventureComp;
-        } else if (result instanceof String stringResult) {
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (String): [" + stringResult + "]");
-            return ChatUtils.parseLegacy(stringResult);
-        } else {
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 回傳未知型態: " + result.getClass().getName());
+
+        Component comp = convertRelocatedAdventureComponent(result);
+        if (comp != null) {
+            String plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(comp);
+            String json = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(comp);
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析與轉檔成功 PlainText=[" + plain + "] GsonJSON=[" + json + "]");
+            return comp;
         }
+
+        Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 回傳未知型態: " + result.getClass().getName());
         return null;
     }
 
