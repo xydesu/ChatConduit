@@ -74,16 +74,14 @@
 
 > *(Note: Agent 已在此為您規劃與補充具體優化方向)*
 
-* [x] **跨服好友傳送與請求對接 (`/friend tp <玩家>`)**
-    * [x] 經由 Redis 發送跨服傳送請求 `FriendTpPacket`
-    * [x] 支援目標玩家畫面可點擊 `[接受傳送]` / `[拒絕傳送]` Component 按鈕
-    (Note: Actually We Did't need this, because we have /tpa can use, so can we remove this?)
 * [x] **PlaceholderAPI 好友動態變數 (`ChatConduitPAPIExpansion`)**
     * [x] `%chatconduit_friend_count%` (總好友數)
     * [x] `%chatconduit_online_friends%` (線上好友數，含跨服)
     * [x] `%chatconduit_pending_requests%` (待處理申請數)
     * [x] `%chatconduit_channel%` (當前說話頻道)
     * [x] `%chatconduit_muted%` (是否處於禁言狀態)
+* [ ] **好友私密群組語音/聊天房**
+    * [ ] 支援一鍵建立好友專屬通道，跨服聊天下自動過濾非好友成員
 
 ---
 
