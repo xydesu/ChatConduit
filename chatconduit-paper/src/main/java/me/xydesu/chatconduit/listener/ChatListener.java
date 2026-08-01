@@ -211,6 +211,11 @@ public class ChatListener implements Listener {
             }
         }
 
+        if (playerMessage != null) {
+            playerMessage = ChatUtils.cleanComponentInteractiveChatTags(playerMessage);
+            playerMessage = ChatUtils.stripExpiredClickEvents(playerMessage);
+        }
+
         String rawChatFormat = Main.getInstance().getConfig().getString(
                 "chat-format",
                 "<white><channel_prefix> <dark_gray>[<gray>{server}<dark_gray>] <gray>[%luckperms_prefix%<gray>] <white><player>> <white><message>"

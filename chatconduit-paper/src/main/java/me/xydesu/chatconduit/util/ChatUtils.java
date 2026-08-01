@@ -29,11 +29,11 @@ public class ChatUtils {
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
     private static final Pattern PAPI_PATTERN = Pattern.compile("%([^%]+)%");
-    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:>, <chat=UUID:[item]>, <ic=UUID:[ping]:>, <interactivechat=UUID:item>)
-    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("(?i)<(?:chat|ic|interactivechat)=[^:>]+(?::(\\[[^\\]]+\\]|[^:>]+)?)?:?>");
+    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:>, <chat=UUID:[獄髓劍]>, <ic=UUID:[ping]>, <interactivechat=UUID:item>)
+    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("(?i)<(?:chat|ic|interactivechat)=[^:>]+(?::(\\[[^\\]]+\\]|[^:>]+))?:?>");
 
     /**
-     * 清理與轉化 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為不引發遠端 InteractiveChat 重複解析的安全 [item])
+     * 清理與轉化 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]> 轉為不引發遠端 InteractiveChat 重複解析的安全 [item])
      * 透過注入零寬空格 (\u200B)，可在遊戲畫面 100% 正常顯示 [item]，並防止遠端伺服器誤判噴出紅字 Parse error
      *
      * @param text 待清理的文字
@@ -68,6 +68,36 @@ public class ChatUtils {
                     return Component.text(safeTag);
                 })
         );
+    }
+
+    /**
+     * 遞迴移除 Component 樹中指向上次過期的 /interactivechat viewitem 指令 (避免玩家點擊時噴出 "This inventory view has expired!")
+     * 同時 100% 保留 HoverEvent (物品名稱、Lore、附魔、耐久度等全套懸浮圖鑑)
+     *
+     * @param component 輸入 Component
+     * @return 已移除過期點擊指令的 Component
+     */
+    public static Component stripExpiredClickEvents(Component component) {
+        if (component == null) return Component.empty();
+
+        Component result = component;
+        if (result.clickEvent() != null) {
+            String clickStr = String.valueOf(result.clickEvent()).toLowerCase();
+            if (clickStr.contains("interactivechat") || clickStr.contains("viewitem")) {
+                result = result.clickEvent(null);
+            }
+        }
+
+        List<Component> children = result.children();
+        if (!children.isEmpty()) {
+            List<Component> newChildren = new ArrayList<>(children.size());
+            for (Component child : children) {
+                newChildren.add(stripExpiredClickEvents(child));
+            }
+            result = result.children(newChildren);
+        }
+
+        return result;
     }
 
     private static String formatSafePlaceholder(String tag) {
