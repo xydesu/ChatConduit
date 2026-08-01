@@ -13,6 +13,7 @@ import org.bukkit.plugin.Plugin;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -30,8 +31,74 @@ public class InteractiveChatIntegration {
     private static Method bungeeMethod = null;
     private static Object apiInstance = null;
 
-    private static final Pattern ITEM_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^:>]+)?:?>");
-    private static final Pattern OFFHAND_PATTERN = Pattern.compile("(?i)\\[(offhand|off)\\]");
+    private static final Pattern ITEM_SPECIFIC_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[(?:item|i|hand)\\]|[^\\]:]*item[^\\]:]*)?:?>");
+    private static final Pattern OFFHAND_SPECIFIC_PATTERN = Pattern.compile("(?i)\\[(offhand|off)\\]|<(?:chat|ic|interactivechat)=[^:]+:?(\\[(?:offhand|off)\\])?:?>");
+
+    private static Component processItemPlaceholders(Player player, String message) {
+        try {
+            ItemStack mainHand = player.getInventory().getItemInMainHand();
+            ItemStack offHand = player.getInventory().getItemInOffHand();
+
+            Component mainItemComp = null;
+            if (mainHand != null && mainHand.getType() != Material.AIR && createItemDisplayComponentM != null) {
+                try {
+                    Object rawRes = createItemDisplayComponentM.invoke(null, player, mainHand);
+                    mainItemComp = convertRelocatedAdventureComponent(rawRes);
+                } catch (Throwable t) {
+                    Main.getInstance().getLogger().log(Level.FINE, "[InteractiveChat-Debug] 呼叫 createItemDisplayComponent 失敗:", t);
+                }
+            }
+
+            Component offItemComp = null;
+            if (offHand != null && offHand.getType() != Material.AIR && createItemDisplayComponentM != null) {
+                try {
+                    Object rawRes = createItemDisplayComponentM.invoke(null, player, offHand);
+                    offItemComp = convertRelocatedAdventureComponent(rawRes);
+                } catch (Throwable t) {
+                    Main.getInstance().getLogger().log(Level.FINE, "[InteractiveChat-Debug] 呼叫 createItemDisplayComponent 失敗:", t);
+                }
+            }
+
+            String current = message;
+            Component builder = Component.empty();
+
+            // 1. 處理主手物品 [item] 標籤
+            Matcher itemMatcher = ITEM_SPECIFIC_PATTERN.matcher(current);
+            int lastEnd = 0;
+            boolean foundAny = false;
+            while (itemMatcher.find()) {
+                foundAny = true;
+                String lead = current.substring(lastEnd, itemMatcher.start());
+                if (!lead.isEmpty()) {
+                    builder = builder.append(ChatUtils.parseLegacy(ChatUtils.cleanInteractiveChatPlaceholders(lead)));
+                }
+
+                if (mainItemComp != null) {
+                    builder = builder.append(mainItemComp);
+                } else {
+                    // 空手 (AIR) 或無展示 Component 時，安全降級為乾淨文字 [item]，絕不出錯！
+                    builder = builder.append(Component.text("[\u200Bitem]"));
+                }
+                lastEnd = itemMatcher.end();
+            }
+
+            if (foundAny) {
+                String tail = current.substring(lastEnd);
+                if (!tail.isEmpty()) {
+                    builder = builder.append(ChatUtils.parseLegacy(ChatUtils.cleanInteractiveChatPlaceholders(tail)));
+                }
+                return builder;
+            }
+
+            // 2. 若不是 [item]，但包含 <chat=...> 或 [inv] / [ping] 等其他標籤：
+            // 將所有 <chat=UUID:[inv]> 等淨化為安全 [inv], [ping], [ender]，保留各自獨立標籤！
+            String cleanedAll = ChatUtils.cleanInteractiveChatPlaceholders(message);
+            return ChatUtils.parseLegacy(cleanedAll);
+        } catch (Throwable t) {
+            Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 解析標籤 Component 時例外:", t);
+            return ChatUtils.parseLegacy(ChatUtils.cleanInteractiveChatPlaceholders(message));
+        }
+    }
 
     /**
      * 檢查伺服器是否已安裝並啟用 InteractiveChat 插件
@@ -143,8 +210,8 @@ public class InteractiveChatIntegration {
 
             // 1. 優先嘗試 InteractiveChatAPI.createItemDisplayComponent 處理 [item] / [offhand] 標籤
             if (createItemDisplayComponentM != null) {
-                boolean hasItemTag = ITEM_PATTERN.matcher(message).find();
-                boolean hasOffhandTag = OFFHAND_PATTERN.matcher(message).find();
+                boolean hasItemTag = ITEM_SPECIFIC_PATTERN.matcher(message).find();
+                boolean hasOffhandTag = OFFHAND_SPECIFIC_PATTERN.matcher(message).find();
 
                 if (hasItemTag || hasOffhandTag) {
                     Main.getInstance().getLogger().info("[InteractiveChat-Debug] 偵測到物品標籤，準備呼叫 InteractiveChatAPI.createItemDisplayComponent 生成展示 Component...");
@@ -199,48 +266,6 @@ public class InteractiveChatIntegration {
         }
 
         return null;
-    }
-
-    private static Component processItemPlaceholders(Player player, String message) {
-        try {
-            ItemStack mainHand = player.getInventory().getItemInMainHand();
-            ItemStack offHand = player.getInventory().getItemInOffHand();
-
-            Component mainItemComp = null;
-            if (mainHand != null && mainHand.getType() != Material.AIR) {
-                Object rawRes = createItemDisplayComponentM.invoke(null, player, mainHand);
-                mainItemComp = convertRelocatedAdventureComponent(rawRes);
-            }
-
-            Component offItemComp = null;
-            if (offHand != null && offHand.getType() != Material.AIR) {
-                Object rawRes = createItemDisplayComponentM.invoke(null, player, offHand);
-                offItemComp = convertRelocatedAdventureComponent(rawRes);
-            }
-
-            String current = message;
-            Component builder = Component.empty();
-
-            String[] parts = ITEM_PATTERN.split(current, -1);
-            for (int i = 0; i < parts.length; i++) {
-                if (!parts[i].isEmpty()) {
-                    String cleanedPart = ChatUtils.cleanInteractiveChatPlaceholders(parts[i]);
-                    builder = builder.append(ChatUtils.parseLegacy(cleanedPart));
-                }
-                if (i < parts.length - 1) {
-                    if (mainItemComp != null) {
-                        builder = builder.append(mainItemComp);
-                    } else {
-                        builder = builder.append(Component.text("[\u200Bitem]"));
-                    }
-                }
-            }
-
-            return builder;
-        } catch (Throwable t) {
-            Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 解析 [item] 標籤 Component 時失敗:", t);
-            return null;
-        }
     }
 
     private static Component convertRelocatedAdventureComponent(Object rawObj) {

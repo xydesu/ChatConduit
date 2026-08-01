@@ -213,7 +213,6 @@ public class ChatListener implements Listener {
 
         if (playerMessage != null) {
             playerMessage = ChatUtils.cleanComponentInteractiveChatTags(playerMessage);
-            playerMessage = ChatUtils.stripExpiredClickEvents(playerMessage);
         }
 
         String rawChatFormat = Main.getInstance().getConfig().getString(
