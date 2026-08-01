@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF416C"/>
+      <stop offset="100%" stop-color="#FF4B2B"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE000"/>
+      <stop offset="100%" stop-color="#799F0C"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 40 L416 96 V232 C416 340 348 436 256 472 C164 436 96 340 96 232 V96 Z" fill="url(#shieldGrad)" stroke="#FFFFFF" stroke-width="8"/>
+  <!-- Crown / Gear Emblem inside Shield -->
+  <path d="M256 160 L280 210 L336 218 L296 258 L305 314 L256 288 L207 314 L216 258 L176 218 L232 210 Z" fill="url(#goldGrad)"/>
+  <circle cx="256" cy="245" r="20" fill="#FFFFFF"/>
+</svg>

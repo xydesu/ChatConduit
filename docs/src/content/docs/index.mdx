@@ -1,0 +1,76 @@
+---
+title: ChatConduit 官方維基
+description: Paper/Purpur 零指令、跨服與箱子 GUI 解耦的深層社交聊天頻道外掛
+template: splash
+hero:
+  tagline: 專為大型群服與頂級 Minecraft 伺服器打造的新一代社交與聊天頻道控制台
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: 管理員指南 (For Admin)
+      link: /admin/channels/
+      icon: right-arrow
+      variant: primary
+    - text: 玩家指南 (For Player)
+      link: /player/channels/
+      icon: open-book
+      variant: secondary
+    - text: GitHub 倉庫
+      link: https://github.com/xydesu/ChatConduit
+      icon: external
+---
+
+import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
+
+## 🌟 核心架構特色 (Core Highlights)
+
+<CardGrid stagger>
+  <Card title="⚡ 零指令頻道發言" icon="rocket">
+    玩家無需輸入複雜指令，只需在聊天欄輸入前綴符號（如 `!` 發言至全服頻道，`$` 發言至商業頻道）即可自動路由訊息。
+  </Card>
+
+  <Card title="🧰 箱子 GUI 符號佈局" icon="setting">
+    採用高度解耦的 **Symbol Map 符號地圖** 架構。管理員可在 `gui/*.yml` 中自由繪製選單，按鈕槽位動態解析，升級完全不破壞佈局。
+  </Card>
+
+  <Card title="📡 Redis 跨服 Pub/Sub 同步" icon="random">
+    即時跨服聊天廣播、跨服私訊對接、好友連線/離線狀態即時推播，並搭配 Redis 記憶體快取維護全網在線玩家名冊。
+  </Card>
+
+  <Card title="🛑 全維度黑名單隱私保護" icon="shield">
+    封鎖玩家時自動強制解除好友關係，並於本地與跨服維度完全屏蔽私訊與邀請。
+  </Card>
+</CardGrid>
+
+---
+
+## 🧭 快速文檔導航 (Documentation Navigation)
+
+<CardGrid>
+  <LinkCard
+    title="👑 管理員指南 (For Admin)"
+    description="深入瞭解系統頻道格式、Symbol Map 符號選單繪製、LuckPerms 權限節點、MySQL / Redis 配置與 DiscordSRV 連動。"
+    href="/admin/channels/"
+  />
+  <LinkCard
+    title="🎮 玩家使用手冊 (For Player)"
+    description="專為玩家設計的操作手冊，學習零指令發言、自建加密群組頻道 (/playerchannel)、跨服私訊與 Chest GUI 社交選單。"
+    href="/player/channels/"
+  />
+  <LinkCard
+    title="🔌 PlaceholderAPI 變數大全"
+    description="查看所有可用於 Scoreboard、TAB 與 ChatFormat 的 %chatconduit_*% 原生 Placeholder 變數。"
+    href="/developer/placeholders/"
+  />
+  <LinkCard
+    title="⚡ Redis Pub/Sub 協定規格"
+    description="開發者專區：解構 ChatConduit 的跨服 JSON 封包架構與即時廣播管道機制。"
+    href="/developer/redis-packets/"
+  />
+</CardGrid>
+
+---
+
+<Aside type="tip">
+  **提示**：ChatConduit 由 **xydesu** 原生開發，基於 Java 25 與 Paper 1.20+ 構建，具備 100% 非同步 SQL 操作，保證 0 阻塞主執行緒。
+</Aside>
