@@ -29,8 +29,53 @@ public class ChatUtils {
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
     private static final Pattern PAPI_PATTERN = Pattern.compile("%([^%]+)%");
-    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <ic=UUID:[ping]:>)
-    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<(?:chat|ic|interactivechat)=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
+    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:>, <chat=UUID:[item]>, <ic=UUID:[ping]:>, <interactivechat=UUID:item>)
+    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("(?i)<(?:chat|ic|interactivechat)=[^:>]+(?::(\\[[^\\]]+\\]|[^:>]+)?)?:?>");
+
+    /**
+     * 清理 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為乾淨的 [item])
+     *
+     * @param text 待清理的文字
+     * @return 淨化後的文字
+     */
+    public static String cleanInteractiveChatPlaceholders(String text) {
+        if (text == null || text.isEmpty()) return "";
+        Matcher matcher = INTERACTIVE_CHAT_PATTERN.matcher(text);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String tag = matcher.group(1);
+            if (tag == null || tag.trim().isEmpty()) {
+                tag = "[item]";
+            } else if (!tag.startsWith("[")) {
+                tag = "[" + tag + "]";
+            }
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(tag));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * 清理 Adventure Component 內部文字節點中的 InteractiveChat 標籤，同時保留組件既有的 HoverEvent / ClickEvent
+     *
+     * @param component 待處理的 Component
+     * @return 處理完畢的 Component
+     */
+    public static Component cleanComponentInteractiveChatTags(Component component) {
+        if (component == null) return Component.empty();
+        return component.replaceText(builder -> builder
+                .match(INTERACTIVE_CHAT_PATTERN)
+                .replacement((result, b) -> {
+                    String tag = result.group(1);
+                    if (tag == null || tag.trim().isEmpty()) {
+                        tag = "[item]";
+                    } else if (!tag.startsWith("[")) {
+                        tag = "[" + tag + "]";
+                    }
+                    return Component.text(tag);
+                })
+        );
+    }
 
     private static final Pattern HEX_X_PATTERN = Pattern.compile("(?i)[&§]x[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])");
     private static final Pattern HEX_HASH_PATTERN = Pattern.compile("(?i)[&§]#([0-9a-fA-F]{6})");
@@ -286,26 +331,5 @@ public class ChatUtils {
             head.setItemMeta(meta);
         }
         return head;
-    }
-
-    /**
-     * 清理 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為乾淨的 [item])
-     *
-     * @param text 待清理的文字
-     * @return 淨化後的文字
-     */
-    public static String cleanInteractiveChatPlaceholders(String text) {
-        if (text == null || text.isEmpty()) return "";
-        Matcher matcher = INTERACTIVE_CHAT_PATTERN.matcher(text);
-        StringBuilder sb = new StringBuilder();
-        while (matcher.find()) {
-            String tag = matcher.group(1);
-            if (!tag.startsWith("[")) {
-                tag = "[" + tag + "]";
-            }
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(tag));
-        }
-        matcher.appendTail(sb);
-        return sb.toString();
     }
 }

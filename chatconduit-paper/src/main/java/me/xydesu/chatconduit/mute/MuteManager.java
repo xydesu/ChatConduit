@@ -32,7 +32,7 @@ public class MuteManager {
         }
 
         public boolean isExpired() {
-            return !isPermanent() && (System.currentTimeMillis() - 5000) >= expireAt;
+            return !isPermanent() && System.currentTimeMillis() >= expireAt;
         }
 
         public long getRemainingMillis() {

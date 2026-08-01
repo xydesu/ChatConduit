@@ -159,9 +159,20 @@ public class RedisMessageListener extends JedisPubSub {
             channelPrefixComponent = ChatUtils.parseNoItalic(null, "<gray>[" + channelKeyOrName + "]");
         }
 
-        // 訊息文字元件 (淨化 InteractiveChat 內部標籤並建構乾淨文字 Component，防止跨服出錯 hoverEvent)
-        String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(rawMessage);
-        Component playerMessageComponent = ChatUtils.parseLegacy(cleanedMessage);
+        // 訊息文字元件 (優先解析跨服組件 messageJson 以保留 Hover/Click 事物，並對內部標籤進行淨化防錯)
+        Component playerMessageComponent = null;
+        if (packet.getMessageJson() != null && !packet.getMessageJson().isEmpty()) {
+            try {
+                Component deserializedComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
+                playerMessageComponent = ChatUtils.cleanComponentInteractiveChatTags(deserializedComp);
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.FINE, "反序列化來自跨服的 messageJson 失敗，退回預設文字解析:", e);
+            }
+        }
+        if (playerMessageComponent == null) {
+            String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(rawMessage);
+            playerMessageComponent = ChatUtils.parseLegacy(cleanedMessage);
+        }
 
         String rawChatFormat = packet.getChatFormat();
         if (rawChatFormat == null || rawChatFormat.isEmpty()) {

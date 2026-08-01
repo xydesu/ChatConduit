@@ -60,7 +60,24 @@ class ChatUtilsTest {
         String input3 = "Ping: <chat=uuid-1234:ping:>";
         assertEquals("Ping: [ping]", ChatUtils.cleanInteractiveChatPlaceholders(input3));
 
+        String input4 = "Look at <chat=1234-5678:[item]> without trailing colon";
+        assertEquals("Look at [item] without trailing colon", ChatUtils.cleanInteractiveChatPlaceholders(input4));
+
+        String input5 = "Check <ic=uuid-9999:item> and <interactivechat=uuid-8888:[ender]:>";
+        assertEquals("Check [item] and [ender]", ChatUtils.cleanInteractiveChatPlaceholders(input5));
+
         String normal = "Normal chat message without IC tags.";
         assertEquals(normal, ChatUtils.cleanInteractiveChatPlaceholders(normal));
+    }
+
+    @Test
+    @DisplayName("測試 cleanComponentInteractiveChatTags Component 內部標籤淨化")
+    void testCleanComponentInteractiveChatTags() {
+        Component comp = Component.text("Look at ").append(Component.text("<chat=1234-5678:[item]:>"));
+        Component cleaned = ChatUtils.cleanComponentInteractiveChatTags(comp);
+
+        assertNotNull(cleaned);
+        String plainText = PlainTextComponentSerializer.plainText().serialize(cleaned);
+        assertEquals("Look at [item]", plainText);
     }
 }
