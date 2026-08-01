@@ -12,6 +12,9 @@ import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,7 +34,175 @@ public class InteractiveChatIntegration {
     private static Method bungeeMethod = null;
     private static Object apiInstance = null;
 
-    private static final Pattern ALL_PLACEHOLDERS_PATTERN = Pattern.compile("(?i)\\[(item|i|hand|inv|inventory|ender|ec|money|m|balance|loohpjames|gametime|time|pos|ping)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^\\]:]+)?:?>");
+    private static final Pattern GENERIC_TAG_PATTERN = Pattern.compile("(?i)\\[[^\\]]+\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^\\]:]+)?:?>");
+
+    private static class ICPlaceholderReflect {
+        Object rawObj;
+        Pattern keywordPattern;
+        String replaceText;
+        List<String> hoverLines;
+        String clickActionStr;
+        String clickValueStr;
+
+        @SuppressWarnings("unchecked")
+        public static ICPlaceholderReflect fromObject(Object obj) {
+            if (obj == null) return null;
+            ICPlaceholderReflect ref = new ICPlaceholderReflect();
+            ref.rawObj = obj;
+            try {
+                Class<?> c = obj.getClass();
+                for (Method m : c.getMethods()) {
+                    if (m.getParameterCount() != 0) continue;
+                    String mName = m.getName().toLowerCase();
+                    m.setAccessible(true);
+                    Object val = m.invoke(obj);
+                    if (val == null) continue;
+
+                    if (mName.equals("getkeyword") || mName.equals("keyword") || mName.equals("getpattern")) {
+                        if (val instanceof Pattern p) ref.keywordPattern = p;
+                        else if (val instanceof String s) {
+                            try { ref.keywordPattern = Pattern.compile(s); } catch (Throwable ignored) {}
+                        }
+                    } else if (mName.equals("getreplacetext") || mName.equals("replacetext") || mName.equals("getreplace")) {
+                        ref.replaceText = String.valueOf(val);
+                    } else if (mName.contains("hover")) {
+                        extractHover(val, ref);
+                    } else if (mName.contains("click")) {
+                        extractClick(val, ref);
+                    }
+                }
+            } catch (Throwable t) {
+                Main.getInstance().getLogger().log(Level.FINE, "[InteractiveChat-Debug] 讀取 ICPlaceholder 物件失敗:", t);
+            }
+
+            return (ref.keywordPattern != null || ref.replaceText != null) ? ref : null;
+        }
+
+        private static void extractHover(Object hoverObj, ICPlaceholderReflect ref) {
+            if (hoverObj instanceof List<?> list) {
+                ref.hoverLines = new ArrayList<>();
+                for (Object item : list) ref.hoverLines.add(String.valueOf(item));
+            } else if (hoverObj instanceof String s) {
+                ref.hoverLines = List.of(s);
+            } else {
+                try {
+                    Method getEnableM = hoverObj.getClass().getMethod("getEnable");
+                    if (getEnableM != null && Boolean.FALSE.equals(getEnableM.invoke(hoverObj))) return;
+                } catch (Throwable ignored) {}
+                try {
+                    Method getTextM = hoverObj.getClass().getMethod("getText");
+                    Object tVal = getTextM.invoke(hoverObj);
+                    if (tVal instanceof List<?> list) {
+                        ref.hoverLines = new ArrayList<>();
+                        for (Object item : list) ref.hoverLines.add(String.valueOf(item));
+                    } else if (tVal instanceof String s) {
+                        ref.hoverLines = List.of(s);
+                    }
+                } catch (Throwable ignored) {}
+            }
+        }
+
+        private static void extractClick(Object clickObj, ICPlaceholderReflect ref) {
+            try {
+                Method getEnableM = clickObj.getClass().getMethod("getEnable");
+                if (getEnableM != null && Boolean.FALSE.equals(getEnableM.invoke(clickObj))) return;
+            } catch (Throwable ignored) {}
+            try {
+                Method getActionM = clickObj.getClass().getMethod("getAction");
+                Object aVal = getActionM.invoke(clickObj);
+                if (aVal != null) ref.clickActionStr = String.valueOf(aVal);
+
+                Method getValueM = clickObj.getClass().getMethod("getValue");
+                Object vVal = getValueM.invoke(clickObj);
+                if (vVal != null) ref.clickValueStr = String.valueOf(vVal);
+            } catch (Throwable ignored) {}
+        }
+
+        public Component buildComponent(Player player, Matcher matcher) {
+            String rep = replaceText;
+            if (rep == null || rep.isEmpty()) {
+                rep = matcher.group(0);
+            }
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                if (matcher.group(i) != null) {
+                    rep = rep.replace("$" + i, matcher.group(i));
+                }
+            }
+
+            Component comp = ChatUtils.parse(player, rep);
+
+            if (hoverLines != null && !hoverLines.isEmpty()) {
+                List<Component> hoverComps = new ArrayList<>();
+                for (String line : hoverLines) {
+                    for (int i = 1; i <= matcher.groupCount(); i++) {
+                        if (matcher.group(i) != null) {
+                            line = line.replace("$" + i, matcher.group(i));
+                        }
+                    }
+                    hoverComps.add(ChatUtils.parse(player, line));
+                }
+                Component hoverContent = Component.empty();
+                for (int i = 0; i < hoverComps.size(); i++) {
+                    if (i > 0) hoverContent = hoverContent.append(Component.newline());
+                    hoverContent = hoverContent.append(hoverComps.get(i));
+                }
+                comp = comp.hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(hoverContent));
+            }
+
+            if (clickActionStr != null && clickValueStr != null && !clickValueStr.isEmpty()) {
+                String val = clickValueStr;
+                for (int i = 1; i <= matcher.groupCount(); i++) {
+                    if (matcher.group(i) != null) {
+                        val = val.replace("$" + i, matcher.group(i));
+                    }
+                }
+                val = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, val);
+
+                String actUpper = clickActionStr.toUpperCase();
+                if (actUpper.contains("SUGGEST")) {
+                    comp = comp.clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand(val));
+                } else if (actUpper.contains("RUN")) {
+                    comp = comp.clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand(val));
+                } else if (actUpper.contains("URL")) {
+                    comp = comp.clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl(val));
+                } else if (actUpper.contains("CLIPBOARD") || actUpper.contains("COPY")) {
+                    comp = comp.clickEvent(net.kyori.adventure.text.event.ClickEvent.copyToClipboard(val));
+                }
+            }
+
+            return comp;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<ICPlaceholderReflect> fetchICPlaceholders() {
+        List<ICPlaceholderReflect> result = new ArrayList<>();
+        try {
+            Class<?> apiClass = Class.forName("com.loohp.interactivechat.api.InteractiveChatAPI");
+            List<Object> rawList = null;
+            try {
+                Method m = apiClass.getMethod("getICPlaceholderList");
+                rawList = (List<Object>) m.invoke(null);
+            } catch (Throwable t) {
+                try {
+                    Method m2 = apiClass.getMethod("getPlaceholderList");
+                    rawList = (List<Object>) m2.invoke(null);
+                } catch (Throwable ignored) {}
+            }
+
+            if (rawList != null) {
+                for (Object o : rawList) {
+                    ICPlaceholderReflect ref = ICPlaceholderReflect.fromObject(o);
+                    if (ref != null && ref.keywordPattern != null) {
+                        result.add(ref);
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Main.getInstance().getLogger().log(Level.FINE, "[InteractiveChat-Debug] 獲取 ICPlaceholder 列表失敗:", t);
+        }
+        return result;
+    }
 
     private static Component processItemPlaceholders(Player player, String message) {
         try {
@@ -47,7 +218,10 @@ public class InteractiveChatIntegration {
                 }
             }
 
-            Matcher matcher = ALL_PLACEHOLDERS_PATTERN.matcher(message);
+            // 1. 動態嘗試從 InteractiveChat API 獲取服主在 CustomPlaceholders.yml 中設定的所有原生 ICPlaceholder 規則
+            List<ICPlaceholderReflect> activeICPlaceholders = fetchICPlaceholders();
+
+            Matcher matcher = GENERIC_TAG_PATTERN.matcher(message);
             Component builder = Component.empty();
             int lastEnd = 0;
             boolean foundAny = false;
@@ -60,51 +234,69 @@ public class InteractiveChatIntegration {
                     builder = builder.append(ChatUtils.parse(player, cleanedPart));
                 }
 
-                String tag = matcher.group(1);
-                if (tag == null) tag = matcher.group(2);
-                if (tag == null) tag = matcher.group(0);
-                tag = tag.replaceAll("[\\[\\]]", "").trim().toLowerCase();
+                String matchedText = matcher.group(0);
+                String tagContent = matchedText.replaceAll("[\\[\\]]", "").trim().toLowerCase();
 
-                if (tag.equals("item") || tag.equals("i") || tag.equals("hand") || tag.contains("item")) {
+                if (tagContent.equals("item") || tagContent.equals("i") || tagContent.equals("hand") || tagContent.contains("item")) {
                     if (mainItemComp != null) {
                         builder = builder.append(mainItemComp);
                     } else {
                         builder = builder.append(Component.text("[\u200Bitem]"));
                     }
                 } else {
-                    String customFormat = Main.getInstance().getConfig().getString("interactivechat.placeholders." + tag);
-                    Component customComp = null;
-
-                    if (customFormat != null && !customFormat.isEmpty()) {
-                        customComp = ChatUtils.parse(player, customFormat);
-                    } else {
-                        switch (tag) {
-                            case "ping" -> customComp = ChatUtils.parse(player, "&f%player_colored_ping% &bms");
-                            case "inv", "inventory" -> customComp = ChatUtils.parse(player, "&b[&f%player_name%'s Inventory&b]");
-                            case "ender", "ec" -> customComp = ChatUtils.parse(player, "&d[&f%player_name%'s Ender Chest&d]");
-                            case "money", "m", "balance" -> {
-                                Component base = ChatUtils.parse(player, "&e[&f%player_name%'s Balance&e]");
-                                base = base.hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(ChatUtils.parse(player, "&6%player_name%'s Balance: $%vault_eco_balance_commas%")))
-                                           .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand("/pay " + player.getName() + " "));
-                                customComp = base;
+                    // 優先比對 InteractiveChat 原生 CustomPlaceholders.yml 載入的 Pattern
+                    ICPlaceholderReflect matchedIC = null;
+                    Matcher icMatcher = null;
+                    for (ICPlaceholderReflect ic : activeICPlaceholders) {
+                        if (ic.keywordPattern != null) {
+                            Matcher m = ic.keywordPattern.matcher(matchedText);
+                            if (m.find()) {
+                                matchedIC = ic;
+                                icMatcher = m;
+                                break;
                             }
-                            case "loohpjames" -> {
-                                Component base = ChatUtils.parse(player, "&3&lLoohp&6&lJames");
-                                base = base.hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(ChatUtils.parse(player, "&eVisit the author's website!\n&bClick me!")))
-                                           .clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl("https://loohpjames.com"));
-                                customComp = base;
-                            }
-                            case "gametime" -> customComp = ChatUtils.parse(player, "%player_world_time_24%");
-                            case "time" -> customComp = ChatUtils.parse(player, "%server_time_dd/MM/yyyy HH:mm:ss zzz%");
-                            case "pos" -> customComp = ChatUtils.parse(player, "&bWorld: &f%player_world% &eX:&f%player_x% &eY:&f%player_y% &eZ:&f%player_z%");
-                            default -> customComp = ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(matcher.group(0)));
                         }
                     }
 
-                    if (customComp != null) {
-                        builder = builder.append(customComp);
+                    if (matchedIC != null && icMatcher != null) {
+                        // 100% 原汁原味還原 InteractiveChat 服主在 CustomPlaceholders.yml 設定的 Replace, Hover 與 Click！
+                        builder = builder.append(matchedIC.buildComponent(player, icMatcher));
                     } else {
-                        builder = builder.append(ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(matcher.group(0))));
+                        // 次要嘗試從 config.yml 或預設清單中讀取
+                        String customFormat = Main.getInstance().getConfig().getString("interactivechat.placeholders." + tagContent);
+                        Component customComp = null;
+
+                        if (customFormat != null && !customFormat.isEmpty()) {
+                            customComp = ChatUtils.parse(player, customFormat);
+                        } else {
+                            switch (tagContent) {
+                                case "ping" -> customComp = ChatUtils.parse(player, "&f%player_colored_ping% &bms");
+                                case "inv", "inventory" -> customComp = ChatUtils.parse(player, "&b[&f%player_name%'s Inventory&b]");
+                                case "ender", "ec" -> customComp = ChatUtils.parse(player, "&d[&f%player_name%'s Ender Chest&d]");
+                                case "money", "m", "balance" -> {
+                                    Component base = ChatUtils.parse(player, "&e[&f%player_name%'s Balance&e]");
+                                    base = base.hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(ChatUtils.parse(player, "&6%player_name%'s Balance: $%vault_eco_balance_commas%")))
+                                               .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand("/pay " + player.getName() + " "));
+                                    customComp = base;
+                                }
+                                case "loohpjames" -> {
+                                    Component base = ChatUtils.parse(player, "&3&lLoohp&6&lJames");
+                                    base = base.hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(ChatUtils.parse(player, "&eVisit the author's website!\n&bClick me!")))
+                                               .clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl("https://loohpjames.com"));
+                                    customComp = base;
+                                }
+                                case "gametime" -> customComp = ChatUtils.parse(player, "%player_world_time_24%");
+                                case "time" -> customComp = ChatUtils.parse(player, "%server_time_dd/MM/yyyy HH:mm:ss zzz%");
+                                case "pos" -> customComp = ChatUtils.parse(player, "&bWorld: &f%player_world% &eX:&f%player_x% &eY:&f%player_y% &eZ:&f%player_z%");
+                                default -> customComp = ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(matchedText));
+                            }
+                        }
+
+                        if (customComp != null) {
+                            builder = builder.append(customComp);
+                        } else {
+                            builder = builder.append(ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(matchedText)));
+                        }
                     }
                 }
 
@@ -240,7 +432,7 @@ public class InteractiveChatIntegration {
             }
 
             // 1. 優先嘗試 InteractiveChat API 處理 [item] / [ping] / [inv] / [ender] / [money] 等全套標籤
-            if (ALL_PLACEHOLDERS_PATTERN.matcher(message).find()) {
+            if (GENERIC_TAG_PATTERN.matcher(message).find()) {
                 Main.getInstance().getLogger().info("[InteractiveChat-Debug] 偵測到動態標籤，準備進行全套佔位符格式化與 Component 生成...");
                 Component resultComp = processItemPlaceholders(player, message);
                 if (resultComp != null) {
