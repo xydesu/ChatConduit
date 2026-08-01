@@ -12,9 +12,7 @@
     <name>ChatConduit-Parent</name>
 
     <modules>
-        <module>chatconduit-common</module>
         <module>chatconduit-paper</module>
-        <module>chatconduit-velocity</module>
     </modules>
 
     <properties>

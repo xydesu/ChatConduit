@@ -176,6 +176,21 @@
 ---
 
 ## 4. Plugins platform
-* [ ] Remove Velocity Platform
-* [ ] Merge both paper and common
+* [x] Remove Velocity Platform
+* [x] Merge both paper and common
 
+## 5. Readme
+* [x] Add missing part to readme
+    * [x] Gemini You can edit this part to check what diff to current src and readme
+
+---
+
+## 6. 建議後續開發順序 (Suggested Next Tasks)
+* [ ] **第一階段：好友系統基礎資料層 (Friend Database & Core Model)**
+    * [ ] 設計與實作 `FriendDAO`, `FriendRequestDAO`, `FriendBlockDAO` (支援 SQLite 與 MySQL)
+    * [ ] 實作 `FriendManager` 處理記憶體快取與異步 SQL 讀寫
+* [ ] **第二階段：好友指令與基礎驗證 (Friend Commands & Validation)**
+    * [ ] 實作 `/friend add`, `/friend accept`, `/friend deny`, `/friend remove`, `/friend list`
+    * [ ] 整合冷卻時間 (CD) 防止刷申請
+* [ ] **第三階段：好友箱子 GUI 控制台 (Friend Chest GUI Console)**
+    * [ ] 實作 `FriendGUIListener`, `FriendMainGUI`, `FriendListGUI`, `FriendRequestsGUI`
