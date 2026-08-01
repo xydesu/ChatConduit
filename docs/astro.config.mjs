@@ -22,13 +22,6 @@ export default defineConfig({
           ],
         },
       ],
-      defaultLocale: 'root',
-      locales: {
-        root: {
-          label: '繁體中文',
-          lang: 'zh-TW',
-        },
-      },
     }),
   ],
 });
