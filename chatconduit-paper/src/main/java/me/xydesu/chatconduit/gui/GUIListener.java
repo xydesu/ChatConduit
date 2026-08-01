@@ -54,6 +54,25 @@ public class GUIListener implements Listener {
                 case ONLINE_PLAYERS_SELECT -> handleOnlinePlayersSelectClick(player, holder.getExtraData(), slot, clickedItem);
                 case CHANNEL_SETTINGS -> handleSettingsClick(player, holder.getExtraData(), slot, clickedItem);
                 case MESSAGE_SETTINGS -> handleMessageSettingsClick(player, slot, clickedItem);
+                case CHAT_COLOR -> handleChatColorClick(player, slot);
+            }
+        }
+    }
+
+    private void handleChatColorClick(Player player, int slot) {
+        if (slot == 22) {
+            me.xydesu.chatconduit.chatcolor.ChatColorManager.removeChatColor(player.getUniqueId());
+            player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已成功重置聊天顏色！"));
+            ChatColorGUI.openGUI(player);
+            return;
+        }
+
+        for (ChatColorGUI.ColorOption opt : ChatColorGUI.COLOR_OPTIONS) {
+            if (opt.slot() == slot) {
+                me.xydesu.chatconduit.chatcolor.ChatColorManager.setChatColor(player.getUniqueId(), opt.code());
+                player.sendMessage(ChatUtils.parse(player, Main.getInstance().getLanguageConfig().getString("prefix", "") + "<green>已成功將聊天顏色設定為 " + opt.code() + opt.name() + "<green>！"));
+                ChatColorGUI.openGUI(player);
+                return;
             }
         }
     }

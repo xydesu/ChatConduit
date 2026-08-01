@@ -101,6 +101,8 @@ public class DatabaseManager {
         String createChannelMembersSql;
         String createMutesSql;
 
+        String createPlayerColorsSql;
+
         if (isMySQL) {
             createPlayerDataSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_data ("
                     + "uuid VARCHAR(36) PRIMARY KEY, "
@@ -138,6 +140,11 @@ public class DatabaseManager {
                     + "expire_at BIGINT NOT NULL, "
                     + "muted_by VARCHAR(32) NOT NULL, "
                     + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+            createPlayerColorsSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_colors ("
+                    + "uuid VARCHAR(36) PRIMARY KEY, "
+                    + "color VARCHAR(64) NOT NULL"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
         } else {
             createPlayerDataSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_data ("
@@ -177,6 +184,11 @@ public class DatabaseManager {
                     + "muted_by TEXT NOT NULL, "
                     + "created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
                     + ");";
+
+            createPlayerColorsSql = "CREATE TABLE IF NOT EXISTS chatconduit_player_colors ("
+                    + "uuid TEXT PRIMARY KEY, "
+                    + "color TEXT NOT NULL"
+                    + ");";
         }
 
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
@@ -184,6 +196,7 @@ public class DatabaseManager {
             stmt.execute(createPlayerChannelsSql);
             stmt.execute(createChannelMembersSql);
             stmt.execute(createMutesSql);
+            stmt.execute(createPlayerColorsSql);
 
             // 自動遷移舊版資料表結構（加欄位時忽略已存在錯誤）
             try {

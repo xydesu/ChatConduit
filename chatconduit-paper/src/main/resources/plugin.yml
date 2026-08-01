@@ -31,8 +31,15 @@ commands:
   reply:
     description: 快速回覆最後一位與您私訊的玩家
     aliases: [r]
+  chatcolor:
+    description: 開啟玩家發言文字顏色選擇 GUI 選單或自訂發言顏色
+    aliases: [ccolor, color]
+    permission: chatconduit.chatcolor
 
 permissions:
+  chatconduit.chatcolor:
+    description: 允許使用 /chatcolor 選擇發言文字顏色
+    default: true
   chatconduit.admin.mute:
     description: 允許執行 /mute 指令
     default: op

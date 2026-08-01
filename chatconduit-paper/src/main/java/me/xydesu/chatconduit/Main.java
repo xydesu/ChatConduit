@@ -32,6 +32,7 @@ public final class Main extends JavaPlugin {
         me.xydesu.chatconduit.database.DatabaseManager.init();
         me.xydesu.chatconduit.database.DataMigrationManager.runMigrationCheck();
         me.xydesu.chatconduit.mute.MuteManager.init();
+        me.xydesu.chatconduit.chatcolor.ChatColorManager.init();
 
         // 載入頻道與玩家資料
         ChannelManager.loadChannels();
@@ -85,6 +86,12 @@ public final class Main extends JavaPlugin {
         if (getCommand("reply") != null) {
             getCommand("reply").setExecutor(msgCmd);
             getCommand("reply").setTabCompleter(msgCmd);
+        }
+
+        me.xydesu.chatconduit.command.ChatColorCommand chatColorCmd = new me.xydesu.chatconduit.command.ChatColorCommand();
+        if (getCommand("chatcolor") != null) {
+            getCommand("chatcolor").setExecutor(chatColorCmd);
+            getCommand("chatcolor").setTabCompleter(chatColorCmd);
         }
 
         // 初始化 DiscordSRV 溝通模組
