@@ -192,8 +192,16 @@ public class ChatListener implements Listener {
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/channel " + sysChannel.key()));
         }
 
-        // 優先使用原始 event.message() 以保留 InteractiveChat 等插件產生的互動組件 (Hover, Click, Item/Inv 等)
-        Component playerMessage = event.message();
+        // 優先透過 InteractiveChat API 處理玩家發言包含的 [item] / [inv] 動態組件
+        Component playerMessage = null;
+        if (me.xydesu.chatconduit.integration.InteractiveChatIntegration.isAvailable()) {
+            playerMessage = me.xydesu.chatconduit.integration.InteractiveChatIntegration.processMessageToComponent(player, finalMessage);
+        }
+
+        if (playerMessage == null) {
+            playerMessage = event.message();
+        }
+
         if (playerMessage == null || (playerMessage.children().isEmpty() && playerMessage.hoverEvent() == null && playerMessage.clickEvent() == null)) {
             if (player.hasPermission("chatconduit.chat.color")) {
                 playerMessage = ChatUtils.parseLegacy(finalMessage);

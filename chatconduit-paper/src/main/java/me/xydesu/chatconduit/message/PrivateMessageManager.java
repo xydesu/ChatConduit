@@ -110,9 +110,16 @@ public class PrivateMessageManager {
                 String targetServerId = remoteData.getServerId();
 
                 String messageJson = null;
-                if (sender.hasPermission("chatconduit.chat.color")) {
+                Component icComp = null;
+                if (me.xydesu.chatconduit.integration.InteractiveChatIntegration.isAvailable()) {
+                    icComp = me.xydesu.chatconduit.integration.InteractiveChatIntegration.processMessageToComponent(sender, rawMessage);
+                }
+                if (icComp == null && sender.hasPermission("chatconduit.chat.color")) {
+                    icComp = ChatUtils.parseLegacy(rawMessage);
+                }
+                if (icComp != null) {
                     try {
-                        messageJson = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(ChatUtils.parseLegacy(rawMessage));
+                        messageJson = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(icComp);
                     } catch (Exception ignored) {}
                 }
 

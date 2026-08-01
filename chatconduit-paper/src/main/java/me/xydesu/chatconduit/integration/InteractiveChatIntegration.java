@@ -46,20 +46,19 @@ public class InteractiveChatIntegration {
     }
 
     /**
-     * 嘗試呼叫 InteractiveChat API 解析玩家文字訊息
-     * 若插件未開啟或 API 不可用，則返回原始訊息
+     * 嘗試呼叫 InteractiveChat API 解析玩家文字訊息並返回完整 Component (包含 Hover/Click Event)
+     * 若插件未開啟或 API 不可用，則返回 null
      *
      * @param player  發言玩家
      * @param message 原始訊息
-     * @return 處理完畢的文字
+     * @return 包含 HoverEvent 的 Adventure Component，失敗則返回 null
      */
-    public static String processMessage(Player player, String message) {
+    public static Component processMessageToComponent(Player player, String message) {
         if (!isAvailable() || message == null || message.isEmpty()) {
-            return message;
+            return null;
         }
 
         try {
-            // 反射嘗試呼叫 InteractiveChatAPI 相關靜態或實例方法
             Class<?> apiClass = Class.forName("com.loohp.interactivechat.api.InteractiveChatAPI");
             if (transformMethod == null) {
                 for (Method m : apiClass.getDeclaredMethods()) {
@@ -79,22 +78,42 @@ public class InteractiveChatIntegration {
                 } else if (transformMethod.getParameterCount() == 1) {
                     result = transformMethod.invoke(null, message);
                 } else {
-                    result = message;
+                    result = null;
                 }
 
-                if (result instanceof String stringResult) {
+                if (result instanceof Component componentResult) {
+                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Adventure Component)。");
+                    return componentResult;
+                } else if (result instanceof net.md_5.bungee.api.chat.BaseComponent[] bungeeComponents) {
+                    String json = net.md_5.bungee.chat.ComponentSerializer.toString(bungeeComponents);
+                    Component adventureComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(json);
+                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Bungee BaseComponent[] -> Adventure Component)。");
+                    return adventureComp;
+                } else if (result instanceof String stringResult) {
                     Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (String): " + stringResult);
-                    return stringResult;
-                } else if (result instanceof Component componentResult) {
-                    String serialized = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(componentResult);
-                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Component): " + serialized);
-                    return serialized;
+                    return ChatUtils.parseLegacy(stringResult);
                 }
             }
         } catch (Throwable t) {
             Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 呼叫 InteractiveChat API 時拋出異常:", t);
         }
 
+        return null;
+    }
+
+    /**
+     * 嘗試呼叫 InteractiveChat API 解析玩家文字訊息
+     * 若插件未開啟或 API 不可用，則返回原始訊息
+     *
+     * @param player  發言玩家
+     * @param message 原始訊息
+     * @return 處理完畢的文字
+     */
+    public static String processMessage(Player player, String message) {
+        Component comp = processMessageToComponent(player, message);
+        if (comp != null) {
+            return net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(comp);
+        }
         return message;
     }
 
