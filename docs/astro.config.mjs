@@ -2,7 +2,6 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
-  site: 'https://xydesu.github.io',
   base: '/ChatConduit',
   integrations: [
     starlight({
