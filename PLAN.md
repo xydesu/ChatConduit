@@ -1,234 +1,122 @@
-## 1. 好友系統 (Friend System)
+# 🚀 ChatConduit 開發計畫書 (Project Roadmap)
 
-### 1.1 基礎系統 (Base System)
-
-* [ ] **請求與驗證機制**
-    * [ ] 發送好友申請（包含防刷申請的 CD 限制）
-    * [ ] 接受 / 拒絕好友申請
-    * [ ] 撤回已發送的好友申請
-    * [ ] 刪除好友（雙向解綁）
-
-
-* [ ] **狀態追蹤**
-    * [ ] 上下線通知（向在線好友廣播）
-    * [ ] 跨分服狀態同步（在線/離線/所在伺服器名稱）
-    * [ ] 伺服器切換通知（例如：*玩家 A 移至了 生存分服-1*）
-
-
+> **專案作者 (Author)**: xydesu  
+> **基礎套件 (Base Package)**: `me.xydesu.chatconduit`  
+> **專案環境 (Environment)**: Paper / Purpur 1.20+, Java 25, HikariCP, Redis Pub/Sub
 
 ---
 
-### 1.2 指令系統 (Command)
+## 📌 優先級規劃 (Priority Overview)
 
-* [x] **指令架構**
-    * [x] `/friend help` - 顯示指令說明清單
-    * [x] `/friend add <玩家名>` - 發送好友申請
-    * [x] `/friend accept <玩家名>` - 接受好友申請
-    * [x] `/friend deny <玩家名>` - 拒絕好友申請
-    * [x] `/friend remove <玩家名>` - 刪除好友
-    * [x] `/friend list [頁碼]` - 顯示好友清單（文字版）
-    * [x] `/friend gui` - 打開箱子 GUI 主介面
-    * [x] `/friend block <玩家名>` - 加入黑名單
-    * [x] `/friend unblock <玩家名>` - 移出黑名單
-* [x] **指令補全與Tab優化**
-    * [x] 整合 TabCompleter，自動補全在線玩家與好友名單
-
-
+* **🔥 第一階段（核心進行中）**: Redis 跨服狀態廣播、Chest GUI Symbol 動態佈局重構、GUI 分頁與即時刷新。
+* **✨ 第二階段（進階擴充）**: VIP 專屬好友特效與視覺擴充、異步頭顱 Skin 加載優化、廣播通道擴充。
+* **📚 第三階段（文件與維基 Roadmap）**: 官方 WIKI Page 維護、API 開發者文件。
 
 ---
 
-### 1.3 箱子 GUI 介面 (Chest GUI)
+## 1. 🔥 第一階段：核心開發與跨服/GUI強化 (High Priority)
 
-* [x] **主選單 (Main Menu)**
-    * [x] 個人資訊頭顱（顯示目前好友數/上限、待處理申請、黑名單人數）
-    * [x] 好友列表按鈕（點擊進入列表頁面）
-    * [x] 待處理申請按鈕（提示未讀申請數量）
-    * [x] 黑名單管理按鈕
-
-
-* [x] **好友列表視窗**
-    * [x] 動態玩家頭顱展示（顯示暱稱、當前所在分服、上線/離線狀態）
-    * [x] 點擊頭顱「好友互動選單」：
-        * [x] 私訊快捷（左鍵開啟私訊提示）
-        * [x] 刪除好友（右鍵解綁好友關係）
-        * [x] 手動輸入玩家名稱新增好友 (Slot 53)
-
-
-* [x] **申請管理視窗**
-    * [x] 申請者頭顱清單（顯示發送時間）
-    * [x] 左鍵接受 / 右鍵拒絕申請
-
-
-* [x] **黑名單管理視窗**
-    * [x] 封鎖玩家頭顱清單
-    * [x] 點擊一鍵解除黑名單封鎖
-
-
-
----
-
-### 1.4 資料庫存儲 (Database Storage)
-
-* [x] **資料表架構設計 (Schema Design)**
-    * [x] `friends` 表：紀錄好友關係（`player_uuid`, `friend_uuid`, `created_at`）
-    * [x] `friend_requests` 表：紀錄未處理申請（`sender_uuid`, `receiver_uuid`, `timestamp`）
-    * [x] `friend_blocks` 表：紀錄黑名單（`player_uuid`, `blocked_uuid`）
-    * [x] `player_settings` 表：紀錄玩家個人偏好與限制
-
-
-* [x] **資料庫選型支援**
-    * [x] SQLite（單機簡易部署）
-    * [x] MySQL / MariaDB（跨服多機連接）
-
-
-
----
-
-### 1.5 Redis 跨服同步 (Redis Multiple Server Sync)
-
+### 1.1 Redis 跨服好友狀態與廣播 (Redis Sync & PubSub)
 * [ ] **Pub/Sub 訊息廣播**
-    * [ ] 上下線/切換伺服器事件頻道（`friend:status_change`）
-    * [ ] 跨服私訊頻道（`friend:private_msg`）
-    * [ ] 好友申請與實時通知頻道（`friend:request_notify`）
-
-
+    * [ ] 上下線/切換伺服器事件頻道 (`friend:status_change`)
+    * [ ] 跨服私訊頻道 (`friend:private_msg`)
+    * [ ] 好友申請與實時通知頻道 (`friend:request_notify`)
 * [ ] **Redis Data Cache**
-    * [ ] 快取在線玩家列表與所在伺服器（`online_players` Hash/Set）
+    * [ ] 快取在線玩家列表與所在伺服器 (`online_players` Hash/Set)
     * [ ] 快取玩家好友名單以降低資料庫查詢壓力
 
+---
 
+### 1.2 Chest GUI Symbol 佈局架構重構 (Symbol-based GUI System)
+* [ ] **GUI 佈局解耦**
+    * [ ] 將 GUI 選單 slots 設定由固定數字 (`0, 1, 2...`) 重構成基於符號地圖 (Symbol Map) 的結構 (例如用 `'#'` 代表邊框, `'F'` 代表好友, `'P'` 代表分頁)
+    * [ ] 允許管理員在 YAML 中自訂圖案佈局與按鈕放置位置
 
 ---
 
-### 1.6 好友上限與 VIP 特權 (Friend Limits & VIP Perks)
+### 1.3 頁面翻頁與動態 GUI 刷新 (Pagination & Dynamic GUI Refresh)
+* [ ] **動態分頁演算法**
+    * [ ] 支援多頁自動切割（前一頁 / 下一頁 / 第一頁 / 最後一頁）
+    * [ ] 當前頁碼與總頁數顯示（如：`第 2 / 5 頁`）
+* [ ] **即時 GUI 刷新**
+    * [ ] 監聽玩家狀態變化（好友上線/下線），自動更新目前開啟 GUI 的玩家視窗
+    * [ ] 異步載入頭顱 Skin（避免翻頁時伺服器卡頓）
 
-* [ ] **動態上限計算**
-    * [ ] 基礎玩家好友數量上限（例如：預設 20 人）
-    * [ ] 基於權限節點（LuckPerms）授權額外額度（例如：`friend.limit.vip = 50`, `friend.limit.mvp = 100`）
-    * [ ] 突破上限補正（若 VIP 到期，保留現有好友但無法新增）
+---
 
+## 2. ✨ 第二階段：好友特權與黑名單保護 (Medium Priority)
 
+### 2.1 好友上限與 VIP 特權 (Friend Limits & VIP Perks)
+* [x] **動態上限計算**
+    * [x] 基礎玩家好友數量上限（預設 20 人）
+    * [x] 基於權限節點（LuckPerms）授權額外額度（例如：`chatconduit.friend.limit.50`, `chatconduit.friend.limit.100`）
+    * [x] 管理員與 VIP 無上限權限 (`chatconduit.admin.bypasslimit`)
 * [ ] **VIP 專屬特權**
     * [ ] 專屬 GUI 介面邊框 / 頭顱特效
     * [ ] 好友上線專屬提示音與播報
     * [ ] 優先跨服傳送通道
 
+---
 
+### 2.2 黑名單/屏蔽系統 (Blacklist / Block System)
+* [x] **黑名單邏輯**
+    * [x] 屏蔽好友申請（被屏蔽者發送申請時自動忽略或提示失敗）
+    * [x] 自動解除好友關係（若加入黑名單時雙方已是好友，強制解綁）
+    * [x] GUI 內點擊可解鎖/檢視黑名單成員
+* [ ] **屏蔽私訊與跨服傳送**
+    * [ ] 阻止被封鎖玩家發送跨服私訊與發起傳送請求
 
 ---
 
-### 1.7 黑名單/屏蔽系統 (Blacklist / Block System)
+## 3. 📚 官方維基與開發者文件 (Wiki Roadmap)
 
-* [ ] **黑名單邏輯**
-    * [ ] 屏蔽好友申請（被屏蔽者發送申請時自動忽略或提示失敗）
-    * [ ] 屏蔽私訊與跨服傳送
-    * [ ] 自動解除好友關係（若加入黑名單時雙方已是好友，強制解綁）
-
-
-* [ ] **黑名單管理**
-    * [ ] GUI 內點擊可解鎖/檢視黑名單成員
-
-
-
----
-
-### 1.8 頁面翻頁與動態 GUI 刷新 (Pagination & Dynamic GUI Refresh)
-
-* [ ] **動態分頁演算法**
-    * [ ] 支援多頁自動切割（前一頁 / 下一頁 / 第一頁 / 最後一頁）
-    * [ ] 當前頁碼與總頁數顯示（如：`第 2 / 5 頁`）
-
-
-* [ ] **即時 GUI 刷新**
-    * [ ] 監聽玩家狀態變化（好友上線/下線），自動更新目前開啟 GUI 的玩家視窗
-    * [ ] 異步載入頭顱 Skin（避免翻頁時伺服器卡頓）
-
-
-
----
-
-### 1.9 異步資料庫 I/O (Asynchronous DB I/O)
-
-* [x] **線程池管理**
-    * [x] 使用 Bukkit Scheduler 異步任務或 CompletableFuture 處理所有 SQL 操作
-    * [x] 避免在主執行緒（Server Thread）執行任何 Blocking DB 操作
-
-
-* [x] **連線池優化 (HikariCP)**
-    * [x] 整合 HikariCP 管理 MySQL 資料庫連線，提高查詢效能與併發穩定度
-
-
-
----
-
-## 2. 隱藏訊息系統 (Hidding Message System)
-
-### 2.1 CMI 插件整合
-
-* [x] **AFK 自動掛機狀態監測**
-    * [x] 監聽 CMI 的 `CMIPlayerAfkStatusChangeEvent`
-    * [x] 判斷目標玩家是否處於 AFK（離開）狀態
-
----
-
-## 3. 頻道系統加強
-* [x] **官方頻道**
-    * [x] 可取消訂閱頻道
-
----
-
-## 4. Plugins platform
-* [x] Remove Velocity Platform
-* [x] Merge both paper and common
-
-## 5. Readme
-* [x] Add missing part to readme
-    * [x] Gemini You can edit this part to check what diff to current src and readme
-
----
-
-## 6. 建議後續開發順序 (Suggested Next Tasks)
-* [x] **第一階段：好友系統基礎資料層 (Friend Database & Core Model)**
-    * [x] 設計與實作 `FriendDAO`, `FriendRequestDAO`, `FriendBlockDAO`, `PlayerSettingsDAO` (支援 SQLite 與 MySQL)
-    * [x] 實作 `FriendManager` 處理記憶體快取與異步 SQL 讀寫
-* [x] **第二階段：好友指令與基礎驗證 (Friend Commands & Validation)**
-    * [x] 實作 `/friend add`, `/friend accept`, `/friend deny`, `/friend remove`, `/friend list`
-    * [x] 整合冷卻時間 (CD) 防止刷申請
-* [x] **第三階段：好友箱子 GUI 控制台 (Friend Chest GUI Console)**
-    * [x] 實作 `FriendMainGUI`, `FriendListGUI`, `FriendRequestsGUI`, `FriendBlockGUI` 與對應的 YAML 配置文件和 `GUIListener` 事件監聽
-* [ ] **第四階段：Redis 跨服好友狀態廣播與 VIP 上限 (Redis Sync & VIP Perks)**
-    * [ ] 上下線/伺服器切換廣播頻道 (`friend:status_change`) 與即時跨服申請推播
-    * [ ] LuckPerms 動態好友上限與 VIP 上限權限劃分
-
-
-
-## 7. WIKI Page 
-(Mark As Not Important, agent, you can edit here)
-### ChatConduit 官方維基文件架構 (Wiki Roadmap & Documentation Outline)
+> *(Note: Agent 協助細化與排版 WIKI 文件架構)*
 
 * [ ] **概述與快速入門 (Overview & Quick Start)**
     * [ ] 插件簡介與核心特色（零指令聊天頻道、箱子 GUI 控制台、跨服同步）
     * [ ] 系統需求（Paper 1.20+, Java 25, HikariCP, Jedis 5.x）
     * [ ] 安裝步驟與權限點（LuckPerms 節點說明）
-
 * [ ] **頻道與聊天系統 (Channels & Private Messaging)**
     * [ ] 系統頻道配置 (`config.yml` 頻道前綴與格式)
     * [ ] 玩家自建頻道與密碼機制 (`/playerchannel`)
     * [ ] 跨服私訊與回覆 (`/msg`, `/reply`)
-
 * [ ] **好友與社交系統 (Friend & Social System)**
-    * [ ] 好友關係管理與指令清單 (`/friend`)
+    * [ ] 好友關係管理與指令清單 (`/friend add`, `/friend accept`, `/friend deny`, `/friend revoke`, `/friend remove`)
     * [ ] 好友箱子 GUI 互動說明
     * [ ] 跨服好友狀態通知與傳送機制
     * [ ] 屏蔽與黑名單保護機制
-
 * [ ] **第三方整合與跨服架構 (Integrations & Cross-Server Sync)**
     * [ ] Redis Pub/Sub 廣播機制說明
     * [ ] DiscordSRV 雙向連動與 Webhook 設置
     * [ ] CMI AFK 掛機狀態自動偵測
     * [ ] PlaceholderAPI 變數清單
 
+---
 
-## 8. Cleanup unused code/folder/files, and make structure more good
-* [x] **清理廢棄模組**：移除 `chatconduit-velocity` 平台殘留目錄（因已將 Paper 與 Common 模組合併）。
-* [x] **專案檔結構優化**：清理與整合 Maven 父元件與模組連動，確保 Java 25 / HikariCP 編譯正確。
+## 4. ✅ 已完成功能紀錄 (Completed Features Archive)
+
+### 4.1 好友系統基礎與指令 (Friend Core & Commands)
+* [x] **請求與驗證機制**
+    * [x] 發送好友申請（包含防刷申請的 CD 限制）
+    * [x] 接受 / 拒絕好友申請
+    * [x] 撤回已發送的好友申請 (`/friend revoke <玩家名>`)
+    * [x] 刪除好友（雙向解綁）
+* [x] **完整指令與 Tab 補全**
+    * [x] `/friend help`, `/friend add`, `/friend accept`, `/friend deny`, `/friend revoke`, `/friend remove`, `/friend list`, `/friend block`, `/friend unblock`, `/friend gui`
+    * [x] 整合 `TabCompleter` 自動補全在線玩家、發出申請與好友名單
+
+### 4.2 箱子 GUI 控制台 (Chest GUI Console)
+* [x] **主選單 (Main Menu)**: 個人資訊頭顱、好友列表、待處理申請、黑名單管理
+* [x] **好友列表視窗**: 動態頭顱展示、左鍵私訊、右鍵刪除好友、手動新增好友
+* [x] **申請管理與黑名單視窗**: 一鍵接受/拒絕申請、一鍵解除黑名單
+
+### 4.3 資料庫與非同步 I/O (Database Storage)
+* [x] `friends`, `friend_requests`, `friend_blocks`, `player_settings` 表 Schema 設計
+* [x] 支援 SQLite 與 MySQL (HikariCP 連線池)
+* [x] 採用 `CompletableFutures` 與 Bukkit Scheduler 完全非同步 SQL 操作
+
+### 4.4 隱藏訊息、頻道加強與架構清理
+* [x] CMI AFK 自動掛機狀態監測 (`CMIPlayerAfkStatusChangeEvent`)
+* [x] 官方頻道取消訂閱功能
+* [x] 移除 Velocity 殘留目錄，合併 Paper 與 Common 模組
+* [x] README.md 與目前原始碼差異核對與同步 (`Gemini diff checked`)

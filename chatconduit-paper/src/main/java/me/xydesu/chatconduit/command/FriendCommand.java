@@ -25,7 +25,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
 
     private static final int ITEMS_PER_PAGE = 10;
     private static final List<String> SUBCOMMANDS = Arrays.asList(
-            "add", "accept", "deny", "remove", "list", "block", "unblock", "gui", "help"
+            "add", "accept", "deny", "revoke", "remove", "list", "block", "unblock", "gui", "help"
     );
 
     @Override
@@ -50,6 +50,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             case "add" -> handleAdd(player, args);
             case "accept" -> handleAccept(player, args);
             case "deny" -> handleDeny(player, args);
+            case "revoke" -> handleRevoke(player, args);
             case "remove" -> handleRemove(player, args);
             case "list" -> handleList(player, args);
             case "block" -> handleBlock(player, args);
@@ -94,6 +95,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
                         case REQUESTS_DISABLED -> ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.add-disabled"));
                         case AUTO_ACCEPTED -> ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.add-auto-accepted")
                                 .replace("<target>", targetName));
+                        case SENDER_LIMIT_REACHED -> ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.limit-reached"));
                         case FAILED -> ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.add-failed"));
                     }
                 }));
@@ -146,6 +148,32 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
                                 .replace("<target>", targetName));
                     } else {
                         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.deny-not-found")
+                                .replace("<target>", targetName));
+                    }
+                }));
+    }
+
+    private void handleRevoke(Player player, String[] args) {
+        if (args.length < 2) {
+            ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-revoke"));
+            return;
+        }
+
+        String targetName = args[1];
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        if (target == null || target.getUniqueId() == null) {
+            ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.player-not-found")
+                    .replace("<target>", targetName));
+            return;
+        }
+
+        FriendManager.getInstance().revokeFriendRequestAsync(player.getUniqueId(), target.getUniqueId())
+                .thenAccept(success -> Bukkit.getScheduler().runTask(me.xydesu.chatconduit.Main.getInstance(), () -> {
+                    if (success) {
+                        ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.revoke-success")
+                                .replace("<target>", targetName));
+                    } else {
+                        ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.revoke-not-found")
                                 .replace("<target>", targetName));
                     }
                 }));
@@ -328,6 +356,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-add"));
         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-accept"));
         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-deny"));
+        ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-revoke"));
         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-remove"));
         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-list"));
         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.help-block"));
@@ -374,6 +403,16 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
                         OfflinePlayer senderP = Bukkit.getOfflinePlayer(req.getSenderUuid());
                         if (senderP.getName() != null) {
                             completions.add(senderP.getName());
+                        }
+                    }
+                }
+            } else if (sub.equals("revoke")) {
+                List<FriendRequest> requests = FriendManager.getInstance().getOutgoingRequestsAsync(player.getUniqueId()).join();
+                if (requests != null) {
+                    for (FriendRequest req : requests) {
+                        OfflinePlayer receiverP = Bukkit.getOfflinePlayer(req.getReceiverUuid());
+                        if (receiverP.getName() != null) {
+                            completions.add(receiverP.getName());
                         }
                     }
                 }

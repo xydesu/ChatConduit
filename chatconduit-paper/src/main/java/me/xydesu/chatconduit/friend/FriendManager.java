@@ -7,6 +7,9 @@ import me.xydesu.chatconduit.database.dao.FriendRequestDAO;
 import me.xydesu.chatconduit.database.dao.PlayerSettingsDAO;
 import me.xydesu.chatconduit.friend.model.FriendRequest;
 import me.xydesu.chatconduit.friend.model.PlayerSettings;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -110,6 +113,16 @@ public class FriendManager {
                 return RequestResult.AUTO_ACCEPTED;
             }
 
+            // 檢查發送者好友數量上限
+            Player senderPlayer = Bukkit.getPlayer(sender);
+            if (senderPlayer != null) {
+                int limit = getMaxFriendLimit(senderPlayer);
+                Set<UUID> currentFriends = getFriends(sender);
+                if (currentFriends.size() >= limit) {
+                    return RequestResult.SENDER_LIMIT_REACHED;
+                }
+            }
+
             boolean success = FriendRequestDAO.sendRequest(sender, receiver);
             if (success) {
                 requestCooldowns.put(sender, now);
@@ -118,6 +131,47 @@ public class FriendManager {
                 return RequestResult.FAILED;
             }
         });
+    }
+
+    /**
+     * 動態計算玩家的好友數量上限（基於 LuckPerms / 權限點 chatconduit.friend.limit.<數量>）
+     *
+     * @param player 目標玩家
+     * @return int 好友數量上限
+     */
+    public int getMaxFriendLimit(Player player) {
+        if (player == null) {
+            return 20;
+        }
+        if (player.hasPermission("chatconduit.admin.bypasslimit") || player.hasPermission("chatconduit.friend.limit.unlimited")) {
+            return Integer.MAX_VALUE;
+        }
+
+        int maxLimit = 20; // 預設 20 人
+        for (PermissionAttachmentInfo pai : player.getEffectivePermissions()) {
+            String perm = pai.getPermission().toLowerCase();
+            if (perm.startsWith("chatconduit.friend.limit.")) {
+                String limitStr = perm.substring("chatconduit.friend.limit.".length());
+                try {
+                    int limit = Integer.parseInt(limitStr);
+                    if (limit > maxLimit) {
+                        maxLimit = limit;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return maxLimit;
+    }
+
+    /**
+     * 撤回已發送的好友申請
+     *
+     * @param sender 發送者 UUID
+     * @param receiver 接收者 UUID
+     * @return CompletableFuture<Boolean> 是否成功撤回
+     */
+    public CompletableFuture<Boolean> revokeFriendRequestAsync(UUID sender, UUID receiver) {
+        return CompletableFuture.supplyAsync(() -> FriendRequestDAO.removeRequest(sender, receiver));
     }
 
     /**
@@ -282,6 +336,13 @@ public class FriendManager {
     }
 
     /**
+     * 獲取玩家發出的未處理申請
+     */
+    public CompletableFuture<List<FriendRequest>> getOutgoingRequestsAsync(UUID sender) {
+        return CompletableFuture.supplyAsync(() -> FriendRequestDAO.getOutgoingRequests(sender));
+    }
+
+    /**
      * 獲取玩家個人設定（優先快取）
      */
     public PlayerSettings getSettings(UUID player) {
@@ -317,6 +378,8 @@ public class FriendManager {
         CANNOT_ADD_SELF,
         REQUESTS_DISABLED,
         AUTO_ACCEPTED,
+        SENDER_LIMIT_REACHED,
+        RECEIVER_LIMIT_REACHED,
         FAILED
     }
 }

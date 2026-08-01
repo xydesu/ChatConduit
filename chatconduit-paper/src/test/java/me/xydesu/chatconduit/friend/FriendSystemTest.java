@@ -4,6 +4,7 @@ import me.xydesu.chatconduit.friend.model.FriendBlock;
 import me.xydesu.chatconduit.friend.model.FriendRelation;
 import me.xydesu.chatconduit.friend.model.FriendRequest;
 import me.xydesu.chatconduit.friend.model.PlayerSettings;
+import org.bukkit.entity.Player;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -75,5 +76,13 @@ class FriendSystemTest {
         assertFalse(settings.isAllowFriendRequests());
         assertFalse(settings.isAllowTeleport());
         assertFalse(settings.isAllowPrivateMessages());
+    }
+
+    @Test
+    @DisplayName("測試 FriendManager 預設好友上限數值")
+    void testMaxFriendLimitDefault() {
+        FriendManager manager = new FriendManager();
+        int limitNullPlayer = manager.getMaxFriendLimit(null);
+        assertEquals(20, limitNullPlayer, "Null 玩家的預設好友上限應為 20");
     }
 }
