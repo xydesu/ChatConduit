@@ -170,13 +170,19 @@ public class ChatUtils {
     }
 
     /**
-     * 將輸入的純文字轉成支援 Legacy 顏色碼 (&a, &c, &#RRGGBB) 的 Component
+     * 將輸入的純文字轉成 Component，支援 Legacy 顏色碼 (&a, &c, &#RRGGBB) 與 MiniMessage 標籤 (<gradient:...>, <rainbow>, <#RRGGBB>)
      *
-     * @param text 包含 Legacy 顏色碼的字串
+     * @param text 包含色碼或標籤的字串
      * @return Adventure Component
      */
     public static Component parseLegacy(String text) {
-        if (text == null) return Component.empty();
+        if (text == null || text.isEmpty()) return Component.empty();
+        if (text.contains("<") && text.contains(">")) {
+            String miniText = translateLegacyToMiniMessage(text);
+            try {
+                return MINI_MESSAGE.deserialize(miniText);
+            } catch (Exception ignored) {}
+        }
         return LEGACY_SERIALIZER.deserialize(text);
     }
 
