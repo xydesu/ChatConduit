@@ -50,3 +50,10 @@ run/
 server/
 test-server/
 *.log
+
+# ==========================================
+# Node.js / Astro Build Output
+# ==========================================
+docs/node_modules/
+docs/dist/
+docs/.astro/
