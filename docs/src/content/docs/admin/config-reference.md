@@ -173,32 +173,6 @@ redis:
 
 ---
 
-## interactivechat
-
-```yaml
-interactivechat:
-  enabled: true
-  placeholders:
-    ping: "&f%player_colored_ping% &bms"
-    inv: "&b[&f%player_name%'s Inventory&b]"
-    inventory: "&b[&f%player_name%'s Inventory&b]"
-    ender: "&d[&f%player_name%'s Ender Chest&d]"
-    ec: "&d[&f%player_name%'s Ender Chest&d]"
-    money: "&e[&f%player_name%'s Balance&e]"
-    balance: "&e[&f%player_name%'s Balance&e]"
-```
-
-InteractiveChat 插件整合設定，自訂聊天欄內可點擊的佔位符格式。
-
-| 鍵 | 觸發詞 | 說明 |
-| :--- | :--- | :--- |
-| `ping` | `[ping]` | 顯示玩家延遲數值 |
-| `inv` / `inventory` | `[inv]` | 顯示玩家背包內容（可點擊查看） |
-| `ender` / `ec` | `[ender]` | 顯示玩家末影箱內容 |
-| `money` / `balance` | `[money]` | 顯示玩家目前餘額 |
-
----
-
 ## discordsrv
 
 ```yaml

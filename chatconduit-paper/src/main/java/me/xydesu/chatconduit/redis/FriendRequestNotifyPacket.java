@@ -16,6 +16,7 @@ public class FriendRequestNotifyPacket {
         ACCEPT,
         DENY,
         REVOKE,
+        REMOVE,
         BLOCK
     }
 

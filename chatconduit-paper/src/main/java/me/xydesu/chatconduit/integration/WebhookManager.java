@@ -20,8 +20,6 @@ public class WebhookManager {
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
-    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:> 或 <chat=UUID:[ping]:>)
-    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("<chat=[^:>]+:(\\[[^\\]]+\\]|[^:>]+):?>");
 
     private static final java.util.Map<String, Long> LAST_SENT_MAP = new java.util.concurrent.ConcurrentHashMap<>();
     private static final long COOLDOWN_MS = 1000; // 每頻道 1 秒速率限制
@@ -157,10 +155,6 @@ public class WebhookManager {
         if (channelId != null) {
             LAST_SENT_MAP.remove(channelId.toLowerCase());
         }
-    }
-
-    public static String cleanInteractiveChatPlaceholders(String text) {
-        return text != null ? text : "";
     }
 
     private static String escapeJson(String text) {

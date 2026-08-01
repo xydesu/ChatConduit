@@ -66,7 +66,6 @@
 - [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) — 支援全域佔位符解析
 - [DiscordSRV](https://www.spigotmc.org/resources/discordsrv.18494/) — 雙向 Discord 頻道整合
 - [CMI](https://www.spigotmc.org/resources/cmi.3742/) — AFK 掛機狀態自動監測
-- [InteractiveChat](https://www.spigotmc.org/resources/interactivechat.75870/) — `[inv]`, `[ping]`, `[ender]` 互動佔位符
 - Redis Server — 跨服廣播與好友狀態同步（多服必備）
 
 ---
@@ -114,7 +113,6 @@
 | `database` | 資料庫模式（`sqlite` / `mysql`）與 HikariCP 參數 |
 | `redis` | Redis 跨服連線設定 |
 | `discordsrv` | Discord 頻道映射與 Webhook 設定 |
-| `interactivechat` | InteractiveChat 佔位符格式自訂 |
 
 多語言文件位於 `plugins/ChatConduit/lang/`：
 - `zh-TW.yml`（正體中文，預設）

@@ -259,13 +259,8 @@ public class ChatListener implements Listener {
         // 5. 跨伺服器 Redis 訊息廣播 (異步)
         if (me.xydesu.chatconduit.redis.RedisManager.isEnabled()) {
             String messageJson = null;
-            try {
-                messageJson = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(playerMessage);
-            } catch (Exception e) {
-                Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 序列化 playerMessage 為 JSON 時失敗:", e);
-            }
+            messageJson = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(playerMessage);
 
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 發送 Redis ChatMessagePacket - sender=" + player.getName() + " (UUID: " + player.getUniqueId() + "), server=" + currentServerId + ", channel=" + channelIdentifier + ", rawMessage=\"" + finalMessage + "\", messageJson=" + messageJson);
 
             me.xydesu.chatconduit.redis.ChatMessagePacket packet = new me.xydesu.chatconduit.redis.ChatMessagePacket(
                     player.getUniqueId().toString(),

@@ -26,6 +26,7 @@ public final class Main extends JavaPlugin {
 
         saveDefaultConfig();
         saveDefaultLanguageFiles();
+        loadLanguageConfig();
         me.xydesu.chatconduit.gui.GUIManager.load();
 
         // 初始化資料庫連線池與自動遷移
@@ -150,9 +151,6 @@ public final class Main extends JavaPlugin {
                 ? "<green>Hooked (AFK Track)</green>"
                 : "<yellow>Not Found</yellow>";
 
-        String icStatus = getServer().getPluginManager().isPluginEnabled("InteractiveChat")
-                ? "<green>Hooked</green>"
-                : "<yellow>Not Found</yellow>";
 
         String papiStatus = "<yellow>Not Found</yellow>";
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
@@ -178,7 +176,6 @@ public final class Main extends JavaPlugin {
             "<dark_gray>│</dark_gray>  <gray>• Redis Sync      :</gray> " + redisStatus,
             "<dark_gray>│</dark_gray>  <gray>• DiscordSRV      :</gray> " + discordSrvStatus,
             "<dark_gray>│</dark_gray>  <gray>• CMI Hook        :</gray> " + cmiStatus,
-            "<dark_gray>│</dark_gray>  <gray>• InteractiveChat :</gray> " + icStatus,
             "<dark_gray>│</dark_gray>  <gray>• PlaceholderAPI  :</gray> " + papiStatus,
             "<dark_gray>│</dark_gray>  <gray>• Channels Loaded :</gray> <aqua>" + sysChanCount + " System</aqua> <dark_gray>/</dark_gray> <aqua>" + playerChanCount + " Player</aqua>",
             "<dark_gray>└────────────────────────────────────────────────────────┘</dark_gray>",

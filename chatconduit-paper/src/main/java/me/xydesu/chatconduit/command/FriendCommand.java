@@ -82,7 +82,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        FriendManager.getInstance().sendFriendRequestAsync(player.getUniqueId(), target.getUniqueId())
+        FriendManager.getInstance().sendFriendRequestAsync(player.getUniqueId(), target.getUniqueId(), player.getName(), targetName)
                 .thenAccept(result -> Bukkit.getScheduler().runTask(me.xydesu.chatconduit.Main.getInstance(), () -> {
                     switch (result) {
                         case SUCCESS -> ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.add-success")
@@ -115,7 +115,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        FriendManager.getInstance().acceptFriendRequestAsync(player.getUniqueId(), target.getUniqueId())
+        FriendManager.getInstance().acceptFriendRequestAsync(player.getUniqueId(), target.getUniqueId(), player.getName(), targetName)
                 .thenAccept(success -> Bukkit.getScheduler().runTask(me.xydesu.chatconduit.Main.getInstance(), () -> {
                     if (success) {
                         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.accept-success")
@@ -141,7 +141,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        FriendManager.getInstance().denyFriendRequestAsync(player.getUniqueId(), target.getUniqueId())
+        FriendManager.getInstance().denyFriendRequestAsync(player.getUniqueId(), target.getUniqueId(), player.getName(), targetName)
                 .thenAccept(success -> Bukkit.getScheduler().runTask(me.xydesu.chatconduit.Main.getInstance(), () -> {
                     if (success) {
                         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.deny-success")
@@ -167,7 +167,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        FriendManager.getInstance().revokeFriendRequestAsync(player.getUniqueId(), target.getUniqueId())
+        FriendManager.getInstance().revokeFriendRequestAsync(player.getUniqueId(), target.getUniqueId(), player.getName(), targetName)
                 .thenAccept(success -> Bukkit.getScheduler().runTask(me.xydesu.chatconduit.Main.getInstance(), () -> {
                     if (success) {
                         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.revoke-success")
@@ -199,7 +199,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        FriendManager.getInstance().removeFriendAsync(player.getUniqueId(), target.getUniqueId())
+        FriendManager.getInstance().removeFriendAsync(player.getUniqueId(), target.getUniqueId(), player.getName(), targetName)
                 .thenAccept(success -> Bukkit.getScheduler().runTask(me.xydesu.chatconduit.Main.getInstance(), () -> {
                     if (success) {
                         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.remove-success")
@@ -230,7 +230,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        FriendManager.getInstance().blockPlayerAsync(player.getUniqueId(), target.getUniqueId())
+        FriendManager.getInstance().blockPlayerAsync(player.getUniqueId(), target.getUniqueId(), player.getName(), targetName)
                 .thenAccept(success -> Bukkit.getScheduler().runTask(me.xydesu.chatconduit.Main.getInstance(), () -> {
                     if (success) {
                         ChatUtils.sendMessage(player, ChatUtils.getMessage("friend.block-success")

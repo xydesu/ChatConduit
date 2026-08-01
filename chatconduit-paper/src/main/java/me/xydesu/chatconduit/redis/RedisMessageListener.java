@@ -112,8 +112,6 @@ public class RedisMessageListener extends JedisPubSub {
         String senderName = packet.getSenderName();
         String remoteServerId = packet.getServerId() != null ? packet.getServerId() : "Remote";
 
-        Main.getInstance().getLogger().info("[InteractiveChat-Debug] 接收 Redis ChatMessagePacket - sender=" + senderName + " (UUID: " + packet.getSenderUuid() + "), remoteServer=" + remoteServerId + ", channel=" + channelKeyOrName + ", rawMessage=\"" + rawMessage + "\", messageJson=" + packet.getMessageJson());
-
         PlayerChannelManager.CustomChannel customChannel = PlayerChannelManager.getChannel(channelKeyOrName);
         ChannelManager.Channel sysChannel = ChannelManager.getChannel(channelKeyOrName);
 
@@ -371,7 +369,11 @@ public class RedisMessageListener extends JedisPubSub {
      * 處理來自遠端伺服器的好友申請與社交動作通知
      */
     private void processFriendRequestNotifyPacket(FriendRequestNotifyPacket packet) {
-        if (packet == null || packet.getTargetName() == null) return;
+        if (packet == null || packet.getAction() == null) return;
+
+        refreshRemoteFriendCaches(packet);
+
+        if (packet.getTargetName() == null) return;
 
         Player targetPlayer = Bukkit.getPlayerExact(packet.getTargetName());
         if (targetPlayer == null || !targetPlayer.isOnline()) {
@@ -397,10 +399,42 @@ public class RedisMessageListener extends JedisPubSub {
                 case REVOKE -> ChatUtils.sendMessage(targetPlayer,
                         "<gray>玩家 <yellow>" + packet.getSenderName() + "</yellow> 撤回了向您發送的好友申請。</gray>"
                 );
+                case REMOVE -> ChatUtils.sendMessage(targetPlayer,
+                        "<gray>玩家 <yellow>" + packet.getSenderName() + "</yellow> 已解除與您的好友關係。</gray>"
+                );
                 case BLOCK -> ChatUtils.sendMessage(targetPlayer,
                         "<gray>玩家 <yellow>" + packet.getSenderName() + "</yellow> 已解除與您的好友關係。</gray>"
                 );
             }
+        }
+    }
+
+    private void refreshRemoteFriendCaches(FriendRequestNotifyPacket packet) {
+        me.xydesu.chatconduit.friend.FriendManager friendManager = me.xydesu.chatconduit.friend.FriendManager.getInstance();
+        if (friendManager == null) return;
+
+        UUID senderUuid = parseUuid(packet.getSenderUuid());
+        UUID targetUuid = parseUuid(packet.getTargetUuid());
+
+        switch (packet.getAction()) {
+            case ACCEPT, REMOVE, BLOCK -> {
+                friendManager.refreshOnlinePlayerData(senderUuid);
+                friendManager.refreshOnlinePlayerData(targetUuid);
+            }
+            default -> {
+                if (targetUuid != null) {
+                    me.xydesu.chatconduit.gui.GUIRefresher.refreshForPlayer(Bukkit.getPlayer(targetUuid));
+                }
+            }
+        }
+    }
+
+    private UUID parseUuid(String rawUuid) {
+        if (rawUuid == null || rawUuid.isEmpty()) return null;
+        try {
+            return UUID.fromString(rawUuid);
+        } catch (Exception ignored) {
+            return null;
         }
     }
 }

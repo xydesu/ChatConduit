@@ -141,6 +141,21 @@ public class RedisPlayerRegistry {
     }
 
     /**
+     * 依 UUID 從本地 Redis 快取查找線上玩家資料。
+     */
+    public static PlayerData getPlayerDataByUuid(String playerUuid) {
+        if (!RedisManager.isEnabled() || playerUuid == null) return null;
+
+        for (PlayerData data : cachedPlayerDataMap.values()) {
+            if (data != null && playerUuid.equalsIgnoreCase(data.getUuid())) {
+                return data;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * 獲取所有線上玩家名稱 Set (含全服線上玩家，用於 Tab 補全與私訊補全，完全讀取快取不阻塞主執行緒)
      */
     public static Set<String> getOnlinePlayerNames() {
