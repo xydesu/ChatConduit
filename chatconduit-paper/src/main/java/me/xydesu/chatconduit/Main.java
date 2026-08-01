@@ -131,6 +131,10 @@ public final class Main extends JavaPlugin {
                 ? "<green>Hooked</green>"
                 : "<yellow>Not Found</yellow>";
 
+        String icStatus = getServer().getPluginManager().isPluginEnabled("InteractiveChat")
+                ? "<green>Hooked</green>"
+                : "<yellow>Not Found</yellow>";
+
         String papiStatus = getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")
                 ? "<green>Hooked</green>"
                 : "<yellow>Not Found</yellow>";
@@ -152,6 +156,7 @@ public final class Main extends JavaPlugin {
             "<dark_gray>│</dark_gray>  <gray>• Database Driver :</gray> <green>HikariCP (" + dbStatus + ")</green>",
             "<dark_gray>│</dark_gray>  <gray>• Redis Sync      :</gray> " + redisStatus,
             "<dark_gray>│</dark_gray>  <gray>• DiscordSRV      :</gray> " + discordSrvStatus,
+            "<dark_gray>│</dark_gray>  <gray>• InteractiveChat :</gray> " + icStatus,
             "<dark_gray>│</dark_gray>  <gray>• PlaceholderAPI  :</gray> " + papiStatus,
             "<dark_gray>│</dark_gray>  <gray>• Channels Loaded :</gray> <aqua>" + sysChanCount + " System</aqua> <dark_gray>/</dark_gray> <aqua>" + playerChanCount + " Player</aqua>",
             "<dark_gray>└────────────────────────────────────────────────────────┘</dark_gray>",

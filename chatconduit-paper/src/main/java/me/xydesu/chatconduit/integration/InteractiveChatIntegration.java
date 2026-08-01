@@ -28,6 +28,11 @@ public class InteractiveChatIntegration {
         if (available == null) {
             Plugin plugin = Bukkit.getPluginManager().getPlugin("InteractiveChat");
             available = plugin != null && plugin.isEnabled();
+            if (available) {
+                Main.getInstance().getLogger().info("[InteractiveChat] 已偵測到 InteractiveChat 插件並成功建立整合！");
+            } else {
+                Main.getInstance().getLogger().info("[InteractiveChat] 未偵測到 InteractiveChat 插件 (軟性相容模式關閉)。");
+            }
         }
         return available;
     }
@@ -67,6 +72,7 @@ public class InteractiveChatIntegration {
             }
 
             if (transformMethod != null) {
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在透過 API 處理玩家 " + player.getName() + " 的訊息: " + message);
                 Object result;
                 if (transformMethod.getParameterCount() == 2) {
                     result = transformMethod.invoke(null, player, message);
@@ -77,13 +83,16 @@ public class InteractiveChatIntegration {
                 }
 
                 if (result instanceof String stringResult) {
+                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (String): " + stringResult);
                     return stringResult;
                 } else if (result instanceof Component componentResult) {
-                    return net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(componentResult);
+                    String serialized = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(componentResult);
+                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Component): " + serialized);
+                    return serialized;
                 }
             }
         } catch (Throwable t) {
-            Main.getInstance().getLogger().log(Level.FINE, "呼叫 InteractiveChat API 失敗，退回預設處理:", t);
+            Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 呼叫 InteractiveChat API 時拋出異常:", t);
         }
 
         return message;

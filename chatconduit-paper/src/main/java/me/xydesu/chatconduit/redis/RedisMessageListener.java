@@ -165,13 +165,15 @@ public class RedisMessageListener extends JedisPubSub {
             try {
                 Component deserializedComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(packet.getMessageJson());
                 playerMessageComponent = ChatUtils.cleanComponentInteractiveChatTags(deserializedComp);
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功反序列化跨服 Component JSON 並完成標籤防錯淨化。");
             } catch (Exception e) {
-                Main.getInstance().getLogger().log(Level.FINE, "反序列化來自跨服的 messageJson 失敗，退回預設文字解析:", e);
+                Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 反序列化來自跨服的 messageJson 失敗，退回預設文字解析:", e);
             }
         }
         if (playerMessageComponent == null) {
             String cleanedMessage = ChatUtils.cleanInteractiveChatPlaceholders(rawMessage);
             playerMessageComponent = ChatUtils.parseLegacy(cleanedMessage);
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已將跨服純文字訊息淨化為安全標籤: " + cleanedMessage);
         }
 
         String rawChatFormat = packet.getChatFormat();
