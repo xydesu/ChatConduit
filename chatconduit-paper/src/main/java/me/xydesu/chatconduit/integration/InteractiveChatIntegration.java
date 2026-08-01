@@ -4,27 +4,34 @@ import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 /**
  * InteractiveChat 插件軟性相容 (SoftDepend Wrapper) 整合類別
- * 使用全方位動態反射機制精準判定參數型態、位置與 API 實例，確保跨版本 100% 相容
+ * 使用全方位動態反射機制呼叫 InteractiveChatAPI (包含 createItemDisplayComponent 等核心 API)
  *
  * @author xydesu
  */
 public class InteractiveChatIntegration {
 
     private static Boolean available = null;
+    private static Method createItemDisplayComponentM = null;
     private static Method componentMethod = null;
     private static Method stringMethod = null;
     private static Method bungeeMethod = null;
     private static Object apiInstance = null;
+
+    private static final Pattern ITEM_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]");
+    private static final Pattern OFFHAND_PATTERN = Pattern.compile("(?i)\\[(offhand|off)\\]");
 
     /**
      * 檢查伺服器是否已安裝並啟用 InteractiveChat 插件
@@ -48,6 +55,7 @@ public class InteractiveChatIntegration {
      */
     public static void resetCache() {
         available = null;
+        createItemDisplayComponentM = null;
         componentMethod = null;
         stringMethod = null;
         bungeeMethod = null;
@@ -66,6 +74,13 @@ public class InteractiveChatIntegration {
                     apiInstance = getInstanceM.invoke(null);
                     Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功獲取 API 單例物件: " + apiInstance);
                 }
+            } catch (Throwable ignored) {}
+
+            // 嘗試獲取 createItemDisplayComponent(Player, ItemStack)
+            try {
+                createItemDisplayComponentM = apiClass.getMethod("createItemDisplayComponent", Player.class, ItemStack.class);
+                createItemDisplayComponentM.setAccessible(true);
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] >> 已成功綁定 createItemDisplayComponent(Player, ItemStack) 方法！");
             } catch (Throwable ignored) {}
 
             Method[] methods = apiClass.getMethods();
@@ -101,25 +116,6 @@ public class InteractiveChatIntegration {
                     }
                 }
             }
-
-            // 若在 getMethods() 未找到，降級掃描 getDeclaredMethods()
-            if (componentMethod == null && stringMethod == null && bungeeMethod == null) {
-                for (Method m : apiClass.getDeclaredMethods()) {
-                    Class<?>[] pTypes = m.getParameterTypes();
-                    if (pTypes.length == 2 && (CommandSender.class.isAssignableFrom(pTypes[0]) || CommandSender.class.isAssignableFrom(pTypes[1]))) {
-                        m.setAccessible(true);
-                        int targetIdx = CommandSender.class.isAssignableFrom(pTypes[0]) ? 1 : 0;
-                        Class<?> targetType = pTypes[targetIdx];
-                        if (Component.class.isAssignableFrom(targetType) && componentMethod == null) {
-                            componentMethod = m;
-                        } else if (targetType == String.class && stringMethod == null) {
-                            stringMethod = m;
-                        } else if (targetType.getName().contains("BaseComponent") && bungeeMethod == null) {
-                            bungeeMethod = m;
-                        }
-                    }
-                }
-            }
         } catch (Throwable t) {
             Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 掃描 API 方法時例外:", t);
         }
@@ -141,11 +137,27 @@ public class InteractiveChatIntegration {
         Main.getInstance().getLogger().info("[InteractiveChat-Debug] 準備處理 API 請求 - 玩家: " + player.getName() + " (UUID: " + player.getUniqueId() + "), 原始訊息: \"" + message + "\"");
 
         try {
-            if (componentMethod == null && stringMethod == null && bungeeMethod == null) {
+            if (createItemDisplayComponentM == null && componentMethod == null && stringMethod == null && bungeeMethod == null) {
                 findApiMethods();
             }
 
-            // 1. 優先嘗試 Component 方法
+            // 1. 優先嘗試 InteractiveChatAPI.createItemDisplayComponent 處理 [item] / [offhand] 標籤
+            if (createItemDisplayComponentM != null) {
+                boolean hasItemTag = ITEM_PATTERN.matcher(message).find();
+                boolean hasOffhandTag = OFFHAND_PATTERN.matcher(message).find();
+
+                if (hasItemTag || hasOffhandTag) {
+                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] 偵測到物品標籤，準備呼叫 InteractiveChatAPI.createItemDisplayComponent 生成展示 Component...");
+                    Component resultComp = processItemPlaceholders(player, message);
+                    if (resultComp != null) {
+                        String json = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(resultComp);
+                        Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功建構包含 [item] 展示之 Component! GsonJSON=" + json);
+                        return resultComp;
+                    }
+                }
+            }
+
+            // 2. 備用嘗試 Component 方法
             if (componentMethod != null) {
                 Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在呼叫 Component API 方法: " + componentMethod.getName());
                 Component inputComp = ChatUtils.parseLegacy(message);
@@ -158,7 +170,7 @@ public class InteractiveChatIntegration {
                 if (res != null) return res;
             }
 
-            // 2. 備用嘗試 String 方法
+            // 3. 備用嘗試 String 方法
             if (stringMethod != null) {
                 Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在呼叫 String API 方法: " + stringMethod.getName());
                 Object target = Modifier.isStatic(stringMethod.getModifiers()) ? null : apiInstance;
@@ -170,7 +182,7 @@ public class InteractiveChatIntegration {
                 if (res != null) return res;
             }
 
-            // 3. 備用嘗試 Bungee 方法
+            // 4. 備用嘗試 Bungee 方法
             if (bungeeMethod != null) {
                 Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在呼叫 Bungee API 方法: " + bungeeMethod.getName());
                 Object bungeeInput = net.md_5.bungee.api.chat.TextComponent.fromLegacyText(message);
@@ -187,6 +199,45 @@ public class InteractiveChatIntegration {
         }
 
         return null;
+    }
+
+    private static Component processItemPlaceholders(Player player, String message) {
+        try {
+            ItemStack mainHand = player.getInventory().getItemInMainHand();
+            ItemStack offHand = player.getInventory().getItemInOffHand();
+
+            Component mainItemComp = null;
+            if (mainHand != null && mainHand.getType() != Material.AIR) {
+                mainItemComp = (Component) createItemDisplayComponentM.invoke(null, player, mainHand);
+            }
+
+            Component offItemComp = null;
+            if (offHand != null && offHand.getType() != Material.AIR) {
+                offItemComp = (Component) createItemDisplayComponentM.invoke(null, player, offHand);
+            }
+
+            String current = message;
+            Component builder = Component.empty();
+
+            String[] parts = ITEM_PATTERN.split(current, -1);
+            for (int i = 0; i < parts.length; i++) {
+                if (!parts[i].isEmpty()) {
+                    builder = builder.append(ChatUtils.parseLegacy(parts[i]));
+                }
+                if (i < parts.length - 1) {
+                    if (mainItemComp != null) {
+                        builder = builder.append(mainItemComp);
+                    } else {
+                        builder = builder.append(Component.text("[item]"));
+                    }
+                }
+            }
+
+            return builder;
+        } catch (Throwable t) {
+            Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 解析 [item] 標籤 Component 時失敗:", t);
+            return null;
+        }
     }
 
     private static Component handleResult(Object result) {
