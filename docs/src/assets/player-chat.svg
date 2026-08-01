@@ -1,11 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <defs>
-    <linearGradient id="playerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00C9FF"/>
-      <stop offset="100%" stop-color="#92FE9D"/>
-    </linearGradient>
-  </defs>
-  <circle cx="256" cy="160" r="80" fill="url(#playerGrad)"/>
-  <path d="M120 416 C120 320 180 280 256 280 C332 280 392 320 392 416" fill="none" stroke="url(#playerGrad)" stroke-width="32" stroke-linecap="round"/>
-  <path d="M340 140 A60 60 0 0 1 440 200 H390 L360 220 V200 H340 Z" fill="#00C9FF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- 人物頭像 -->
+  <circle cx="32" cy="20" r="10" fill="#E4E4E7"/>
+  <!-- 人物身體 -->
+  <path d="M14 52 C14 38 50 38 50 52" fill="#E4E4E7"/>
+  <!-- 對話泡泡 -->
+  <rect x="36" y="8" width="22" height="14" rx="3" fill="#18181B"/>
+  <polygon points="38,22 36,28 44,22" fill="#18181B"/>
+  <!-- 泡泡內點點 -->
+  <circle cx="42" cy="15" r="1.5" fill="#E4E4E7"/>
+  <circle cx="47" cy="15" r="1.5" fill="#E4E4E7"/>
+  <circle cx="52" cy="15" r="1.5" fill="#E4E4E7"/>
 </svg>
