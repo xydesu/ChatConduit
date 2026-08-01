@@ -52,19 +52,19 @@ class ChatUtilsTest {
     @DisplayName("測試 InteractiveChat 內部標籤淨化 (cleanInteractiveChatPlaceholders)")
     void testCleanInteractiveChatPlaceholders() {
         String input1 = "Look at this <chat=1234-5678:[item]:> is cool!";
-        assertEquals("Look at this [item] is cool!", ChatUtils.cleanInteractiveChatPlaceholders(input1));
+        assertEquals("Look at this [\u200Bitem] is cool!", ChatUtils.cleanInteractiveChatPlaceholders(input1));
 
         String input2 = "Check my <chat=abcd-efgh:[inv]:> and <chat=9876-5432:[ender]:>!";
-        assertEquals("Check my [inv] and [ender]!", ChatUtils.cleanInteractiveChatPlaceholders(input2));
+        assertEquals("Check my [\u200Binv] and [\u200Bender]!", ChatUtils.cleanInteractiveChatPlaceholders(input2));
 
         String input3 = "Ping: <chat=uuid-1234:ping:>";
-        assertEquals("Ping: [ping]", ChatUtils.cleanInteractiveChatPlaceholders(input3));
+        assertEquals("Ping: [\u200Bping]", ChatUtils.cleanInteractiveChatPlaceholders(input3));
 
         String input4 = "Look at <chat=1234-5678:[item]> without trailing colon";
-        assertEquals("Look at [item] without trailing colon", ChatUtils.cleanInteractiveChatPlaceholders(input4));
+        assertEquals("Look at [\u200Bitem] without trailing colon", ChatUtils.cleanInteractiveChatPlaceholders(input4));
 
         String input5 = "Check <ic=uuid-9999:item> and <interactivechat=uuid-8888:[ender]:>";
-        assertEquals("Check [item] and [ender]", ChatUtils.cleanInteractiveChatPlaceholders(input5));
+        assertEquals("Check [\u200Bitem] and [\u200Bender]", ChatUtils.cleanInteractiveChatPlaceholders(input5));
 
         String normal = "Normal chat message without IC tags.";
         assertEquals(normal, ChatUtils.cleanInteractiveChatPlaceholders(normal));
@@ -78,6 +78,6 @@ class ChatUtilsTest {
 
         assertNotNull(cleaned);
         String plainText = PlainTextComponentSerializer.plainText().serialize(cleaned);
-        assertEquals("Look at [item]", plainText);
+        assertEquals("Look at [\u200Bitem]", plainText);
     }
 }

@@ -17,11 +17,11 @@ class WebhookManagerTest {
     void testCleanInteractiveChatPlaceholders() {
         String input1 = "Check this item: <chat=123e4567-e89b-12d3-a456-426614174000:[item]:>!";
         String cleaned1 = WebhookManager.cleanInteractiveChatPlaceholders(input1);
-        assertEquals("Check this item: [item]!", cleaned1);
+        assertEquals("Check this item: [\u200Bitem]!", cleaned1);
 
         String input2 = "Player ping: <chat=abc-def:[ping]:>";
         String cleaned2 = WebhookManager.cleanInteractiveChatPlaceholders(input2);
-        assertEquals("Player ping: [ping]", cleaned2);
+        assertEquals("Player ping: [\u200Bping]", cleaned2);
 
         String inputNormal = "Hello world! Normal message";
         assertEquals("Hello world! Normal message", WebhookManager.cleanInteractiveChatPlaceholders(inputNormal));

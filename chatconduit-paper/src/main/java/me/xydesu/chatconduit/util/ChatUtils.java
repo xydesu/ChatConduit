@@ -33,7 +33,8 @@ public class ChatUtils {
     private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("(?i)<(?:chat|ic|interactivechat)=[^:>]+(?::(\\[[^\\]]+\\]|[^:>]+)?)?:?>");
 
     /**
-     * 清理 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為乾淨的 [item])
+     * 清理與轉化 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]:> 轉為不引發遠端 InteractiveChat 重複解析的安全 [item])
+     * 透過注入零寬空格 (\u200B)，可在遊戲畫面 100% 正常顯示 [item]，並防止遠端伺服器誤判噴出紅字 Parse error
      *
      * @param text 待清理的文字
      * @return 淨化後的文字
@@ -44,12 +45,8 @@ public class ChatUtils {
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
             String tag = matcher.group(1);
-            if (tag == null || tag.trim().isEmpty()) {
-                tag = "[item]";
-            } else if (!tag.startsWith("[")) {
-                tag = "[" + tag + "]";
-            }
-            matcher.appendReplacement(sb, Matcher.quoteReplacement(tag));
+            String safeTag = formatSafePlaceholder(tag);
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(safeTag));
         }
         matcher.appendTail(sb);
         return sb.toString();
@@ -67,14 +64,20 @@ public class ChatUtils {
                 .match(INTERACTIVE_CHAT_PATTERN)
                 .replacement((result, b) -> {
                     String tag = result.group(1);
-                    if (tag == null || tag.trim().isEmpty()) {
-                        tag = "[item]";
-                    } else if (!tag.startsWith("[")) {
-                        tag = "[" + tag + "]";
-                    }
-                    return Component.text(tag);
+                    String safeTag = formatSafePlaceholder(tag);
+                    return Component.text(safeTag);
                 })
         );
+    }
+
+    private static String formatSafePlaceholder(String tag) {
+        if (tag == null || tag.trim().isEmpty()) {
+            return "[\u200Bitem]";
+        }
+        if (!tag.startsWith("[")) {
+            return "[\u200B" + tag + "]";
+        }
+        return "[\u200B" + tag.substring(1);
     }
 
     private static final Pattern HEX_X_PATTERN = Pattern.compile("(?i)[&§]x[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])[&§]([0-9a-f])");
