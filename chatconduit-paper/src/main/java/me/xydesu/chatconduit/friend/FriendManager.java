@@ -126,6 +126,18 @@ public class FriendManager {
             boolean success = FriendRequestDAO.sendRequest(sender, receiver);
             if (success) {
                 requestCooldowns.put(sender, now);
+                Player senderP = Bukkit.getPlayer(sender);
+                String senderName = senderP != null ? senderP.getName() : "Unknown";
+                Player receiverP = Bukkit.getPlayer(receiver);
+                String receiverName = receiverP != null ? receiverP.getName() : "Unknown";
+                me.xydesu.chatconduit.redis.RedisManager.publishFriendRequestNotify(
+                        new me.xydesu.chatconduit.redis.FriendRequestNotifyPacket(
+                                sender.toString(), senderName, receiver.toString(), receiverName,
+                                me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                                me.xydesu.chatconduit.redis.FriendRequestNotifyPacket.Action.SEND,
+                                System.currentTimeMillis()
+                        )
+                );
                 return RequestResult.SUCCESS;
             } else {
                 return RequestResult.FAILED;
@@ -171,7 +183,24 @@ public class FriendManager {
      * @return CompletableFuture<Boolean> 是否成功撤回
      */
     public CompletableFuture<Boolean> revokeFriendRequestAsync(UUID sender, UUID receiver) {
-        return CompletableFuture.supplyAsync(() -> FriendRequestDAO.removeRequest(sender, receiver));
+        return CompletableFuture.supplyAsync(() -> {
+            boolean removed = FriendRequestDAO.removeRequest(sender, receiver);
+            if (removed) {
+                Player senderP = Bukkit.getPlayer(sender);
+                String senderName = senderP != null ? senderP.getName() : "Unknown";
+                Player receiverP = Bukkit.getPlayer(receiver);
+                String receiverName = receiverP != null ? receiverP.getName() : "Unknown";
+                me.xydesu.chatconduit.redis.RedisManager.publishFriendRequestNotify(
+                        new me.xydesu.chatconduit.redis.FriendRequestNotifyPacket(
+                                sender.toString(), senderName, receiver.toString(), receiverName,
+                                me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                                me.xydesu.chatconduit.redis.FriendRequestNotifyPacket.Action.REVOKE,
+                                System.currentTimeMillis()
+                        )
+                );
+            }
+            return removed;
+        });
     }
 
     /**
@@ -201,6 +230,20 @@ public class FriendManager {
                 if (senderFriends != null) {
                     senderFriends.add(receiver);
                 }
+
+                Player receiverP = Bukkit.getPlayer(receiver);
+                String receiverName = receiverP != null ? receiverP.getName() : "Unknown";
+                Player senderP = Bukkit.getPlayer(sender);
+                String senderName = senderP != null ? senderP.getName() : "Unknown";
+
+                me.xydesu.chatconduit.redis.RedisManager.publishFriendRequestNotify(
+                        new me.xydesu.chatconduit.redis.FriendRequestNotifyPacket(
+                                receiver.toString(), receiverName, sender.toString(), senderName,
+                                me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                                me.xydesu.chatconduit.redis.FriendRequestNotifyPacket.Action.ACCEPT,
+                                System.currentTimeMillis()
+                        )
+                );
                 return true;
             }
             return false;
@@ -215,7 +258,24 @@ public class FriendManager {
      * @return CompletableFuture<Boolean> 是否成功刪除申請
      */
     public CompletableFuture<Boolean> denyFriendRequestAsync(UUID receiver, UUID sender) {
-        return CompletableFuture.supplyAsync(() -> FriendRequestDAO.removeRequest(sender, receiver));
+        return CompletableFuture.supplyAsync(() -> {
+            boolean removed = FriendRequestDAO.removeRequest(sender, receiver);
+            if (removed) {
+                Player receiverP = Bukkit.getPlayer(receiver);
+                String receiverName = receiverP != null ? receiverP.getName() : "Unknown";
+                Player senderP = Bukkit.getPlayer(sender);
+                String senderName = senderP != null ? senderP.getName() : "Unknown";
+                me.xydesu.chatconduit.redis.RedisManager.publishFriendRequestNotify(
+                        new me.xydesu.chatconduit.redis.FriendRequestNotifyPacket(
+                                receiver.toString(), receiverName, sender.toString(), senderName,
+                                me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                                me.xydesu.chatconduit.redis.FriendRequestNotifyPacket.Action.DENY,
+                                System.currentTimeMillis()
+                        )
+                );
+            }
+            return removed;
+        });
     }
 
     /**

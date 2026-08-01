@@ -25,6 +25,14 @@ public class PlayerListener implements Listener {
         me.xydesu.chatconduit.friend.FriendManager.getInstance().loadPlayerDataAsync(player.getUniqueId());
         // 註冊玩家線上狀態至 Redis 快取
         me.xydesu.chatconduit.redis.RedisPlayerRegistry.registerPlayer(player, me.xydesu.chatconduit.redis.RedisManager.getServerId());
+        // 廣播跨服好友上線狀態
+        me.xydesu.chatconduit.redis.RedisManager.publishFriendStatus(new me.xydesu.chatconduit.redis.FriendStatusPacket(
+                player.getUniqueId().toString(),
+                player.getName(),
+                me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                me.xydesu.chatconduit.redis.FriendStatusPacket.Action.JOIN,
+                System.currentTimeMillis()
+        ));
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -32,6 +40,14 @@ public class PlayerListener implements Listener {
         lastJoinQuitTime = System.currentTimeMillis();
         me.xydesu.chatconduit.gui.PlayerInputManager.clearPendingInput(event.getPlayer().getUniqueId());
         me.xydesu.chatconduit.message.PrivateMessageManager.removeReplyTarget(event.getPlayer().getUniqueId());
+        // 廣播跨服好友下線狀態
+        me.xydesu.chatconduit.redis.RedisManager.publishFriendStatus(new me.xydesu.chatconduit.redis.FriendStatusPacket(
+                event.getPlayer().getUniqueId().toString(),
+                event.getPlayer().getName(),
+                me.xydesu.chatconduit.redis.RedisManager.getServerId(),
+                me.xydesu.chatconduit.redis.FriendStatusPacket.Action.QUIT,
+                System.currentTimeMillis()
+        ));
         // 從 Redis 快取中移除玩家
         me.xydesu.chatconduit.redis.RedisPlayerRegistry.unregisterPlayer(event.getPlayer());
         // 玩家離線時非同步寫入保存，並從記憶體 Map 卸載資料防止洩漏

@@ -56,6 +56,24 @@ public class RedisMessageListener extends JedisPubSub {
                 }
             }
 
+            // 嘗試解析為 FriendStatusPacket
+            if (message.contains("\"playerUuid\"") && message.contains("\"playerName\"") && message.contains("\"action\"")) {
+                FriendStatusPacket statusPacket = FriendStatusPacket.fromJson(message);
+                if (statusPacket != null && statusPacket.getAction() != null) {
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> processFriendStatusPacket(statusPacket));
+                    return;
+                }
+            }
+
+            // 嘗試解析為 FriendRequestNotifyPacket
+            if (message.contains("\"senderUuid\"") && message.contains("\"targetUuid\"") && message.contains("\"originServerId\"")) {
+                FriendRequestNotifyPacket notifyPacket = FriendRequestNotifyPacket.fromJson(message);
+                if (notifyPacket != null && notifyPacket.getAction() != null) {
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> processFriendRequestNotifyPacket(notifyPacket));
+                    return;
+                }
+            }
+
             // 嘗試解析為 PrivateMessagePacket
             if (message.contains("\"targetName\"") && message.contains("\"rawMessage\"") && !message.contains("\"channelName\"")) {
                 PrivateMessagePacket pmPacket = PrivateMessagePacket.fromJson(message);
@@ -305,6 +323,78 @@ public class RedisMessageListener extends JedisPubSub {
                 }
             }
             default -> {}
+        }
+    }
+
+    /**
+     * 處理來自遠端伺服器的好友線上狀態變更通知
+     */
+    private void processFriendStatusPacket(FriendStatusPacket packet) {
+        if (packet == null || packet.getPlayerUuid() == null) return;
+        if (packet.getServerId() != null && packet.getServerId().equalsIgnoreCase(RedisManager.getServerId())) {
+            return; // 本服的狀態變更在本地已自動觸發
+        }
+
+        UUID playerUuid;
+        try {
+            playerUuid = UUID.fromString(packet.getPlayerUuid());
+        } catch (Exception e) {
+            return;
+        }
+
+        me.xydesu.chatconduit.friend.FriendManager friendManager = me.xydesu.chatconduit.friend.FriendManager.getInstance();
+        if (friendManager == null) return;
+
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (friendManager.isFriend(onlinePlayer.getUniqueId(), playerUuid)) {
+                if (packet.getAction() == FriendStatusPacket.Action.JOIN) {
+                    ChatUtils.sendMessage(onlinePlayer,
+                            "<gradient:#00b09b:#96c93d>[好友廣播]</gradient> <gray>您的好友 <yellow>" + packet.getPlayerName() +
+                                    "</yellow> 已上線 <dark_gray>(伺服器: <aqua>" + packet.getServerId() + "</aqua>)</dark_gray></gray>"
+                    );
+                } else if (packet.getAction() == FriendStatusPacket.Action.QUIT) {
+                    ChatUtils.sendMessage(onlinePlayer,
+                            "<gradient:#00b09b:#96c93d>[好友廣播]</gradient> <gray>您的好友 <yellow>" + packet.getPlayerName() + "</yellow> 已下線。</gray>"
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * 處理來自遠端伺服器的好友申請與社交動作通知
+     */
+    private void processFriendRequestNotifyPacket(FriendRequestNotifyPacket packet) {
+        if (packet == null || packet.getTargetName() == null) return;
+
+        Player targetPlayer = Bukkit.getPlayerExact(packet.getTargetName());
+        if (targetPlayer == null || !targetPlayer.isOnline()) {
+            targetPlayer = Bukkit.getPlayer(packet.getTargetName());
+        }
+
+        if (targetPlayer != null && targetPlayer.isOnline()) {
+            switch (packet.getAction()) {
+                case SEND -> {
+                    Component messageComp = ChatUtils.parseNoItalic(targetPlayer,
+                            "<gradient:#56ccf2:#2f80ed>[好友申請]</gradient> <yellow>" + packet.getSenderName() +
+                                    "</yellow> <gray>(來自 <aqua>" + packet.getOriginServerId() + "</aqua>) 向您發送了好友申請！</gray>\n" +
+                                    "<green><bold>[ 點擊接受 ]</bold></green>  <red><bold>[ 點擊拒絕 ]</bold></red>"
+                    );
+                    targetPlayer.sendMessage(messageComp);
+                }
+                case ACCEPT -> ChatUtils.sendMessage(targetPlayer,
+                        "<gradient:#00b09b:#96c93d>[好友連動]</gradient> <yellow>" + packet.getSenderName() + "</yellow> <gray>已接受您的好友申請，你們現在是好友了！</gray>"
+                );
+                case DENY -> ChatUtils.sendMessage(targetPlayer,
+                        "<gray>玩家 <yellow>" + packet.getSenderName() + "</yellow> 拒絕了您的好友申請。</gray>"
+                );
+                case REVOKE -> ChatUtils.sendMessage(targetPlayer,
+                        "<gray>玩家 <yellow>" + packet.getSenderName() + "</yellow> 撤回了向您發送的好友申請。</gray>"
+                );
+                case BLOCK -> ChatUtils.sendMessage(targetPlayer,
+                        "<gray>玩家 <yellow>" + packet.getSenderName() + "</yellow> 已解除與您的好友關係。</gray>"
+                );
+            }
         }
     }
 }

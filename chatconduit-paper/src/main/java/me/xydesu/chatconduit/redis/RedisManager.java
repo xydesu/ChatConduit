@@ -209,6 +209,44 @@ public class RedisManager {
     }
 
     /**
+     * 發送好友線上狀態變更封包至 Redis
+     *
+     * @param packet 狀態變更封包
+     */
+    public static void publishFriendStatus(FriendStatusPacket packet) {
+        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
+            return;
+        }
+
+        executePublish(() -> {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.publish(redisChannel, packet.toJson());
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "發送 Redis 好友狀態變更廣播失敗:", e);
+            }
+        });
+    }
+
+    /**
+     * 發送好友申請與社交動作通知封包至 Redis
+     *
+     * @param packet 好友申請通知封包
+     */
+    public static void publishFriendRequestNotify(FriendRequestNotifyPacket packet) {
+        if (!enabled || jedisPool == null || jedisPool.isClosed()) {
+            return;
+        }
+
+        executePublish(() -> {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.publish(redisChannel, packet.toJson());
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "發送 Redis 好友申請通知廣播失敗:", e);
+            }
+        });
+    }
+
+    /**
      * 獲取 Jedis 連線資源，供組件內部進行同步或非同步 Redis 操作
      * 調用者有責任調用 jedis.close() 來歸還連線池資源
      */

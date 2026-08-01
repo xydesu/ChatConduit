@@ -8,22 +8,23 @@
 
 ## 📌 優先級規劃 (Priority Overview)
 
-* **🔥 第一階段（核心進行中）**: Redis 跨服狀態廣播、Chest GUI Symbol 動態佈局重構、GUI 分頁與即時刷新。
-* **✨ 第二階段（進階擴充）**: VIP 專屬好友特效與視覺擴充、異步頭顱 Skin 加載優化、廣播通道擴充。
-* **📚 第三階段（文件與維基 Roadmap）**: 官方 WIKI Page 維護、API 開發者文件。
+* **🔥 第一階段（核心同步 - 已完成）**: Redis 跨服狀態廣播、跨服私訊與即時申請通知、Redis 快取與黑名單保護。
+* **⚡ 第一階段（進行中）**: Chest GUI Symbol 動態佈局重構、GUI 分頁與即时刷新。
+* **✨ 第二階段（進階擴充）**: VIP 專屬好友特效與視覺擴充、異步頭顱 Skin 加載優化、跨服傳送對接 (`/friend tp`)。
+* **📚 第三階段（文件與維基 Roadmap）**: 現代化開源 WIKI (Starlight/Docusaurus) 維護、API 開發者文件。
 
 ---
 
 ## 1. 🔥 第一階段：核心開發與跨服/GUI強化 (High Priority)
 
 ### 1.1 Redis 跨服好友狀態與廣播 (Redis Sync & PubSub)
-* [ ] **Pub/Sub 訊息廣播**
-    * [ ] 上下線/切換伺服器事件頻道 (`friend:status_change`)
-    * [ ] 跨服私訊頻道 (`friend:private_msg`)
-    * [ ] 好友申請與實時通知頻道 (`friend:request_notify`)
-* [ ] **Redis Data Cache**
-    * [ ] 快取在線玩家列表與所在伺服器 (`online_players` Hash/Set)
-    * [ ] 快取玩家好友名單以降低資料庫查詢壓力
+* [x] **Pub/Sub 訊息廣播**
+    * [x] 上下線/切換伺服器事件頻道 (`friend:status_change` - `FriendStatusPacket`)
+    * [x] 跨服私訊頻道 (`friend:private_msg` - `PrivateMessagePacket`)
+    * [x] 好友申請與實時通知頻道 (`friend:request_notify` - `FriendRequestNotifyPacket`)
+* [x] **Redis Data Cache**
+    * [x] 快取在線玩家列表與所在伺服器 (`online_players` Hash/Set - `RedisPlayerRegistry`)
+    * [x] 快取玩家好友名單與在線狀態以降低資料庫查詢壓力
 
 ---
 
@@ -63,14 +64,31 @@
     * [x] 屏蔽好友申請（被屏蔽者發送申請時自動忽略或提示失敗）
     * [x] 自動解除好友關係（若加入黑名單時雙方已是好友，強制解綁）
     * [x] GUI 內點擊可解鎖/檢視黑名單成員
-* [ ] **屏蔽私訊與跨服傳送**
-    * [ ] 阻止被封鎖玩家發送跨服私訊與發起傳送請求
+* [x] **屏蔽私訊與跨服保護**
+    * [x] 阻止被封鎖玩家發送跨服/本地私訊 (`PrivateMessageManager` 封鎖攔截)
+    * [x] 阻止被封鎖玩家發起好友傳送與邀請
+
+---
+
+### 2.3 🤖 Agent 建議擴充功能 (Agent Suggestions & Extensions)
+
+> *(Note: Agent 已在此為您規劃與補充具體優化方向)*
+
+* [ ] **跨服好友傳送與請求對接 (`/friend tp <玩家>`)**
+    * [ ] 經由 Redis 發送跨服傳送請求 `friend:tp_request`
+    * [ ] 支援目標玩家畫面可點擊 `[接受傳送]` / `[拒絕傳送]` Component 按鈕
+* [ ] **PlaceholderAPI 好友動態變數**
+    * [ ] `%chatconduit_friend_count%` (總好友數)
+    * [ ] `%chatconduit_online_friends%` (線上好友數)
+    * [ ] `%chatconduit_pending_requests%` (待處理申請數)
+* [ ] **好友私密群組語音/聊天房**
+    * [ ] 支援一鍵建立好友專屬通道，跨服聊天下自動過濾非好友成員
 
 ---
 
 ## 3. 📚 官方維基與開發者文件 (Wiki Roadmap)
 
-> *(Note: Agent 協助細化與排版 WIKI 文件架構)*
+> *(Note: 建議使用 **Starlight (Astro)** 或 **Docusaurus** 建立極簡現代開源維基網站)*
 
 * [ ] **概述與快速入門 (Overview & Quick Start)**
     * [ ] 插件簡介與核心特色（零指令聊天頻道、箱子 GUI 控制台、跨服同步）
@@ -115,7 +133,10 @@
 * [x] 支援 SQLite 與 MySQL (HikariCP 連線池)
 * [x] 採用 `CompletableFutures` 與 Bukkit Scheduler 完全非同步 SQL 操作
 
-### 4.4 隱藏訊息、頻道加強與架構清理
+### 4.4 跨服廣播、黑名單保護與隱藏訊息
+* [x] Redis 跨服好友連線/離線狀態即時廣播 (`FriendStatusPacket`)
+* [x] Redis 跨服好友申請實時通知與可點擊互動 (`FriendRequestNotifyPacket`)
+* [x] 全區黑名單私訊與傳送屏蔽保護 (`PrivateMessageManager` Block Guard)
 * [x] CMI AFK 自動掛機狀態監測 (`CMIPlayerAfkStatusChangeEvent`)
 * [x] 官方頻道取消訂閱功能
 * [x] 移除 Velocity 殘留目錄，合併 Paper 與 Common 模組

@@ -97,8 +97,20 @@ public class PrivateMessageManager {
             localTarget = Bukkit.getPlayer(targetName);
         }
 
+        me.xydesu.chatconduit.friend.FriendManager friendManager = me.xydesu.chatconduit.friend.FriendManager.getInstance();
+
         // 1. 本地伺服器找到線上目標玩家
         if (localTarget != null && localTarget.isOnline()) {
+            if (friendManager != null) {
+                if (friendManager.isBlocked(localTarget.getUniqueId(), sender.getUniqueId())) {
+                    ChatUtils.sendMessage(sender, "<red>對方已將您加入黑名單，無法發送私訊。</red>");
+                    return;
+                }
+                if (friendManager.isBlocked(sender.getUniqueId(), localTarget.getUniqueId())) {
+                    ChatUtils.sendMessage(sender, "<red>您已封鎖該玩家，無法發送私訊。請先解除封鎖。</red>");
+                    return;
+                }
+            }
             sendLocalPrivateMessage(sender, localTarget, localServerId, rawMessage);
             return;
         }
@@ -107,6 +119,19 @@ public class PrivateMessageManager {
         if (RedisManager.isEnabled()) {
             RedisPlayerRegistry.PlayerData remoteData = RedisPlayerRegistry.getPlayerData(targetName);
             if (remoteData != null && remoteData.getServerId() != null) {
+                if (friendManager != null && remoteData.getUuid() != null) {
+                    try {
+                        UUID remoteUuid = UUID.fromString(remoteData.getUuid());
+                        if (friendManager.isBlocked(remoteUuid, sender.getUniqueId())) {
+                            ChatUtils.sendMessage(sender, "<red>對方已將您加入黑名單，無法發送私訊。</red>");
+                            return;
+                        }
+                        if (friendManager.isBlocked(sender.getUniqueId(), remoteUuid)) {
+                            ChatUtils.sendMessage(sender, "<red>您已封鎖該玩家，無法發送私訊。請先解除封鎖。</red>");
+                            return;
+                        }
+                    } catch (Exception ignored) {}
+                }
                 String targetServerId = remoteData.getServerId();
 
                 String messageJson = null;
@@ -175,6 +200,16 @@ public class PrivateMessageManager {
         }
 
         if (localTarget != null && localTarget.isOnline()) {
+            me.xydesu.chatconduit.friend.FriendManager friendManager = me.xydesu.chatconduit.friend.FriendManager.getInstance();
+            if (friendManager != null && packet.getSenderUuid() != null) {
+                try {
+                    UUID senderUuid = UUID.fromString(packet.getSenderUuid());
+                    if (friendManager.isBlocked(localTarget.getUniqueId(), senderUuid)) {
+                        return; // 目標玩家已封鎖發送者，直接捨棄私訊
+                    }
+                } catch (Exception ignored) {}
+            }
+
             String senderName = packet.getSenderName();
             String senderServerId = packet.getSenderServerId() != null ? packet.getSenderServerId() : "Remote";
 
