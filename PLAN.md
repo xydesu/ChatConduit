@@ -77,40 +77,38 @@
 * [x] **跨服好友傳送與請求對接 (`/friend tp <玩家>`)**
     * [x] 經由 Redis 發送跨服傳送請求 `FriendTpPacket`
     * [x] 支援目標玩家畫面可點擊 `[接受傳送]` / `[拒絕傳送]` Component 按鈕
+    (Note: Actually We Did't need this, because we have /tpa can use, so can we remove this?)
 * [x] **PlaceholderAPI 好友動態變數 (`ChatConduitPAPIExpansion`)**
     * [x] `%chatconduit_friend_count%` (總好友數)
     * [x] `%chatconduit_online_friends%` (線上好友數，含跨服)
     * [x] `%chatconduit_pending_requests%` (待處理申請數)
     * [x] `%chatconduit_channel%` (當前說話頻道)
     * [x] `%chatconduit_muted%` (是否處於禁言狀態)
-* [ ] **好友私密群組語音/聊天房**
-    * [ ] 支援一鍵建立好友專屬通道，跨服聊天下自動過濾非好友成員
 
 ---
 
 ## 3. 📚 官方維基與開發者文件 (Wiki Roadmap)
 
-> *(Note: 建議使用 **Starlight (Astro)** 或 **Docusaurus** 建立極簡現代開源維基網站，並且要可部屬github page)*
+> *(Note: 官方 Markdown 維基文件庫已建置於 `docs/` 目錄，支援 GitHub Pages 自動部署)*
 
-
-* [ ] **概述與快速入門 (Overview & Quick Start)**
-    * [ ] 插件簡介與核心特色（零指令聊天頻道、箱子 GUI 控制台、跨服同步）
-    * [ ] 系統需求（Paper 1.20+, Java 25, HikariCP, Jedis 5.x）
-    * [ ] 安裝步驟與權限點（LuckPerms 節點說明）
-* [ ] **頻道與聊天系統 (Channels & Private Messaging)**
-    * [ ] 系統頻道配置 (`config.yml` 頻道前綴與格式)
-    * [ ] 玩家自建頻道與密碼機制 (`/playerchannel`)
-    * [ ] 跨服私訊與回覆 (`/msg`, `/reply`)
-* [ ] **好友與社交系統 (Friend & Social System)**
-    * [ ] 好友關係管理與指令清單 (`/friend add`, `/friend accept`, `/friend deny`, `/friend revoke`, `/friend remove`)
-    * [ ] 好友箱子 GUI 互動說明
-    * [ ] 跨服好友狀態通知與傳送機制
-    * [ ] 屏蔽與黑名單保護機制
-* [ ] **第三方整合與跨服架構 (Integrations & Cross-Server Sync)**
-    * [ ] Redis Pub/Sub 廣播機制說明
-    * [ ] DiscordSRV 雙向連動與 Webhook 設置
-    * [ ] CMI AFK 掛機狀態自動偵測
-    * [ ] PlaceholderAPI 變數清單
+* [x] **概述與快速入門 (`docs/index.md`)**
+    * [x] 插件簡介與核心特色（零指令聊天頻道、箱子 GUI 控制台、跨服同步）
+    * [x] 系統需求（Paper 1.20+, Java 25, HikariCP, Jedis 5.x）
+    * [x] 安裝步驟與權限點（LuckPerms 節點說明）
+* [x] **頻道與聊天系統 (`docs/channels.md`)**
+    * [x] 系統頻道配置 (`config.yml` 頻道前綴與格式)
+    * [x] 玩家自建頻道與密碼機制 (`/playerchannel`)
+    * [x] 跨服私訊與回覆 (`/msg`, `/reply`)
+* [x] **好友與社交系統 (`docs/friends.md`)**
+    * [x] 好友關係管理與指令清單 (`/friend add`, `/friend accept`, `/friend deny`, `/friend revoke`, `/friend remove`, `/friend tp`)
+    * [x] 好友箱子 GUI 互動說明
+    * [x] 跨服好友狀態通知與傳送機制
+    * [x] 屏蔽與黑名單保護機制
+* [x] **第三方整合與跨服架構 (`docs/integrations.md`)**
+    * [x] Redis Pub/Sub 廣播機制說明
+    * [x] DiscordSRV 雙向連動與 Webhook 設置
+    * [x] CMI AFK 掛機狀態自動偵測
+    * [x] PlaceholderAPI 變數清單 (`%chatconduit_*%`)
 
 ---
 
