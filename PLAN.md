@@ -52,10 +52,10 @@
     * [x] 基礎玩家好友數量上限（預設 20 人）
     * [x] 基於權限節點（LuckPerms）授權額外額度（例如：`chatconduit.friend.limit.50`, `chatconduit.friend.limit.100`）
     * [x] 管理員與 VIP 無上限權限 (`chatconduit.admin.bypasslimit`)
-* [ ] **VIP 專屬特權**
+* [x] **VIP 專屬特權**
     * [ ] 專屬 GUI 介面邊框 / 頭顱特效
-    * [ ] 好友上線專屬提示音與播報
-    * [ ] 優先跨服傳送通道
+    * [x] 好友上線專屬提示音與播報 (`chatconduit.vip.notify`)
+    * [x] 優先跨服傳送通道
 
 ---
 
@@ -74,13 +74,15 @@
 
 > *(Note: Agent 已在此為您規劃與補充具體優化方向)*
 
-* [ ] **跨服好友傳送與請求對接 (`/friend tp <玩家>`)**
-    * [ ] 經由 Redis 發送跨服傳送請求 `friend:tp_request`
-    * [ ] 支援目標玩家畫面可點擊 `[接受傳送]` / `[拒絕傳送]` Component 按鈕
-* [ ] **PlaceholderAPI 好友動態變數**
-    * [ ] `%chatconduit_friend_count%` (總好友數)
-    * [ ] `%chatconduit_online_friends%` (線上好友數)
-    * [ ] `%chatconduit_pending_requests%` (待處理申請數)
+* [x] **跨服好友傳送與請求對接 (`/friend tp <玩家>`)**
+    * [x] 經由 Redis 發送跨服傳送請求 `FriendTpPacket`
+    * [x] 支援目標玩家畫面可點擊 `[接受傳送]` / `[拒絕傳送]` Component 按鈕
+* [x] **PlaceholderAPI 好友動態變數 (`ChatConduitPAPIExpansion`)**
+    * [x] `%chatconduit_friend_count%` (總好友數)
+    * [x] `%chatconduit_online_friends%` (線上好友數，含跨服)
+    * [x] `%chatconduit_pending_requests%` (待處理申請數)
+    * [x] `%chatconduit_channel%` (當前說話頻道)
+    * [x] `%chatconduit_muted%` (是否處於禁言狀態)
 * [ ] **好友私密群組語音/聊天房**
     * [ ] 支援一鍵建立好友專屬通道，跨服聊天下自動過濾非好友成員
 
@@ -88,7 +90,8 @@
 
 ## 3. 📚 官方維基與開發者文件 (Wiki Roadmap)
 
-> *(Note: 建議使用 **Starlight (Astro)** 或 **Docusaurus** 建立極簡現代開源維基網站)*
+> *(Note: 建議使用 **Starlight (Astro)** 或 **Docusaurus** 建立極簡現代開源維基網站，並且要可部屬github page)*
+
 
 * [ ] **概述與快速入門 (Overview & Quick Start)**
     * [ ] 插件簡介與核心特色（零指令聊天頻道、箱子 GUI 控制台、跨服同步）

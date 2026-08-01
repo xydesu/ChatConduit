@@ -66,7 +66,14 @@ public class RedisMessageListener extends JedisPubSub {
             }
 
             // 嘗試解析為 FriendRequestNotifyPacket
-            if (message.contains("\"senderUuid\"") && message.contains("\"targetUuid\"") && message.contains("\"originServerId\"")) {
+            if (message.contains("\"senderUuid\"") && message.contains("\"targetUuid\"") && message.contains("\"originServerId\"") && !message.contains("\"rawMessage\"")) {
+                if (message.contains("\"action\":\"REQUEST\"") || message.contains("\"action\":\"ACCEPT\"") || message.contains("\"action\":\"DENY\"")) {
+                    FriendTpPacket tpPacket = FriendTpPacket.fromJson(message);
+                    if (tpPacket != null && tpPacket.getAction() != null) {
+                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> processFriendTpPacket(tpPacket));
+                        return;
+                    }
+                }
                 FriendRequestNotifyPacket notifyPacket = FriendRequestNotifyPacket.fromJson(message);
                 if (notifyPacket != null && notifyPacket.getAction() != null) {
                     Bukkit.getScheduler().runTask(Main.getInstance(), () -> processFriendRequestNotifyPacket(notifyPacket));
@@ -352,6 +359,10 @@ public class RedisMessageListener extends JedisPubSub {
                             "<gradient:#00b09b:#96c93d>[好友廣播]</gradient> <gray>您的好友 <yellow>" + packet.getPlayerName() +
                                     "</yellow> 已上線 <dark_gray>(伺服器: <aqua>" + packet.getServerId() + "</aqua>)</dark_gray></gray>"
                     );
+                    // VIP 上線專屬提示音
+                    if (onlinePlayer.hasPermission("chatconduit.vip.notify")) {
+                        onlinePlayer.playSound(onlinePlayer.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
+                    }
                 } else if (packet.getAction() == FriendStatusPacket.Action.QUIT) {
                     ChatUtils.sendMessage(onlinePlayer,
                             "<gradient:#00b09b:#96c93d>[好友廣播]</gradient> <gray>您的好友 <yellow>" + packet.getPlayerName() + "</yellow> 已下線。</gray>"
@@ -361,6 +372,48 @@ public class RedisMessageListener extends JedisPubSub {
         }
 
         me.xydesu.chatconduit.gui.GUIRefresher.refreshFriendGUIs(playerUuid);
+    }
+
+    /**
+     * 處理來自遠端伺服器的跨服好友傳送對接與請求
+     */
+    private void processFriendTpPacket(FriendTpPacket packet) {
+        if (packet == null || packet.getTargetName() == null) return;
+
+        Player targetPlayer = Bukkit.getPlayerExact(packet.getTargetName());
+        if (targetPlayer == null || !targetPlayer.isOnline()) {
+            targetPlayer = Bukkit.getPlayer(packet.getTargetName());
+        }
+
+        if (targetPlayer != null && targetPlayer.isOnline()) {
+            switch (packet.getAction()) {
+                case REQUEST -> {
+                    Component messageComp = ChatUtils.parseNoItalic(targetPlayer,
+                            "<gradient:#a8c0ff:#3f2b96>[好友傳送]</gradient> <yellow>" + packet.getSenderName() +
+                                    "</yellow> <gray>(來自 <aqua>" + packet.getOriginServerId() + "</aqua>) 請求傳送到您的位置！</gray>\n" +
+                                    "<green><bold>[ 點擊接受傳送 ]</bold></green>  <red><bold>[ 點擊拒絕 ]</bold></red>",
+                            net.kyori.adventure.text.minimessage.tag.resolver.Placeholder.component("accept_btn",
+                                    ChatUtils.parseNoItalic(targetPlayer, "<green><bold>[ 點擊接受傳送 ]</bold></green>")
+                                            .clickEvent(ClickEvent.runCommand("/friend tpaccept " + packet.getSenderName()))
+                            )
+                    );
+                    targetPlayer.sendMessage(messageComp);
+                }
+                case ACCEPT -> {
+                    ChatUtils.sendMessage(targetPlayer,
+                            "<gradient:#00b09b:#96c93d>[傳送對接]</gradient> <yellow>" + packet.getSenderName() + "</yellow> <gray>已接受您的傳送請求！正在進行傳送對接...</gray>"
+                    );
+                    Player senderPlayer = Bukkit.getPlayerExact(packet.getSenderName());
+                    if (senderPlayer != null && senderPlayer.isOnline()) {
+                        senderPlayer.teleport(targetPlayer.getLocation());
+                        ChatUtils.sendMessage(senderPlayer, "<green>已成功傳送至好友 <yellow>" + targetPlayer.getName() + "</yellow> 的位置！</green>");
+                    }
+                }
+                case DENY -> ChatUtils.sendMessage(targetPlayer,
+                        "<gray>玩家 <yellow>" + packet.getSenderName() + "</yellow> 拒絕了您的傳送請求。</gray>"
+                );
+            }
+        }
     }
 
     /**

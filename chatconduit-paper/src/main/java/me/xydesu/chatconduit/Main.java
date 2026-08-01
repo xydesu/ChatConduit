@@ -154,9 +154,11 @@ public final class Main extends JavaPlugin {
                 ? "<green>Hooked</green>"
                 : "<yellow>Not Found</yellow>";
 
-        String papiStatus = getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")
-                ? "<green>Hooked</green>"
-                : "<yellow>Not Found</yellow>";
+        String papiStatus = "<yellow>Not Found</yellow>";
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            new me.xydesu.chatconduit.integration.ChatConduitPAPIExpansion().register();
+            papiStatus = "<green>Hooked & Expansion Registered</green>";
+        }
 
         int sysChanCount = ChannelManager.getChannels().size();
         int playerChanCount = PlayerChannelManager.getCustomChannels().size();
