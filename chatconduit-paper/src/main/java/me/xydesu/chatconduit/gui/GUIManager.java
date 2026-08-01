@@ -132,6 +132,62 @@ public class GUIManager {
     }
 
     /**
+     * 依據 YAML layout 符號圖案解析出對應的 Slots 陣列
+     *
+     * @param config GUI 配置檔
+     * @param symbol 搜尋的字元符號 (例如 '#' 代表邊框, 'F' 代表好友)
+     * @param fallbackPath 備用傳統數字路徑
+     * @param defaultSlots 預設數字陣列
+     * @return int[] 匹配的 Slots 陣列
+     */
+    public static int[] getSymbolSlots(FileConfiguration config, char symbol, String fallbackPath, int[] defaultSlots) {
+        if (config != null && config.contains("layout")) {
+            List<String> layoutLines = config.getStringList("layout");
+            if (!layoutLines.isEmpty()) {
+                List<Integer> slots = new ArrayList<>();
+                for (int r = 0; r < layoutLines.size(); r++) {
+                    String line = layoutLines.get(r);
+                    for (int c = 0; c < Math.min(9, line.length()); c++) {
+                        if (line.charAt(c) == symbol) {
+                            slots.add(r * 9 + c);
+                        }
+                    }
+                }
+                if (!slots.isEmpty()) {
+                    return slots.stream().mapToInt(i -> i).toArray();
+                }
+            }
+        }
+        return getSlots(config, fallbackPath, defaultSlots);
+    }
+
+    /**
+     * 依據 YAML layout 符號圖案解析出第一個對應的 Slot
+     *
+     * @param config GUI 配置檔
+     * @param symbol 搜尋的字元符號
+     * @param fallbackItemKey 備用傳統項目 Key
+     * @param defaultSlot 預設數字 Slot
+     * @return int Slot 號碼
+     */
+    public static int getSymbolSlot(FileConfiguration config, char symbol, String fallbackItemKey, int defaultSlot) {
+        if (config != null && config.contains("layout")) {
+            List<String> layoutLines = config.getStringList("layout");
+            if (!layoutLines.isEmpty()) {
+                for (int r = 0; r < layoutLines.size(); r++) {
+                    String line = layoutLines.get(r);
+                    for (int c = 0; c < Math.min(9, line.length()); c++) {
+                        if (line.charAt(c) == symbol) {
+                            return r * 9 + c;
+                        }
+                    }
+                }
+            }
+        }
+        return getSlot(config, fallbackItemKey, defaultSlot);
+    }
+
+    /**
      * 根據配置檔與 Key 建構 ItemStack 物品
      *
      * @param config GUI 設定檔

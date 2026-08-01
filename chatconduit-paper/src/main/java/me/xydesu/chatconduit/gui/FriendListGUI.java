@@ -60,24 +60,9 @@ public class FriendListGUI {
                 if (!player.isOnline()) return;
 
                 FileConfiguration config = GUIManager.getConfig("friend_list");
-                String titleStr = GUIManager.getTitle("friend_list", "<green><bold>好友列表 - 第 <page> 頁</bold></green>")
-                        .replace("<page>", String.valueOf(page));
-                Component titleComponent = ChatUtils.parse(player, titleStr);
-
                 int size = GUIManager.getSize("friend_list", 54);
-                GUIHolder holder = new GUIHolder(GUIHolder.GUIType.FRIEND_LIST, null, page);
-                Inventory inv = Bukkit.createInventory(holder, size, titleComponent);
 
-                // 邊框填充
-                ItemStack filler = GUIManager.createItem(config, "filler-glass", Material.GRAY_STAINED_GLASS_PANE, null);
-                int[] fillerSlots = GUIManager.getSlots(config, "items.filler-glass.slots", new int[]{
-                        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 49, 51, 52
-                });
-                for (int s : fillerSlots) {
-                    if (s < size) inv.setItem(s, filler);
-                }
-
-                int[] headSlots = GUIManager.getSlots(config, "slots.player-heads", new int[]{
+                int[] headSlots = GUIManager.getSymbolSlots(config, 'F', "slots.player-heads", new int[]{
                         10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34
                 });
 
@@ -85,6 +70,23 @@ public class FriendListGUI {
                 int totalItems = friendList.size();
                 int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / itemsPerPage));
                 int curPage = Math.min(Math.max(1, page), totalPages);
+
+                String titleStr = GUIManager.getTitle("friend_list", "<green><bold>好友列表 - 第 <page> / <total_pages> 頁</bold></green>")
+                        .replace("<page>", String.valueOf(curPage))
+                        .replace("<total_pages>", String.valueOf(totalPages));
+                Component titleComponent = ChatUtils.parse(player, titleStr);
+
+                GUIHolder holder = new GUIHolder(GUIHolder.GUIType.FRIEND_LIST, null, curPage);
+                Inventory inv = Bukkit.createInventory(holder, size, titleComponent);
+
+                // 邊框填充
+                ItemStack filler = GUIManager.createItem(config, "filler-glass", Material.GRAY_STAINED_GLASS_PANE, null);
+                int[] fillerSlots = GUIManager.getSymbolSlots(config, '#', "items.filler-glass.slots", new int[]{
+                        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 49, 51, 52
+                });
+                for (int s : fillerSlots) {
+                    if (s < size) inv.setItem(s, filler);
+                }
 
                 int startIndex = (curPage - 1) * itemsPerPage;
                 int endIndex = Math.min(startIndex + itemsPerPage, totalItems);
@@ -122,20 +124,20 @@ public class FriendListGUI {
                 }
 
                 // 按鈕
-                int backSlot = GUIManager.getSlot(config, "back-button", 45);
+                int backSlot = GUIManager.getSymbolSlot(config, 'B', "back-button", 45);
                 if (backSlot < size) inv.setItem(backSlot, GUIManager.createItem(config, "back-button", Material.ARROW, null));
 
                 if (curPage > 1) {
-                    int prevSlot = GUIManager.getSlot(config, "prev-page", 48);
+                    int prevSlot = GUIManager.getSymbolSlot(config, 'P', "prev-page", 48);
                     if (prevSlot < size) inv.setItem(prevSlot, GUIManager.createItem(config, "prev-page", Material.PAPER, null));
                 }
 
                 if (curPage < totalPages) {
-                    int nextSlot = GUIManager.getSlot(config, "next-page", 50);
+                    int nextSlot = GUIManager.getSymbolSlot(config, 'N', "next-page", 50);
                     if (nextSlot < size) inv.setItem(nextSlot, GUIManager.createItem(config, "next-page", Material.PAPER, null));
                 }
 
-                int addSlot = GUIManager.getSlot(config, "add-friend", 53);
+                int addSlot = GUIManager.getSymbolSlot(config, 'A', "add-friend", 53);
                 if (addSlot < size) inv.setItem(addSlot, GUIManager.createItem(config, "add-friend", Material.ANVIL, null));
 
                 player.openInventory(inv);

@@ -359,6 +359,8 @@ public class RedisMessageListener extends JedisPubSub {
                 }
             }
         }
+
+        me.xydesu.chatconduit.gui.GUIRefresher.refreshFriendGUIs(playerUuid);
     }
 
     /**
