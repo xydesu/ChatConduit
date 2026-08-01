@@ -34,6 +34,13 @@ export default defineConfig({
           ],
         },
         {
+          label: '設定檔完整參考 (Config Reference)',
+          items: [
+            { label: 'config.yml 完整參數', link: '/admin/config-reference/' },
+            { label: 'GUI 佈局設定參考', link: '/admin/gui-config-reference/' },
+          ],
+        },
+        {
           label: '玩家指南 (For Player)',
           items: [
             { label: '零指令頻道發言與切換', link: '/player/channels/' },
