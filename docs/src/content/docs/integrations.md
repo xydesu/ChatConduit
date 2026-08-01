@@ -1,3 +1,8 @@
+---
+title: 🔌 第三方整合與跨服
+description: Redis Pub/Sub、PlaceholderAPI 變數、DiscordSRV 與 CMI AFK
+---
+
 # 🔌 第三方整合與跨服架構 (Integrations & Cross-Server Sync)
 
 ChatConduit 提供強大的跨服 Pub/Sub 通訊架構，並與主流外掛程式無縫整合。

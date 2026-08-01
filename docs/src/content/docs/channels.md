@@ -1,3 +1,8 @@
+---
+title: 💬 頻道與聊天系統
+description: 系統頻道、零指令發言與跨服私訊說明
+---
+
 # 💬 頻道與聊天系統 (Channels & Private Messaging)
 
 ChatConduit 提供了零指令前綴發言、官方系統頻道、玩家自建頻道與跨服私訊系統。

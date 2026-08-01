@@ -1,4 +1,18 @@
-# 🚀 ChatConduit 官方維基與開發者文件 (Overview & Quick Start)
+---
+title: 🚀 概述與快速入門
+description: ChatConduit Paper/Purpur 跨服聊天與社交外掛官方維基
+template: splash
+hero:
+  tagline: 強大、零指令、跨服與高度解耦的 Minecraft 社交頻道插件
+  actions:
+    - text: 開始閱讀文檔
+      link: /channels/
+      icon: right-arrow
+      variant: primary
+    - text: 查看 GitHub 倉庫
+      link: https://github.com/xydesu/ChatConduit
+      icon: external
+---
 
 > **專案作者 (Author)**: xydesu  
 > **基礎套件 (Base Package)**: `me.xydesu.chatconduit`  
@@ -16,10 +30,10 @@
 * **Redis Pub/Sub 跨服廣播與同步**:
   * 跨服好友連線/離線狀態即時廣播 (`FriendStatusPacket`)。
   * 跨服好友申請與動作實時點擊推播 (`FriendRequestNotifyPacket`)。
-  * 跨服私訊 (`PrivateMessagePacket`) 與跨服好友傳送對接 (`FriendTpPacket`)。
+  * 跨服私訊 (`PrivateMessagePacket`)。
   * Redis 記憶體快取全服線上玩家註冊冊 (`online_players`)。
 * **高併發非同步資料庫架構**: 支援 SQLite 與 MySQL (HikariCP 連線池)，採用 `CompletableFuture` 與 Bukkit Scheduler，保證 SQL 操作 0 阻塞主執行緒。
-* **全維度黑名單與隱私保護**: 強制自動解綁好友關係，並於本地與跨服維度全方位屏蔽私訊與傳送邀請。
+* **全維度黑名單與隱私保護**: 強制自動解綁好友關係，並於本地與跨服維度全方位屏蔽私訊與邀請。
 * **第三方生態擴充整合**:
   * 原生 **PlaceholderAPI** 變數擴充 (`%chatconduit_*%`)。
   * **DiscordSRV** 雙向連動與 Discord Webhook 支援。
