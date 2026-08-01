@@ -152,6 +152,9 @@ public class InteractiveChatIntegration {
 
             Method[] methods = apiClass.getMethods();
             for (Method m : methods) {
+                if (m.getReturnType() == void.class || m.getReturnType() == Void.TYPE) {
+                    continue; // 排除 void 回傳型態之發送/動作方法
+                }
                 StringBuilder paramsStr = new StringBuilder();
                 for (Class<?> p : m.getParameterTypes()) {
                     if (paramsStr.length() > 0) paramsStr.append(", ");
