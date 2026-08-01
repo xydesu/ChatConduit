@@ -81,10 +81,9 @@ public class RedisManager {
      * 啟動 Redis 訂閱非同步執行緒
      */
     private static void startSubscriberThread() {
-        pubSubListener = new RedisMessageListener();
-
         pubSubThread = new Thread(() -> {
             while (enabled && !Thread.currentThread().isInterrupted()) {
+                pubSubListener = new RedisMessageListener();
                 try (Jedis jedis = jedisPool.getResource()) {
                     Main.getInstance().getLogger().info("Redis 訂閱線程已成功啟動，正在監聽頻道: " + redisChannel);
                     jedis.subscribe(pubSubListener, redisChannel);

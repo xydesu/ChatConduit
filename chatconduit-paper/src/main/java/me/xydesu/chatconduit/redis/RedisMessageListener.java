@@ -174,15 +174,15 @@ public class RedisMessageListener extends JedisPubSub {
         // 如果模板含有 {server}，將其替換為 remoteServerId；否則若無伺服器則消除
         String formattedTemplate = rawChatFormat.replace("{server}", remoteServerId);
 
-        org.bukkit.OfflinePlayer senderOfflinePlayer = null;
+        Player senderOnlinePlayer = null;
         if (packet.getSenderUuid() != null && !packet.getSenderUuid().isEmpty()) {
             try {
-                senderOfflinePlayer = Bukkit.getOfflinePlayer(UUID.fromString(packet.getSenderUuid()));
+                senderOnlinePlayer = Bukkit.getPlayer(UUID.fromString(packet.getSenderUuid()));
             } catch (Exception ignored) {}
         }
 
         Component fullChatMessage = ChatUtils.parse(
-                senderOfflinePlayer,
+                senderOnlinePlayer,
                 formattedTemplate,
                 Placeholder.component("channel_prefix", channelPrefixComponent),
                 Placeholder.unparsed("player", senderName),

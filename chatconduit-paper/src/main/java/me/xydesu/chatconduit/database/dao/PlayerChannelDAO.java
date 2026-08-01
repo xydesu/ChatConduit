@@ -126,17 +126,26 @@ public class PlayerChannelDAO {
             sqlChannel = "INSERT OR REPLACE INTO chatconduit_player_channels (channel_name, display_name, owner_uuid, is_private, webhook_url) VALUES (?, ?, ?, ?, ?);";
         }
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlChannel)) {
-            ps.setString(1, channel.getId().toLowerCase());
-            ps.setString(2, channel.getDisplayName());
-            ps.setString(3, channel.getOwner().toString());
-            ps.setInt(4, channel.getMode() == Mode.PRIVATE ? 1 : 0);
-            ps.setString(5, channel.getWebhookUrl());
-            ps.executeUpdate();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sqlChannel)) {
+                ps.setString(1, channel.getId().toLowerCase());
+                ps.setString(2, channel.getDisplayName());
+                ps.setString(3, channel.getOwner().toString());
+                ps.setInt(4, channel.getMode() == Mode.PRIVATE ? 1 : 0);
+                ps.setString(5, channel.getWebhookUrl());
+                ps.executeUpdate();
 
-            // 更新成員表
-            saveChannelMembers(conn, channel);
+                // 更新成員表
+                saveChannelMembers(conn, channel);
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(originalAutoCommit);
+            }
         } catch (SQLException e) {
             Main.getInstance().getLogger().log(Level.SEVERE, "儲存群組頻道資料時失敗: " + (channel != null ? channel.getId() : "null"), e);
         }
@@ -149,15 +158,24 @@ public class PlayerChannelDAO {
         String sqlMembers = "DELETE FROM chatconduit_channel_members WHERE channel_name = ?";
         String sqlChannel = "DELETE FROM chatconduit_player_channels WHERE channel_name = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement psMem = conn.prepareStatement(sqlMembers);
-             PreparedStatement psChan = conn.prepareStatement(sqlChannel)) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try (PreparedStatement psMem = conn.prepareStatement(sqlMembers);
+                 PreparedStatement psChan = conn.prepareStatement(sqlChannel)) {
 
-            psMem.setString(1, channelId.toLowerCase());
-            psMem.executeUpdate();
+                psMem.setString(1, channelId.toLowerCase());
+                psMem.executeUpdate();
 
-            psChan.setString(1, channelId.toLowerCase());
-            psChan.executeUpdate();
+                psChan.setString(1, channelId.toLowerCase());
+                psChan.executeUpdate();
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(originalAutoCommit);
+            }
         } catch (SQLException e) {
             Main.getInstance().getLogger().log(Level.SEVERE, "從資料庫刪除群組頻道時失敗: " + channelId, e);
         }

@@ -156,8 +156,8 @@ public class PlayerChannelManager {
         INVALID_NAME
     }
 
-    public static CreateResult tryCreateChannel(String name, Player owner) {
-        if (name == null) return CreateResult.INVALID_NAME;
+    public static synchronized CreateResult tryCreateChannel(String name, Player owner) {
+        if (name == null || owner == null) return CreateResult.INVALID_NAME;
         String cleanName = name.trim();
         int minLen = Main.getInstance().getConfig().getInt("player-channels.name-min-length", 1);
         int maxLen = Main.getInstance().getConfig().getInt("player-channels.name-max-length", 20);

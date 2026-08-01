@@ -178,11 +178,12 @@ public class ChannelManager {
                 if (data.listeningChannels() != null) {
                     listening = data.listeningChannels();
                 }
-            }
-            playerSelectedChannel.put(uuid, channelKey);
-            playerDeathMessageToggle.put(uuid, deathEnabled);
-            playerJoinMessageToggle.put(uuid, joinEnabled);
-            playerListeningChannels.put(uuid, listening);
+            if (!player.isOnline()) return;
+
+            playerSelectedChannel.putIfAbsent(uuid, channelKey);
+            playerDeathMessageToggle.putIfAbsent(uuid, deathEnabled);
+            playerJoinMessageToggle.putIfAbsent(uuid, joinEnabled);
+            playerListeningChannels.putIfAbsent(uuid, listening);
 
             String finalKey = channelKey;
             Bukkit.getScheduler().runTask(Main.getInstance(), () -> {

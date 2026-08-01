@@ -128,8 +128,12 @@ public class ChatListener implements Listener {
             Player onlineOwner = Bukkit.getPlayer(customChannel.getOwner());
             String ownerName = onlineOwner != null ? onlineOwner.getName() : null;
             if (ownerName == null) {
-                org.bukkit.OfflinePlayer offP = Bukkit.getOfflinePlayer(customChannel.getOwner());
-                ownerName = offP.getName() != null ? offP.getName() : customChannel.getOwner().toString().substring(0, 8);
+                org.bukkit.OfflinePlayer offP = Bukkit.getOfflinePlayerIfCached(customChannel.getOwner());
+                if (offP != null && offP.getName() != null) {
+                    ownerName = offP.getName();
+                } else {
+                    ownerName = customChannel.getOwner().toString().substring(0, 8);
+                }
             }
             String modeStr = customChannel.getMode() == PlayerChannelManager.Mode.PUBLIC ? "<green>PUBLIC (公共)</green>" : "<red>PRIVATE (私人)</red>";
 
