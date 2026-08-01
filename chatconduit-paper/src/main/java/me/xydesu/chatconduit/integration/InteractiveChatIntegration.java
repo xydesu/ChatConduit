@@ -4,15 +4,17 @@ import me.xydesu.chatconduit.Main;
 import me.xydesu.chatconduit.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.logging.Level;
 
 /**
  * InteractiveChat 插件軟性相容 (SoftDepend Wrapper) 整合類別
- * 使用動態反射機制精準判定參數型態並呼叫 API，避免未安裝插件時發生 ClassNotFoundException 或 IllegalArgumentException
+ * 使用全方位動態反射機制精準判定參數型態、位置與 API 實例，確保跨版本 100% 相容
  *
  * @author xydesu
  */
@@ -22,6 +24,7 @@ public class InteractiveChatIntegration {
     private static Method componentMethod = null;
     private static Method stringMethod = null;
     private static Method bungeeMethod = null;
+    private static Object apiInstance = null;
 
     /**
      * 檢查伺服器是否已安裝並啟用 InteractiveChat 插件
@@ -48,27 +51,71 @@ public class InteractiveChatIntegration {
         componentMethod = null;
         stringMethod = null;
         bungeeMethod = null;
+        apiInstance = null;
     }
 
     private static void findApiMethods() {
         try {
             Class<?> apiClass = Class.forName("com.loohp.interactivechat.api.InteractiveChatAPI");
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在掃描 InteractiveChatAPI 方法列表...");
-            for (Method m : apiClass.getDeclaredMethods()) {
-                String name = m.getName().toLowerCase();
-                if (name.contains("transform") || name.contains("parse") || name.contains("process") || name.contains("replace")) {
-                    Class<?>[] pTypes = m.getParameterTypes();
-                    if (pTypes.length == 2 && Player.class.isAssignableFrom(pTypes[0])) {
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在全面掃描 " + apiClass.getName() + " 的方法清單...");
+
+            // 檢查是否為 Instance 單例 API (例如 InteractiveChatAPI.getInstance())
+            try {
+                Method getInstanceM = apiClass.getMethod("getInstance");
+                if (Modifier.isStatic(getInstanceM.getModifiers())) {
+                    apiInstance = getInstanceM.invoke(null);
+                    Main.getInstance().getLogger().info("[InteractiveChat-Debug] 成功獲取 API 單例物件: " + apiInstance);
+                }
+            } catch (Throwable ignored) {}
+
+            Method[] methods = apiClass.getMethods();
+            for (Method m : methods) {
+                StringBuilder paramsStr = new StringBuilder();
+                for (Class<?> p : m.getParameterTypes()) {
+                    if (paramsStr.length() > 0) paramsStr.append(", ");
+                    paramsStr.append(p.getSimpleName());
+                }
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 發現方法: " + m.getName() + "(" + paramsStr + ") -> " + m.getReturnType().getSimpleName() + " (Static: " + Modifier.isStatic(m.getModifiers()) + ")");
+
+                Class<?>[] pTypes = m.getParameterTypes();
+                if (pTypes.length == 2) {
+                    int senderIdx = -1;
+                    if (CommandSender.class.isAssignableFrom(pTypes[0])) senderIdx = 0;
+                    else if (CommandSender.class.isAssignableFrom(pTypes[1])) senderIdx = 1;
+
+                    if (senderIdx != -1) {
                         m.setAccessible(true);
-                        if (Component.class.isAssignableFrom(pTypes[1]) && componentMethod == null) {
+                        int targetIdx = senderIdx == 0 ? 1 : 0;
+                        Class<?> targetType = pTypes[targetIdx];
+
+                        if (Component.class.isAssignableFrom(targetType) && componentMethod == null) {
                             componentMethod = m;
-                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已匹配 Adventure Component 方法: " + m);
-                        } else if (pTypes[1] == String.class && stringMethod == null) {
+                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] >> 綁定 Component API 方法: " + m.getName());
+                        } else if (targetType == String.class && stringMethod == null) {
                             stringMethod = m;
-                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已匹配 String 方法: " + m);
-                        } else if (pTypes[1].getName().contains("BaseComponent") && bungeeMethod == null) {
+                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] >> 綁定 String API 方法: " + m.getName());
+                        } else if (targetType.getName().contains("BaseComponent") && bungeeMethod == null) {
                             bungeeMethod = m;
-                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已匹配 Bungee BaseComponent[] 方法: " + m);
+                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] >> 綁定 Bungee API 方法: " + m.getName());
+                        }
+                    }
+                }
+            }
+
+            // 若在 getMethods() 未找到，降級掃描 getDeclaredMethods()
+            if (componentMethod == null && stringMethod == null && bungeeMethod == null) {
+                for (Method m : apiClass.getDeclaredMethods()) {
+                    Class<?>[] pTypes = m.getParameterTypes();
+                    if (pTypes.length == 2 && (CommandSender.class.isAssignableFrom(pTypes[0]) || CommandSender.class.isAssignableFrom(pTypes[1]))) {
+                        m.setAccessible(true);
+                        int targetIdx = CommandSender.class.isAssignableFrom(pTypes[0]) ? 1 : 0;
+                        Class<?> targetType = pTypes[targetIdx];
+                        if (Component.class.isAssignableFrom(targetType) && componentMethod == null) {
+                            componentMethod = m;
+                        } else if (targetType == String.class && stringMethod == null) {
+                            stringMethod = m;
+                        } else if (targetType.getName().contains("BaseComponent") && bungeeMethod == null) {
+                            bungeeMethod = m;
                         }
                     }
                 }
@@ -98,28 +145,40 @@ public class InteractiveChatIntegration {
                 findApiMethods();
             }
 
-            // 1. 優先嘗試 (Player, Component) 方法
+            // 1. 優先嘗試 Component 方法
             if (componentMethod != null) {
-                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 呼叫方法: " + componentMethod.getName() + "(Player, Component)");
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在呼叫 Component API 方法: " + componentMethod.getName());
                 Component inputComp = ChatUtils.parseLegacy(message);
-                Object result = componentMethod.invoke(null, player, inputComp);
+                Object target = Modifier.isStatic(componentMethod.getModifiers()) ? null : apiInstance;
+                Object[] args = componentMethod.getParameterTypes()[0].isAssignableFrom(Player.class)
+                        ? new Object[]{player, inputComp}
+                        : new Object[]{inputComp, player};
+                Object result = componentMethod.invoke(target, args);
                 Component res = handleResult(result);
                 if (res != null) return res;
             }
 
-            // 2. 備用嘗試 (Player, String) 方法
+            // 2. 備用嘗試 String 方法
             if (stringMethod != null) {
-                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 呼叫方法: " + stringMethod.getName() + "(Player, String)");
-                Object result = stringMethod.invoke(null, player, message);
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在呼叫 String API 方法: " + stringMethod.getName());
+                Object target = Modifier.isStatic(stringMethod.getModifiers()) ? null : apiInstance;
+                Object[] args = stringMethod.getParameterTypes()[0].isAssignableFrom(Player.class)
+                        ? new Object[]{player, message}
+                        : new Object[]{message, player};
+                Object result = stringMethod.invoke(target, args);
                 Component res = handleResult(result);
                 if (res != null) return res;
             }
 
-            // 3. 備用嘗試 (Player, BaseComponent[]) 方法
+            // 3. 備用嘗試 Bungee 方法
             if (bungeeMethod != null) {
-                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 呼叫方法: " + bungeeMethod.getName() + "(Player, BaseComponent[])");
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在呼叫 Bungee API 方法: " + bungeeMethod.getName());
                 Object bungeeInput = net.md_5.bungee.api.chat.TextComponent.fromLegacyText(message);
-                Object result = bungeeMethod.invoke(null, player, bungeeInput);
+                Object target = Modifier.isStatic(bungeeMethod.getModifiers()) ? null : apiInstance;
+                Object[] args = bungeeMethod.getParameterTypes()[0].isAssignableFrom(Player.class)
+                        ? new Object[]{player, bungeeInput}
+                        : new Object[]{bungeeInput, player};
+                Object result = bungeeMethod.invoke(target, args);
                 Component res = handleResult(result);
                 if (res != null) return res;
             }
