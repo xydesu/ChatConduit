@@ -30,7 +30,7 @@ public class InteractiveChatIntegration {
     private static Method bungeeMethod = null;
     private static Object apiInstance = null;
 
-    private static final Pattern ITEM_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]|§f\\[[^\\]]+\\]§r");
+    private static final Pattern ITEM_PATTERN = Pattern.compile("(?i)\\[(item|i|hand)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^:>]+)?:?>");
     private static final Pattern OFFHAND_PATTERN = Pattern.compile("(?i)\\[(offhand|off)\\]");
 
     /**
@@ -224,13 +224,14 @@ public class InteractiveChatIntegration {
             String[] parts = ITEM_PATTERN.split(current, -1);
             for (int i = 0; i < parts.length; i++) {
                 if (!parts[i].isEmpty()) {
-                    builder = builder.append(ChatUtils.parseLegacy(parts[i]));
+                    String cleanedPart = ChatUtils.cleanInteractiveChatPlaceholders(parts[i]);
+                    builder = builder.append(ChatUtils.parseLegacy(cleanedPart));
                 }
                 if (i < parts.length - 1) {
                     if (mainItemComp != null) {
                         builder = builder.append(mainItemComp);
                     } else {
-                        builder = builder.append(Component.text("[item]"));
+                        builder = builder.append(Component.text("[\u200Bitem]"));
                     }
                 }
             }

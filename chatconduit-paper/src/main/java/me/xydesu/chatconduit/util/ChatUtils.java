@@ -29,8 +29,8 @@ public class ChatUtils {
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
     private static final Pattern PAPI_PATTERN = Pattern.compile("%([^%]+)%");
-    // 匹配 InteractiveChat 內部佔位符 (例如 <chat=UUID:[item]:>, <chat=UUID:[獄髓劍]>, <ic=UUID:[ping]>, <interactivechat=UUID:item>)
-    private static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("(?i)<(?:chat|ic|interactivechat)=[^:>]+(?::(\\[[^\\]]+\\]|[^:>]+))?:?>");
+    // 匹配 InteractiveChat 內部所有極限標籤變體 (例如 <chat=UUID:[item]:>, <chat=UUID:[獄髓劍]:>, <chat=UUID:[item]>, <ic=UUID:[ping]>, <interactivechat=UUID:item>)
+    public static final Pattern INTERACTIVE_CHAT_PATTERN = Pattern.compile("(?i)<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^:>]+)?:?>");
 
     /**
      * 清理與轉化 InteractiveChat 內部佔位符標籤 (將 <chat=UUID:[item]> 轉為不引發遠端 InteractiveChat 重複解析的安全 [item])
