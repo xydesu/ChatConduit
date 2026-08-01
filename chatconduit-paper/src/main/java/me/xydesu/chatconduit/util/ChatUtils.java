@@ -170,6 +170,67 @@ public class ChatUtils {
     }
 
     /**
+     * 依據玩家擁有的細粒度權限過濾對話訊息中的色碼與特殊文字效果 (Bold, Italic, Underline, Strikethrough, Magic/Obfuscated, Hex)
+     *
+     * @param player  發言玩家
+     * @param message 原始對話訊息
+     * @return 過濾無權限色碼/效果後的對話訊息
+     */
+    public static String filterTextByPermissions(Player player, String message) {
+        if (message == null || message.isEmpty() || player == null) return message != null ? message : "";
+
+        boolean hasBasicColor = player.hasPermission("chatconduit.chat.color");
+        boolean hasHexColor = player.hasPermission("chatconduit.chat.color.hex");
+
+        boolean hasAllFormat = player.hasPermission("chatconduit.chat.format");
+        boolean hasBold = hasAllFormat || player.hasPermission("chatconduit.chat.format.bold");
+        boolean hasItalic = hasAllFormat || player.hasPermission("chatconduit.chat.format.italic");
+        boolean hasUnderline = hasAllFormat || player.hasPermission("chatconduit.chat.format.underline");
+        boolean hasStrikethrough = hasAllFormat || player.hasPermission("chatconduit.chat.format.strikethrough");
+        boolean hasMagic = hasAllFormat || player.hasPermission("chatconduit.chat.format.magic");
+
+        StringBuilder sb = new StringBuilder();
+        char[] chars = message.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+            if ((c == '&' || c == '§') && i + 1 < chars.length) {
+                char code = Character.toLowerCase(chars[i + 1]);
+
+                if (code == '#' && i + 7 < chars.length) {
+                    if (!hasHexColor) {
+                        i += 7;
+                        continue;
+                    }
+                } else if (code == 'x' && i + 13 < chars.length) {
+                    if (!hasHexColor) {
+                        i += 13;
+                        continue;
+                    }
+                } else if ("0123456789abcdefr".indexOf(code) != -1) {
+                    if (!hasBasicColor) {
+                        i++;
+                        continue;
+                    }
+                } else if (code == 'l' && !hasBold) { i++; continue; }
+                else if (code == 'o' && !hasItalic) { i++; continue; }
+                else if (code == 'n' && !hasUnderline) { i++; continue; }
+                else if (code == 'm' && !hasStrikethrough) { i++; continue; }
+                else if (code == 'k' && !hasMagic) { i++; continue; }
+            }
+            sb.append(c);
+        }
+
+        String result = sb.toString();
+        if (!hasBold) result = result.replaceAll("(?i)<(?:b|bold)>", "").replaceAll("(?i)</(?:b|bold)>", "");
+        if (!hasItalic) result = result.replaceAll("(?i)<(?:i|italic)>", "").replaceAll("(?i)</(?:i|italic)>", "");
+        if (!hasUnderline) result = result.replaceAll("(?i)<(?:u|underlined)>", "").replaceAll("(?i)</(?:u|underlined)>", "");
+        if (!hasStrikethrough) result = result.replaceAll("(?i)<(?:st|strikethrough)>", "").replaceAll("(?i)</(?:st|strikethrough)>", "");
+        if (!hasMagic) result = result.replaceAll("(?i)<(?:obf|obfuscated)>", "").replaceAll("(?i)</(?:obf|obfuscated)>", "");
+
+        return result;
+    }
+
+    /**
      * 將輸入的純文字轉成 Component，支援 Legacy 顏色碼 (&a, &c, &#RRGGBB) 與 MiniMessage 標籤 (<gradient:...>, <rainbow>, <#RRGGBB>)
      *
      * @param text 包含色碼或標籤的字串

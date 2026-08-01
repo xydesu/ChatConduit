@@ -193,17 +193,14 @@ public class ChatListener implements Listener {
                     .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/channel " + sysChannel.key()));
         }
 
+        String filteredMessage = ChatUtils.filterTextByPermissions(player, finalMessage);
+
         String chatColor = me.xydesu.chatconduit.chatcolor.ChatColorManager.getChatColor(player.getUniqueId());
         if (chatColor != null && !chatColor.isEmpty()) {
-            finalMessage = chatColor + finalMessage;
+            filteredMessage = chatColor + filteredMessage;
         }
 
-        Component playerMessage = null;
-        if (player.hasPermission("chatconduit.chat.color") || (chatColor != null && !chatColor.isEmpty())) {
-            playerMessage = ChatUtils.parseLegacy(finalMessage);
-        } else {
-            playerMessage = Component.text(finalMessage);
-        }
+        Component playerMessage = ChatUtils.parseLegacy(filteredMessage);
 
         String rawChatFormat = Main.getInstance().getConfig().getString(
                 "chat-format",

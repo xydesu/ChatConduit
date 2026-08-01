@@ -59,7 +59,28 @@ permissions:
     description: 允許使用自訂 RGB Hex 顏色碼 (#RRGGBB)
     default: op
   chatconduit.chat.color:
-    description: 允許在聊天對話中使用 Legacy 顏色碼
+    description: 允許在聊天對話中使用基礎 Legacy 顏色碼 (&0~&f)
+    default: op
+  chatconduit.chat.color.hex:
+    description: 允許在聊天對話中使用 RGB Hex 顏色碼 (&#RRGGBB)
+    default: op
+  chatconduit.chat.format:
+    description: 允許在聊天對話中使用所有文字特殊效果 (&l, &o, &n, &m, &k)
+    default: op
+  chatconduit.chat.format.bold:
+    description: 允許在聊天對話中使用粗體效果 (&l)
+    default: op
+  chatconduit.chat.format.italic:
+    description: 允許在聊天對話中使用斜體效果 (&o)
+    default: op
+  chatconduit.chat.format.underline:
+    description: 允許在聊天對話中使用底線效果 (&n)
+    default: op
+  chatconduit.chat.format.strikethrough:
+    description: 允許在聊天對話中使用刪除線效果 (&m)
+    default: op
+  chatconduit.chat.format.magic:
+    description: 允許在聊天對話中使用亂碼/閃爍效果 (&k)
     default: op
   chatconduit.admin:
     description: 允許執行 /chatconduit 管理指令
