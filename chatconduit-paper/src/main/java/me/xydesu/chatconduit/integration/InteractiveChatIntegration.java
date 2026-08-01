@@ -53,6 +53,7 @@ public class InteractiveChatIntegration {
     private static void findApiMethods() {
         try {
             Class<?> apiClass = Class.forName("com.loohp.interactivechat.api.InteractiveChatAPI");
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在掃描 InteractiveChatAPI 方法列表...");
             for (Method m : apiClass.getDeclaredMethods()) {
                 String name = m.getName().toLowerCase();
                 if (name.contains("transform") || name.contains("parse") || name.contains("process") || name.contains("replace")) {
@@ -61,16 +62,19 @@ public class InteractiveChatIntegration {
                         m.setAccessible(true);
                         if (Component.class.isAssignableFrom(pTypes[1]) && componentMethod == null) {
                             componentMethod = m;
+                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已匹配 Adventure Component 方法: " + m);
                         } else if (pTypes[1] == String.class && stringMethod == null) {
                             stringMethod = m;
+                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已匹配 String 方法: " + m);
                         } else if (pTypes[1].getName().contains("BaseComponent") && bungeeMethod == null) {
                             bungeeMethod = m;
+                            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 已匹配 Bungee BaseComponent[] 方法: " + m);
                         }
                     }
                 }
             }
         } catch (Throwable t) {
-            Main.getInstance().getLogger().log(Level.FINE, "[InteractiveChat] 掃描 API 方法時例外:", t);
+            Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 掃描 API 方法時例外:", t);
         }
     }
 
@@ -87,6 +91,8 @@ public class InteractiveChatIntegration {
             return null;
         }
 
+        Main.getInstance().getLogger().info("[InteractiveChat-Debug] 準備處理 API 請求 - 玩家: " + player.getName() + " (UUID: " + player.getUniqueId() + "), 原始訊息: \"" + message + "\"");
+
         try {
             if (componentMethod == null && stringMethod == null && bungeeMethod == null) {
                 findApiMethods();
@@ -94,7 +100,7 @@ public class InteractiveChatIntegration {
 
             // 1. 優先嘗試 (Player, Component) 方法
             if (componentMethod != null) {
-                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在透過 API (Player, Component) 處理玩家 " + player.getName() + " 的訊息: " + message);
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 呼叫方法: " + componentMethod.getName() + "(Player, Component)");
                 Component inputComp = ChatUtils.parseLegacy(message);
                 Object result = componentMethod.invoke(null, player, inputComp);
                 Component res = handleResult(result);
@@ -103,7 +109,7 @@ public class InteractiveChatIntegration {
 
             // 2. 備用嘗試 (Player, String) 方法
             if (stringMethod != null) {
-                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在透過 API (Player, String) 處理玩家 " + player.getName() + " 的訊息: " + message);
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 呼叫方法: " + stringMethod.getName() + "(Player, String)");
                 Object result = stringMethod.invoke(null, player, message);
                 Component res = handleResult(result);
                 if (res != null) return res;
@@ -111,7 +117,7 @@ public class InteractiveChatIntegration {
 
             // 3. 備用嘗試 (Player, BaseComponent[]) 方法
             if (bungeeMethod != null) {
-                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 正在透過 API (Player, BaseComponent[]) 處理玩家 " + player.getName() + " 的訊息: " + message);
+                Main.getInstance().getLogger().info("[InteractiveChat-Debug] 呼叫方法: " + bungeeMethod.getName() + "(Player, BaseComponent[])");
                 Object bungeeInput = net.md_5.bungee.api.chat.TextComponent.fromLegacyText(message);
                 Object result = bungeeMethod.invoke(null, player, bungeeInput);
                 Component res = handleResult(result);
@@ -125,18 +131,26 @@ public class InteractiveChatIntegration {
     }
 
     private static Component handleResult(Object result) {
-        if (result == null) return null;
+        if (result == null) {
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 方法回傳 null");
+            return null;
+        }
         if (result instanceof Component componentResult) {
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Adventure Component)。");
+            String plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(componentResult);
+            String json = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(componentResult);
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Adventure Component) PlainText=[" + plain + "] GsonJSON=[" + json + "]");
             return componentResult;
         } else if (result instanceof net.md_5.bungee.api.chat.BaseComponent[] bungeeComponents) {
             String json = net.md_5.bungee.chat.ComponentSerializer.toString(bungeeComponents);
             Component adventureComp = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(json);
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Bungee BaseComponent[] -> Adventure Component)。");
+            String plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(adventureComp);
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (Bungee BaseComponent[]) PlainText=[" + plain + "] GsonJSON=[" + json + "]");
             return adventureComp;
         } else if (result instanceof String stringResult) {
-            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (String): " + stringResult);
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 解析成功 (String): [" + stringResult + "]");
             return ChatUtils.parseLegacy(stringResult);
+        } else {
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] API 回傳未知型態: " + result.getClass().getName());
         }
         return null;
     }

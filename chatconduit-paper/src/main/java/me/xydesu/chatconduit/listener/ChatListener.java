@@ -18,6 +18,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ChatListener implements Listener {
 
@@ -268,7 +269,11 @@ public class ChatListener implements Listener {
             String messageJson = null;
             try {
                 messageJson = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(playerMessage);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Main.getInstance().getLogger().log(Level.WARNING, "[InteractiveChat-Debug] 序列化 playerMessage 為 JSON 時失敗:", e);
+            }
+
+            Main.getInstance().getLogger().info("[InteractiveChat-Debug] 發送 Redis ChatMessagePacket - sender=" + player.getName() + " (UUID: " + player.getUniqueId() + "), server=" + currentServerId + ", channel=" + channelIdentifier + ", rawMessage=\"" + finalMessage + "\", messageJson=" + messageJson);
 
             me.xydesu.chatconduit.redis.ChatMessagePacket packet = new me.xydesu.chatconduit.redis.ChatMessagePacket(
                     player.getUniqueId().toString(),

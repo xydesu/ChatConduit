@@ -94,6 +94,8 @@ public class RedisMessageListener extends JedisPubSub {
         String senderName = packet.getSenderName();
         String remoteServerId = packet.getServerId() != null ? packet.getServerId() : "Remote";
 
+        Main.getInstance().getLogger().info("[InteractiveChat-Debug] 接收 Redis ChatMessagePacket - sender=" + senderName + " (UUID: " + packet.getSenderUuid() + "), remoteServer=" + remoteServerId + ", channel=" + channelKeyOrName + ", rawMessage=\"" + rawMessage + "\", messageJson=" + packet.getMessageJson());
+
         PlayerChannelManager.CustomChannel customChannel = PlayerChannelManager.getChannel(channelKeyOrName);
         ChannelManager.Channel sysChannel = ChannelManager.getChannel(channelKeyOrName);
 
