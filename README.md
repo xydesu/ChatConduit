@@ -50,6 +50,10 @@
 - 支援 SQLite (單機預設) 與 MySQL (跨服分散式資料庫)。
 - 完全採用非同步 SQL 讀寫作業，避免任何主伺服器執行緒 (Main Thread) 阻塞。
 
+### 10. 好友與社交系統 (Friend System)
+- 提供完整 `/friend` 指令與全 Chest GUI 選單面板。
+- 支援好友申請發送/接受/拒絕、冷卻防刷機制、黑名單封鎖管理、動態好友列表與點擊私訊/刪除好友。
+
 ---
 
 ## 開發與建置需求 (Requirements)
@@ -83,6 +87,14 @@
 | `/pc manage delete` | - | 解散並刪除群組頻道 | 頻道隊長權限 |
 | `/msg <玩家> <訊息>` | `/tell`, `/w`, `/pm` | 發送跨服/本地私訊給指定玩家 | `chatconduit.use` |
 | `/reply <訊息>` | `/r` | 快速回覆最後一位與您私訊的玩家 | `chatconduit.use` |
+| `/friend [gui\|help]` | `/f`, `/friends` | 開啟好友社交 GUI 控制台或顯示幫助 | `chatconduit.friend` |
+| `/friend add <玩家>` | - | 發送好友申請給指定玩家 | `chatconduit.friend` |
+| `/friend accept <玩家>` | - | 接受來自指定玩家的好友申請 | `chatconduit.friend` |
+| `/friend deny <玩家>` | - | 拒絕來自指定玩家的好友申請 | `chatconduit.friend` |
+| `/friend remove <玩家>` | - | 刪除指定好友關係 | `chatconduit.friend` |
+| `/friend list [頁碼]` | - | 顯示文字版好友清單與線上分服狀態 | `chatconduit.friend` |
+| `/friend block <玩家>` | - | 將指定玩家加入黑名單 | `chatconduit.friend` |
+| `/friend unblock <玩家>` | - | 將指定玩家移出黑名單 | `chatconduit.friend` |
 | `/chatcolor` | `/ccolor`, `/color` | 開啟發言文字顏色選擇 GUI 選單 | `chatconduit.chatcolor` |
 | `/mute <玩家> [時間] [原因]` | - | 禁言指定玩家發言 | `chatconduit.admin.mute` |
 | `/unmute <玩家>` | - | 解除指定玩家的禁言 | `chatconduit.admin.unmute` |
@@ -91,6 +103,7 @@
 | `/chatconduit reload` | - | 重載插件設定與語言檔案 | `chatconduit.admin` |
 
 ### 特殊權限節點
+- `chatconduit.friend` - 允許使用好友社交系統 (`/friend`) 與箱子 GUI 控制台。
 - `chatconduit.chatcolor.gradient` - 允許解鎖與使用漸變限定聊天顏色 (Sunset, Cyberpunk, Ocean, Emerald)。
 - `chatconduit.chatcolor.vip` - 允許解鎖與使用 VIP 尊爵限定聊天顏色 (Sakura, Royal Gold)。
 - `chatconduit.chatcolor.rainbow` - 允許解鎖與使用七彩幻光彩虹聊天顏色 (Rainbow)。

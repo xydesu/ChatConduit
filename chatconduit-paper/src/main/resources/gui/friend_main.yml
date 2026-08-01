@@ -1,0 +1,51 @@
+title: "<gradient:#4158D0:#C850C0><bold>好友社交系統主介面</bold></gradient>"
+size: 45
+
+items:
+  filler-glass:
+    slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 37, 38, 39, 41, 42, 43, 44]
+    material: GRAY_STAINED_GLASS_PANE
+    name: "<gray> "
+
+  player-profile:
+    slot: 13
+    material: PLAYER_HEAD
+    name: "<yellow><bold>👤 個人好友資訊</bold></yellow>"
+    lore:
+      - "<gray>玩家名稱: <white><player_name></white>"
+      - "<gray>目前好友數: <green><friend_count></green> 人"
+      - "<gray>待處理申請: <gold><request_count></gold> 個"
+      - "<gray>黑名單人數: <red><block_count></red> 人"
+
+  friend-list:
+    slot: 20
+    material: BOOK
+    name: "<green><bold>📜 好友列表</bold></green>"
+    lore:
+      - "<gray>檢視您的所有好友、上線狀態與分服"
+      - ""
+      - "<yellow>▶ 點擊開啟好友列表</yellow>"
+
+  friend-requests:
+    slot: 22
+    material: WRITABLE_BOOK
+    name: "<gold><bold>✉ 待處理好友申請</bold></gold>"
+    lore:
+      - "<gray>檢視別人發送給您的好友邀請"
+      - "<gray>未讀申請: <gold><request_count></gold> 個"
+      - ""
+      - "<yellow>▶ 點擊開啟申請管理列表</yellow>"
+
+  block-list:
+    slot: 24
+    material: REDSTONE
+    name: "<red><bold>🚫 黑名單管理</bold></red>"
+    lore:
+      - "<gray>檢視與解除已被您屏蔽的玩家"
+      - ""
+      - "<yellow>▶ 點擊開啟黑名單</yellow>"
+
+  close-button:
+    slot: 40
+    material: BARRIER
+    name: "<red><bold>✖ 關閉介面</bold></red>"

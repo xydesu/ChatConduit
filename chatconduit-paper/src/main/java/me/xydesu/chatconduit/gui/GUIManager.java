@@ -31,7 +31,11 @@ public class GUIManager {
             "message_settings.yml",
             "online_players.yml",
             "pending_invites.yml",
-            "player_channel_manage.yml"
+            "player_channel_manage.yml",
+            "friend_main.yml",
+            "friend_list.yml",
+            "friend_requests.yml",
+            "friend_block.yml"
     };
 
     /**

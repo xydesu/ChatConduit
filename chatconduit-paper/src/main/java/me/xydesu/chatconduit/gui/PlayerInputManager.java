@@ -29,7 +29,8 @@ public class PlayerInputManager implements Listener {
         INVITE_PLAYER,
         SET_WEBHOOK,
         SET_DESCRIPTION,
-        SET_RULES
+        SET_RULES,
+        ADD_FRIEND
     }
 
     public record InputSession(InputType type, String extraData) {}
@@ -354,6 +355,11 @@ public class PlayerInputManager implements Listener {
                     PlayerChannelManager.publishSync(me.xydesu.chatconduit.redis.PlayerChannelSyncPacket.Action.UPDATE, customChan, null, null);
                     ChatUtils.sendMessage(player, "<green>已成功修改頻道守則！");
                     ChannelSettingsGUI.open(player, customChan);
+                } else if (session.type() == InputType.ADD_FRIEND) {
+                    if (!cleanInput.isEmpty()) {
+                        player.performCommand("friend add " + cleanInput);
+                    }
+                    FriendListGUI.open(player, 1);
                 }
             } finally {
                 currentlyProcessing.remove(uuid);

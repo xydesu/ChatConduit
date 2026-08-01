@@ -320,8 +320,7 @@ public class FriendCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleGUI(Player player) {
-        // 開啟好友箱子 GUI (如尚在開發生態中，預留訊息提示)
-        ChatUtils.sendMessage(player, "<yellow>好友箱子 GUI 介面準備中...");
+        me.xydesu.chatconduit.gui.FriendMainGUI.open(player);
     }
 
     private void sendHelp(Player player) {

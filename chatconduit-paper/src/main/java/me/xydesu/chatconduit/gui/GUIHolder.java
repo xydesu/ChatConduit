@@ -65,6 +65,10 @@ public class GUIHolder implements InventoryHolder {
         ONLINE_PLAYERS_SELECT,
         CHANNEL_SETTINGS,
         MESSAGE_SETTINGS,
-        CHAT_COLOR
+        CHAT_COLOR,
+        FRIEND_MAIN,
+        FRIEND_LIST,
+        FRIEND_REQUESTS,
+        FRIEND_BLOCK
     }
 }

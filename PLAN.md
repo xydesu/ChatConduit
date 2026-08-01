@@ -39,27 +39,29 @@
 
 ### 1.3 箱子 GUI 介面 (Chest GUI)
 
-* [ ] **主選單 (Main Menu)**
-    * [ ] 個人資訊頭顱（顯示目前好友數/上限、VIP 狀態）
-    * [ ] 好友列表按鈕（點擊進入列表頁面）
-    * [ ] 待處理申請按鈕（提示未讀申請數量）
-    * [ ] 黑名單管理按鈕
-    * [ ] 系統設定按鈕（如：關閉接受申請、拒絕傳送等）
+* [x] **主選單 (Main Menu)**
+    * [x] 個人資訊頭顱（顯示目前好友數/上限、待處理申請、黑名單人數）
+    * [x] 好友列表按鈕（點擊進入列表頁面）
+    * [x] 待處理申請按鈕（提示未讀申請數量）
+    * [x] 黑名單管理按鈕
 
 
-* [ ] **好友列表視窗**
-    * [ ] 動態玩家頭顱展示（顯示造型、暱稱、當前所在分服、上線狀態）
-    * [ ] 點擊頭顱開啟「好友互動選單」：
-    * [ ] 私訊快捷按鈕
-    * [ ] 傳送快捷按鈕
-    * [ ] 刪除好友確認按鈕
+* [x] **好友列表視窗**
+    * [x] 動態玩家頭顱展示（顯示暱稱、當前所在分服、上線/離線狀態）
+    * [x] 點擊頭顱「好友互動選單」：
+        * [x] 私訊快捷（左鍵開啟私訊提示）
+        * [x] 刪除好友（右鍵解綁好友關係）
+        * [x] 手動輸入玩家名稱新增好友 (Slot 53)
 
 
+* [x] **申請管理視窗**
+    * [x] 申請者頭顱清單（顯示發送時間）
+    * [x] 左鍵接受 / 右鍵拒絕申請
 
 
-* [ ] **申請管理視窗**
-    * [ ] 申請者頭顱清單（顯示發送時間）
-    * [ ] 一鍵接受 / 一鍵拒絕所有申請
+* [x] **黑名單管理視窗**
+    * [x] 封鎖玩家頭顱清單
+    * [x] 點擊一鍵解除黑名單封鎖
 
 
 
@@ -192,13 +194,16 @@
 * [x] **第二階段：好友指令與基礎驗證 (Friend Commands & Validation)**
     * [x] 實作 `/friend add`, `/friend accept`, `/friend deny`, `/friend remove`, `/friend list`
     * [x] 整合冷卻時間 (CD) 防止刷申請
-* [ ] **第三階段：好友箱子 GUI 控制台 (Friend Chest GUI Console)**
-    * [ ] 實作 `FriendGUIListener`, `FriendMainGUI`, `FriendListGUI`, `FriendRequestsGUI`
+* [x] **第三階段：好友箱子 GUI 控制台 (Friend Chest GUI Console)**
+    * [x] 實作 `FriendMainGUI`, `FriendListGUI`, `FriendRequestsGUI`, `FriendBlockGUI` 與對應的 YAML 配置文件和 `GUIListener` 事件監聽
+* [ ] **第四階段：Redis 跨服好友狀態廣播與 VIP 上限 (Redis Sync & VIP Perks)**
+    * [ ] 上下線/伺服器切換廣播頻道 (`friend:status_change`) 與即時跨服申請推播
+    * [ ] LuckPerms 動態好友上限與 VIP 上限權限劃分
 
 
 
-## 7. WIKI Page (Mark As Not Important, agent, you can edit here)
-
+## 7. WIKI Page 
+(Mark As Not Important, agent, you can edit here)
 ### ChatConduit 官方維基文件架構 (Wiki Roadmap & Documentation Outline)
 
 * [ ] **概述與快速入門 (Overview & Quick Start)**

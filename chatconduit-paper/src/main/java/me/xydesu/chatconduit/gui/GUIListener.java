@@ -55,6 +55,10 @@ public class GUIListener implements Listener {
                 case CHANNEL_SETTINGS -> handleSettingsClick(player, holder.getExtraData(), slot, clickedItem);
                 case MESSAGE_SETTINGS -> handleMessageSettingsClick(player, slot, clickedItem);
                 case CHAT_COLOR -> handleChatColorClick(player, slot);
+                case FRIEND_MAIN -> handleFriendMainClick(player, slot);
+                case FRIEND_LIST -> handleFriendListClick(player, holder.getPage(), slot, clickedItem, event.getClick());
+                case FRIEND_REQUESTS -> handleFriendRequestsClick(player, holder.getPage(), slot, clickedItem, event.getClick());
+                case FRIEND_BLOCK -> handleFriendBlockClick(player, holder.getPage(), slot, clickedItem);
             }
         }
     }
@@ -510,6 +514,140 @@ public class GUIListener implements Listener {
 
         if (slot == GUIManager.getSlot(config, "back-button", 22)) {
             ChannelSelectGUI.open(player);
+        }
+    }
+
+    private void handleFriendMainClick(Player player, int slot) {
+        FileConfiguration config = GUIManager.getConfig("friend_main");
+        if (slot == GUIManager.getSlot(config, "friend-list", 20)) {
+            FriendListGUI.open(player, 1);
+        } else if (slot == GUIManager.getSlot(config, "friend-requests", 22)) {
+            FriendRequestsGUI.open(player, 1);
+        } else if (slot == GUIManager.getSlot(config, "block-list", 24)) {
+            FriendBlockGUI.open(player, 1);
+        } else if (slot == GUIManager.getSlot(config, "close-button", 40)) {
+            player.closeInventory();
+        }
+    }
+
+    private void handleFriendListClick(Player player, int page, int slot, ItemStack clickedItem, ClickType clickType) {
+        FileConfiguration config = GUIManager.getConfig("friend_list");
+        if (slot == GUIManager.getSlot(config, "back-button", 45)) {
+            FriendMainGUI.open(player);
+            return;
+        }
+        if (slot == GUIManager.getSlot(config, "prev-page", 48)) {
+            FriendListGUI.open(player, Math.max(1, page - 1));
+            return;
+        }
+        if (slot == GUIManager.getSlot(config, "next-page", 50)) {
+            FriendListGUI.open(player, page + 1);
+            return;
+        }
+        if (slot == GUIManager.getSlot(config, "add-friend", 53)) {
+            ChatUtils.sendMessage(player, "<yellow>請在對話框輸入要發送好友申請的玩家名稱：");
+            PlayerInputManager.expectInput(player, PlayerInputManager.InputType.ADD_FRIEND);
+            return;
+        }
+
+        if (clickedItem.getType() == Material.PLAYER_HEAD && clickedItem.hasItemMeta() && clickedItem.getItemMeta() instanceof SkullMeta skullMeta) {
+            OfflinePlayer offP = skullMeta.getOwningPlayer();
+            UUID targetUuid = offP != null ? offP.getUniqueId() : (skullMeta.getPlayerProfile() != null ? skullMeta.getPlayerProfile().getId() : null);
+            String targetName = offP != null && offP.getName() != null ? offP.getName() : (skullMeta.getPlayerProfile() != null && skullMeta.getPlayerProfile().getName() != null ? skullMeta.getPlayerProfile().getName() : "玩家");
+
+            final UUID finalUuid = targetUuid;
+            final String finalName = targetName;
+
+            if (finalUuid != null) {
+                if (clickType.isRightClick()) {
+                    me.xydesu.chatconduit.friend.FriendManager.getInstance().removeFriendAsync(player.getUniqueId(), finalUuid).thenAccept(ok -> {
+                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                            if (ok) ChatUtils.sendMessage(player, "<green>已成功刪除好友 <yellow>" + finalName + "</yellow>。");
+                            FriendListGUI.open(player, page);
+                        });
+                    });
+                } else if (clickType.isLeftClick()) {
+                    player.closeInventory();
+                    ChatUtils.sendMessage(player, "<yellow>您可以直接輸入指令 <white>/msg " + finalName + " <訊息></white> 開始私訊！");
+                }
+            }
+        }
+    }
+
+    private void handleFriendRequestsClick(Player player, int page, int slot, ItemStack clickedItem, ClickType clickType) {
+        FileConfiguration config = GUIManager.getConfig("friend_requests");
+        if (slot == GUIManager.getSlot(config, "back-button", 45)) {
+            FriendMainGUI.open(player);
+            return;
+        }
+        if (slot == GUIManager.getSlot(config, "prev-page", 48)) {
+            FriendRequestsGUI.open(player, Math.max(1, page - 1));
+            return;
+        }
+        if (slot == GUIManager.getSlot(config, "next-page", 50)) {
+            FriendRequestsGUI.open(player, page + 1);
+            return;
+        }
+
+        if (clickedItem.getType() == Material.PLAYER_HEAD && clickedItem.hasItemMeta() && clickedItem.getItemMeta() instanceof SkullMeta skullMeta) {
+            OfflinePlayer offP = skullMeta.getOwningPlayer();
+            UUID targetUuid = offP != null ? offP.getUniqueId() : (skullMeta.getPlayerProfile() != null ? skullMeta.getPlayerProfile().getId() : null);
+            String targetName = offP != null && offP.getName() != null ? offP.getName() : (skullMeta.getPlayerProfile() != null && skullMeta.getPlayerProfile().getName() != null ? skullMeta.getPlayerProfile().getName() : "玩家");
+
+            final UUID finalUuid = targetUuid;
+            final String finalName = targetName;
+
+            if (finalUuid != null) {
+                if (clickType.isLeftClick()) {
+                    me.xydesu.chatconduit.friend.FriendManager.getInstance().acceptFriendRequestAsync(player.getUniqueId(), finalUuid).thenAccept(ok -> {
+                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                            if (ok) ChatUtils.sendMessage(player, "<green>已成功接受來自 <yellow>" + finalName + "</yellow> 的好友申請！");
+                            FriendRequestsGUI.open(player, page);
+                        });
+                    });
+                } else if (clickType.isRightClick()) {
+                    me.xydesu.chatconduit.friend.FriendManager.getInstance().denyFriendRequestAsync(player.getUniqueId(), finalUuid).thenAccept(ok -> {
+                        Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                            if (ok) ChatUtils.sendMessage(player, "<yellow>已拒絕來自 <white>" + finalName + "</white> 的好友申請。");
+                            FriendRequestsGUI.open(player, page);
+                        });
+                    });
+                }
+            }
+        }
+    }
+
+    private void handleFriendBlockClick(Player player, int page, int slot, ItemStack clickedItem) {
+        FileConfiguration config = GUIManager.getConfig("friend_block");
+        if (slot == GUIManager.getSlot(config, "back-button", 45)) {
+            FriendMainGUI.open(player);
+            return;
+        }
+        if (slot == GUIManager.getSlot(config, "prev-page", 48)) {
+            FriendBlockGUI.open(player, Math.max(1, page - 1));
+            return;
+        }
+        if (slot == GUIManager.getSlot(config, "next-page", 50)) {
+            FriendBlockGUI.open(player, page + 1);
+            return;
+        }
+
+        if (clickedItem.getType() == Material.PLAYER_HEAD && clickedItem.hasItemMeta() && clickedItem.getItemMeta() instanceof SkullMeta skullMeta) {
+            OfflinePlayer offP = skullMeta.getOwningPlayer();
+            UUID targetUuid = offP != null ? offP.getUniqueId() : (skullMeta.getPlayerProfile() != null ? skullMeta.getPlayerProfile().getId() : null);
+            String targetName = offP != null && offP.getName() != null ? offP.getName() : (skullMeta.getPlayerProfile() != null && skullMeta.getPlayerProfile().getName() != null ? skullMeta.getPlayerProfile().getName() : "玩家");
+
+            final UUID finalUuid = targetUuid;
+            final String finalName = targetName;
+
+            if (finalUuid != null) {
+                me.xydesu.chatconduit.friend.FriendManager.getInstance().unblockPlayerAsync(player.getUniqueId(), finalUuid).thenAccept(ok -> {
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                        if (ok) ChatUtils.sendMessage(player, "<green>已成功將 <yellow>" + finalName + "</yellow> 移出黑名單！");
+                        FriendBlockGUI.open(player, page);
+                    });
+                });
+            }
         }
     }
 }
