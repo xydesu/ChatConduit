@@ -31,7 +31,7 @@ public class InteractiveChatIntegration {
     private static Method bungeeMethod = null;
     private static Object apiInstance = null;
 
-    private static final Pattern ALL_PLACEHOLDERS_PATTERN = Pattern.compile("(?i)\\[(item|i|hand|inv|inventory|ender|ec|money|balance|ping)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^\\]:]+)?:?>");
+    private static final Pattern ALL_PLACEHOLDERS_PATTERN = Pattern.compile("(?i)\\[(item|i|hand|inv|inventory|ender|ec|money|m|balance|loohpjames|gametime|time|pos|ping)\\]|§f\\[[^\\]]+\\]§r|<(?:chat|ic|interactivechat)=[^:]+:?(\\[[^\\]]+\\]|[^\\]:]+)?:?>");
 
     private static Component processItemPlaceholders(Player player, String message) {
         try {
@@ -61,12 +61,8 @@ public class InteractiveChatIntegration {
                 }
 
                 String tag = matcher.group(1);
-                if (tag == null) {
-                    tag = matcher.group(2);
-                }
-                if (tag == null) {
-                    tag = matcher.group(0);
-                }
+                if (tag == null) tag = matcher.group(2);
+                if (tag == null) tag = matcher.group(0);
                 tag = tag.replaceAll("[\\[\\]]", "").trim().toLowerCase();
 
                 if (tag.equals("item") || tag.equals("i") || tag.equals("hand") || tag.contains("item")) {
@@ -77,15 +73,36 @@ public class InteractiveChatIntegration {
                     }
                 } else {
                     String customFormat = Main.getInstance().getConfig().getString("interactivechat.placeholders." + tag);
-                    if (customFormat == null || customFormat.isEmpty()) {
-                        if (tag.equals("ping")) customFormat = "&f%player_colored_ping% &bms";
-                        else if (tag.equals("inv") || tag.equals("inventory")) customFormat = "&b[&f%player_name%'s Inventory&b]";
-                        else if (tag.equals("ender") || tag.equals("ec")) customFormat = "&d[&f%player_name%'s Ender Chest&d]";
-                        else if (tag.equals("money") || tag.equals("balance")) customFormat = "&e[&f%player_name%'s Balance&e]";
-                    }
+                    Component customComp = null;
 
                     if (customFormat != null && !customFormat.isEmpty()) {
-                        builder = builder.append(ChatUtils.parse(player, customFormat));
+                        customComp = ChatUtils.parse(player, customFormat);
+                    } else {
+                        switch (tag) {
+                            case "ping" -> customComp = ChatUtils.parse(player, "&f%player_colored_ping% &bms");
+                            case "inv", "inventory" -> customComp = ChatUtils.parse(player, "&b[&f%player_name%'s Inventory&b]");
+                            case "ender", "ec" -> customComp = ChatUtils.parse(player, "&d[&f%player_name%'s Ender Chest&d]");
+                            case "money", "m", "balance" -> {
+                                Component base = ChatUtils.parse(player, "&e[&f%player_name%'s Balance&e]");
+                                base = base.hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(ChatUtils.parse(player, "&6%player_name%'s Balance: $%vault_eco_balance_commas%")))
+                                           .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand("/pay " + player.getName() + " "));
+                                customComp = base;
+                            }
+                            case "loohpjames" -> {
+                                Component base = ChatUtils.parse(player, "&3&lLoohp&6&lJames");
+                                base = base.hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(ChatUtils.parse(player, "&eVisit the author's website!\n&bClick me!")))
+                                           .clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl("https://loohpjames.com"));
+                                customComp = base;
+                            }
+                            case "gametime" -> customComp = ChatUtils.parse(player, "%player_world_time_24%");
+                            case "time" -> customComp = ChatUtils.parse(player, "%server_time_dd/MM/yyyy HH:mm:ss zzz%");
+                            case "pos" -> customComp = ChatUtils.parse(player, "&bWorld: &f%player_world% &eX:&f%player_x% &eY:&f%player_y% &eZ:&f%player_z%");
+                            default -> customComp = ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(matcher.group(0)));
+                        }
+                    }
+
+                    if (customComp != null) {
+                        builder = builder.append(customComp);
                     } else {
                         builder = builder.append(ChatUtils.parse(player, ChatUtils.cleanInteractiveChatPlaceholders(matcher.group(0))));
                     }
